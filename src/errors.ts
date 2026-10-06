@@ -15,7 +15,20 @@ export class AppPermissionError extends Error {
   }
 }
 
-/** The portal host did not answer: no `init`, or no `token` in time. */
+/** A Cirro API request that failed; `message` is the API's own. */
+export class CirroApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    /** Further messages from the API, e.g. one per invalid field. */
+    readonly errors: string[],
+  ) {
+    super(message);
+    this.name = 'CirroApiError';
+  }
+}
+
+/** The portal host did not answer (no `init`, or no `token` in time), or had no token to give (`token-error`). */
 export class HostConnectionError extends Error {
   constructor(message: string) {
     super(message);

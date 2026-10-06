@@ -88,7 +88,8 @@ export interface UploadProgress {
 export interface CreateDatasetFile {
   /** Relative path inside the new dataset, e.g. `workspace.cwz` or `figures/fig1.png`. */
   path: string;
-  body: Blob | ArrayBuffer | Uint8Array | string;
+  /** `BufferSource`: an ArrayBuffer or a view of one, such as a Uint8Array. */
+  body: Blob | BufferSource | string;
   contentType?: string;
 }
 
@@ -101,6 +102,8 @@ export interface CreateDatasetInput {
   files: CreateDatasetFile[];
   /** Extra tags; the App and Folder tags are always added. */
   tags?: Tag[];
+  /** The dataset's ingest type; default `FILES_PROCESS_ID` (Cirro's "Files"). */
+  processId?: string;
 }
 
 export interface CreatedDataset {
