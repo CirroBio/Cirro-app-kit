@@ -1,11 +1,11 @@
 export * from './protocol';
+export * from './mode';
 export * from './permissions';
 export * from './conventions';
 export * from './errors';
 export type * from './types';
 export { KIT_VERSION } from './version';
 export { connectToCirro } from './connect';
-export { hostedMode } from './mode';
 export { createAppSession } from './session';
 export { createMockSession } from './mock';
 export { FILES_PROCESS_ID } from './files';

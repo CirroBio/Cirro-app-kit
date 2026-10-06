@@ -1,5 +1,6 @@
+import { hostedModeFromSearch } from './mode';
 import {
-  AppSessionInit, appMessage, HelloMessage, hostedModeFromSearch, hostMessage, InitMessage, isAppMessage, isHostMessage,
+  AppSessionInit, appMessage, HelloMessage, hostMessage, InitMessage, isAppMessage, isHostMessage,
   launchContextFromSearch, launchContextToSearch, NavigateMessage
 } from './protocol';
 

@@ -1,14 +1,11 @@
 // The host protocol between the portal page at /apps/<appId> and the app in its iframe.
 // CONTRACT.md section 3 is the normative description; both sides import this file.
+import { HOSTED_APP_PARAM } from './mode';
 import { AppPermission, isAppPermission } from './permissions';
 
 export const PROTOCOL_VERSION = 1;
 export const APP_SOURCE = 'cirro-app';
 export const HOST_SOURCE = 'cirro-app-host';
-
-/** The query parameter the host puts on the app's URL: `1` when hosted, `mock` for a dev mock session. */
-export const HOSTED_APP_PARAM = 'cirro-app';
-export type HostedMode = 'portal' | 'mock';
 
 /** Launch-context query parameters on the portal's /apps/<appId> URL. */
 export const LAUNCH_PARAMS = { projectId: 'projectId', datasetId: 'datasetId', path: 'path' } as const;
@@ -170,12 +167,4 @@ export function launchContextToSearch(context: LaunchContext, params: URLSearchP
 /** The URL the host loads in its iframe for a tool. */
 export function hostedAppUrl(toolId: string): string {
   return `/tools/${toolId}/index.html?${HOSTED_APP_PARAM}=1`;
-}
-
-/** Reads `cirro-app` from a location's query string: whether, and how, the page is hosted. */
-export function hostedModeFromSearch(search: string): HostedMode | null {
-  const value = new URLSearchParams(search).get(HOSTED_APP_PARAM);
-  if (value === '1') return 'portal';
-  if (value === 'mock') return 'mock';
-  return null;
 }

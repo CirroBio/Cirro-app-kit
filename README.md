@@ -25,7 +25,7 @@ build) next to them.
 - **No-build apps**: vendor `dist/cirro-app-kit.js`, one ES module with the API client
   inlined and no other imports, and load it with
   `import { ... } from './vendor/cirro-app-kit.js'`.
-- **Every app** also vendors `dist/cirro-app-mode.js` (4 KB, no imports): `hostedMode()`
+- **Every app** also vendors `dist/cirro-app-mode.js` (1 KB, no imports): `hostedMode()`
   alone. The app imports it at boot and loads the full kit only when the page is hosted,
   so a page opened on its own never downloads or parses the kit.
 

@@ -2,9 +2,9 @@
 // session from the portal, and access tokens refreshed through it.
 import { HostConnectionError } from './errors';
 import { createMockSession } from './mock';
-import { hostedMode } from './mode';
+import { HOSTED_APP_PARAM, hostedMode } from './mode';
 import {
-  AppMessage, appMessage, AppSessionInit, HelloMessage, HOSTED_APP_PARAM, HostMessage,
+  AppMessage, appMessage, AppSessionInit, HelloMessage, HostMessage,
   isHostMessage, TokenRequestMessage
 } from './protocol';
 import { createSession, isExpiring, SessionWithTokens, TokenGrant } from './session';
