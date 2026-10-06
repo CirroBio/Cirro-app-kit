@@ -219,6 +219,9 @@ const items = await index.items(); // file_list rows, newest dataset first
 - Progress is reported after every dataset, and the rows land in
   `session.store.fileList` as they are found, so a gallery subscribed to it fills in
   while indexing runs. `datasetsDone` and `itemsFound` include skipped datasets.
+- Order a growing gallery with `createStableOrder(key, compare)`: a card keeps the place
+  it was first shown in and later finds are added after it, so cards never move under
+  the user's pointer. Make a new one each time the gallery opens.
 - `index.forget(projectId, datasetId)` drops a dataset so the next run reads it again.
 
 ## Development mock

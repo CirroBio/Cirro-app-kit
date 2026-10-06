@@ -324,6 +324,7 @@ The three apps look like themselves, but they speak about Cirro the same way:
 - **Open from Cirro** — the data browser: **Recent** (history), **Bookmarks**, and
   **In Cirro** (the discovery gallery, with indexing progress and a project filter).
   Shown on the app's start screen when nothing is open, and reachable from a menu.
+  While indexing adds items, a card stays where it was first shown (`createStableOrder`).
 - **Save to Cirro** — the save dialog: project, dataset name, folder (prefilled under
   `Apps/<App name>/`), description; reports the new dataset with a link to it.
 - **Bookmark** — a star on whatever is open; restores the view, not just the file.

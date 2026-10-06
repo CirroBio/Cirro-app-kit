@@ -10,4 +10,5 @@ export { createAppSession } from './session';
 export { createMockSession } from './mock';
 export { FILES_PROCESS_ID } from './files';
 export { createDataIndex } from './indexer';
+export { createStableOrder } from './order';
 export { createSheetStore, sheetInputFor } from './sheet-store';
