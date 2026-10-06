@@ -266,6 +266,9 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
   own server are hidden or degrade, with a reason the user can read.
 - A tool that is also a file viewer (proteoscope) keeps its viewer integration inert
   whenever `hostedMode()` would return a mode.
+- Every app shares the portal's origin, and so its browser storage (localStorage,
+  IndexedDB, OPFS) across every Cirro user who signs in on that browser. Anything an app
+  keeps there while hosted is keyed by `session.user.id`.
 - Standalone behavior is unchanged: when not hosted (section 2) the app runs exactly as
   it did before, and the kit is never initialized.
 - The kit is vendored, not fetched at runtime: bundled apps install
