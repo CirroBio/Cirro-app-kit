@@ -1,11 +1,11 @@
 // The kit's public API: what an app builds on. CONTRACT.md describes the behavior.
 import type {
-  Configuration, DatasetsApi, ExecutionApi, FileApi, MetadataApi, ProcessesApi, ProjectsApi, SheetsApi, Tag,
+  Configuration, DatasetsApi, ExecutionApi, FileApi, MetadataApi, ProcessesApi, ProjectsApi, SheetsApi, Tag
 } from '@cirrobio/api-client';
 import type { AppPermission } from './permissions';
 import type { AppIdentity, AppSessionInit, AppTenant, AppUser, LaunchContext, PortalTarget } from './protocol';
 import type {
-  BookmarkRow, DatasetIndexedRow, FileListRow, HistoryRow, SettingRow, TableSchema,
+  BookmarkRow, DatasetIndexedRow, FileListRow, HistoryRow, SettingRow, TableSchema
 } from './conventions';
 
 // ---- Session ----

@@ -77,7 +77,7 @@ const ROUTES: Route[] = [
   route('PATCH', '/projects/{projectId}/sheets/{sheetId}/data', 'sheets:write'),
   route('DELETE', '/projects/{projectId}/sheets/{sheetId}/data', 'sheets:write'),
 
-  route('POST', '/projects/{projectId}/execution', 'pipelines:run'),
+  route('POST', '/projects/{projectId}/execution', 'pipelines:run')
 ];
 
 /**

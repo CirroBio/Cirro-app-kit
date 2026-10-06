@@ -1,6 +1,6 @@
 import {
   AppSessionInit, appMessage, HelloMessage, hostedModeFromSearch, hostMessage, InitMessage, isAppMessage, isHostMessage,
-  launchContextFromSearch, launchContextToSearch,
+  launchContextFromSearch, launchContextToSearch, NavigateMessage
 } from './protocol';
 
 const session: AppSessionInit = {
@@ -36,7 +36,7 @@ describe('message guards', () => {
   });
 
   it('checks navigate targets', () => {
-    expect(isAppMessage(appMessage({ type: 'navigate', target: { kind: 'dataset', projectId: 'p1', datasetId: 'd1' }, newTab: true }))).toBe(true);
+    expect(isAppMessage(appMessage<NavigateMessage>({ type: 'navigate', target: { kind: 'dataset', projectId: 'p1', datasetId: 'd1' }, newTab: true }))).toBe(true);
     expect(isAppMessage(appMessage({ type: 'navigate', target: { kind: 'dataset', projectId: 'p1' }, newTab: true } as never))).toBe(false);
     expect(isAppMessage(appMessage({ type: 'navigate', target: { kind: 'url', href: 'https://evil.example' }, newTab: true } as never))).toBe(false);
   });
@@ -56,7 +56,7 @@ describe('hostedModeFromSearch', () => {
     ['?cirro-app=1', 'portal'],
     ['?x=1&cirro-app=mock', 'mock'],
     ['?cirro-app=0', null],
-    ['', null],
+    ['', null]
   ])('%s → %s', (search, mode) => {
     expect(hostedModeFromSearch(search)).toBe(mode);
   });

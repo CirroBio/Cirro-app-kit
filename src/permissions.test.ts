@@ -16,7 +16,7 @@ describe('permissionForRequest', () => {
     ['POST', '/projects/p1/sheets/s1/data/query', {}, 'sheets:read'],
     ['POST', '/projects/p1/sheets/raw-query', {}, 'sheets:read'],
     ['PATCH', '/projects/p1/sheets/s1/data', {}, 'sheets:write'],
-    ['POST', '/projects/p1/execution', {}, 'pipelines:run'],
+    ['POST', '/projects/p1/execution', {}, 'pipelines:run']
   ])('%s %s needs %s', (method, path, body, permission) => {
     expect(permissionForRequest(method, path, body)).toBe(permission);
   });
@@ -27,7 +27,7 @@ describe('permissionForRequest', () => {
     ['GET', '/users', undefined],
     ['GET', '/projects/p1/datasets/d1/files/extra', undefined],
     ['POST', '/projects/p1/s3-token', { accessType: 'REFERENCE_UPLOAD' }],
-    ['POST', '/projects/p1/s3-token', undefined],
+    ['POST', '/projects/p1/s3-token', undefined]
   ])('%s %s is not covered', (method, path, body) => {
     expect(permissionForRequest(method, path, body)).toBeNull();
   });

@@ -6,7 +6,7 @@ export class AppPermissionError extends Error {
     readonly method: string,
     readonly path: string,
     /** The permission the request needs, or null when the permission model does not cover it at all. */
-    readonly permission: AppPermission | null,
+    readonly permission: AppPermission | null
   ) {
     super(permission
       ? `This app does not have the "${permission}" permission (${method} ${path}).`
