@@ -154,8 +154,9 @@ The dataset is tagged `App: <appId>` and filed under `Apps/<App name>/<folder...
 (CONTRACT.md section 6); `tags` adds more. Its ingest type is Cirro's "Files"
 (`FILES_PROCESS_ID`, `custom_dataset`) unless `processId` names another. Files upload one
 at a time with presigned PUTs; Cirro completes the dataset when all of them have
-arrived. Datasets are immutable once complete, so saving again creates a new dataset.
-Aborting after the dataset is created leaves it incomplete in Cirro.
+arrived, and lists them under `data/` (`gating.cwz` above is read back as
+`data/gating.cwz`). Datasets are immutable once complete, so saving again creates a new
+dataset. Aborting after the dataset is created leaves it incomplete in Cirro.
 
 ## App data
 
@@ -218,8 +219,8 @@ const items = await index.items(); // file_list rows, newest dataset first
 
 ## Development mock
 
-Open the app with `?cirro-app=mock` (and no portal) to get a session over fixtures the app
-supplies through `ConnectOptions.mock`:
+Open the app with `?cirro-app=mock` to get a session over fixtures the app supplies through
+`ConnectOptions.mock`, with no portal and no sign-in:
 
 ```js
 export default {
