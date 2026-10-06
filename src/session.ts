@@ -81,7 +81,7 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
     portalUrl,
     openInPortal(target, { newTab = true } = {}) {
       if (post) {
-        post(appMessage<NavigateMessage>({ type: 'navigate', target, newTab }));
+        post(appMessage<NavigateMessage>({ type: 'navigate', target: withSetLaunch(target), newTab }));
       } else if (newTab) {
         window.open(portalUrl(target), '_blank', 'noopener');
       } else {
@@ -104,6 +104,13 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
 /** The context's set fields: plain-JS apps pass nulls and empty strings, and the host's guard drops a context that has them. */
 function setFields(context: LaunchContext): LaunchContext {
   return Object.fromEntries(Object.entries(context).filter(([, value]) => value !== null && value !== undefined && value !== ''));
+}
+
+/** An app target with only the set fields of its launch context, and no launch context when it has none. */
+function withSetLaunch(target: PortalTarget): PortalTarget {
+  if (target.kind !== 'app') return target;
+  const { launch, ...app } = target;
+  return launch ? { ...app, launch: setFields(launch) } : app;
 }
 
 function portalPath(target: PortalTarget): string {

@@ -1,8 +1,8 @@
 import { connectToCirro, connectToHost, hostedMode, HostWindows } from './connect';
 import { HostConnectionError } from './errors';
 import {
-  AppMessage, AppSessionInit, ContextMessage, hostMessage, InitMessage, isAppMessage, LaunchContext, TokenErrorMessage, TokenMessage,
-  TokenRequestMessage
+  AppMessage, AppSessionInit, ContextMessage, hostMessage, InitMessage, isAppMessage, LaunchContext, NavigateMessage, PortalTarget,
+  TokenErrorMessage, TokenMessage, TokenRequestMessage
 } from './protocol';
 import type { AppSession } from './types';
 import { KIT_VERSION } from './version';
@@ -241,6 +241,21 @@ describe('a portal-mode session', () => {
     session.reportContext({ projectId: undefined, datasetId: 'd1', path: 'data/a.fcs' });
     const messages = sent().slice(-2);
     expect(messages.map((m) => (m as ContextMessage).context)).toEqual([{ projectId: 'p1' }, { datasetId: 'd1', path: 'data/a.fcs' }]);
+    expect(messages.every(isAppMessage)).toBe(true);
+  });
+
+  it('leaves out unset launch fields of an app it opens, which the host would refuse', async () => {
+    const { session, sent } = await connected();
+    // As a plain-JS app passes them.
+    session.openInPortal({ kind: 'app', appId: 'cytoweave', launch: { projectId: 'p1', datasetId: null, path: '' } } as unknown as PortalTarget);
+    session.openInPortal({ kind: 'app', appId: 'cytoweave', launch: null } as unknown as PortalTarget, { newTab: false });
+    session.openInPortal({ kind: 'app', appId: 'cytoweave' });
+    const messages = sent().slice(-3);
+    expect(messages.map((m) => (m as NavigateMessage).target)).toEqual([
+      { kind: 'app', appId: 'cytoweave', launch: { projectId: 'p1' } },
+      { kind: 'app', appId: 'cytoweave' },
+      { kind: 'app', appId: 'cytoweave' }
+    ]);
     expect(messages.every(isAppMessage)).toBe(true);
   });
 
