@@ -20,12 +20,12 @@ const fixtures = (): MockFixtures => ({
           tags: [{ key: 'Target', value: 'KRAS' }],
           files: [
             { path: 'data/model_0.cif', size: 120, url: 'http://localhost:5173/fixtures/model_0.cif' },
-            { path: 'data/model_0_confidences.json', url: 'http://localhost:5173/fixtures/conf.json' },
+            { path: 'data/model_0_confidences.json', url: 'http://localhost:5173/fixtures/conf.json' }
           ],
-        },
+        }
       ],
     },
-    { id: 'p2', name: 'Empty', datasets: [] },
+    { id: 'p2', name: 'Empty', datasets: [] }
   ],
 });
 
@@ -91,7 +91,7 @@ describe('a mock session', () => {
     const { files } = createMockSession('proteoscope', fixtures());
     expect(await files.list('p1', 'd1')).toEqual([
       { path: 'data/model_0.cif', size: 120, metadata: {} },
-      { path: 'data/model_0_confidences.json', size: null, metadata: {} },
+      { path: 'data/model_0_confidences.json', size: null, metadata: {} }
     ]);
     await expect(files.signedUrl({ projectId: 'p1', datasetId: 'd1', path: 'data/model_0.cif' })).resolves.toBe('http://localhost:5173/fixtures/model_0.cif');
     await expect(files.signedUrl({ projectId: 'p1', datasetId: 'd1', path: 'data/missing.cif' })).rejects.toThrow('has no file data/missing.cif');

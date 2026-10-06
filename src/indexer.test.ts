@@ -1,9 +1,9 @@
 import { CirroApiError } from './errors';
 import { createDataIndex } from './indexer';
 import { createMockSession } from './mock';
-import type { AppSession, DatasetDetector, IndexProgress, LoadableItem, MockDataset, MockFixtures } from './types';
+import type { AppSession, DatasetDetector, IndexProgress, LoadableItem, MockDataset, MockFile, MockFixtures } from './types';
 
-const fcs = (path: string) => ({ path, size: 100, url: `http://localhost/${path}` });
+const fcs = (path: string): MockFile => ({ path, size: 100, url: `http://localhost/${path}` });
 
 function fixtures(): MockFixtures {
   return {
@@ -15,14 +15,14 @@ function fixtures(): MockFixtures {
         name: 'Alpha',
         datasets: [
           { id: 'd1', name: 'Plate 1', createdAt: '2026-01-01T00:00:00.000Z', files: [fcs('data/a.fcs'), fcs('data/notes.txt')] },
-          { id: 'd2', name: 'Plate 2', createdAt: '2026-03-01T00:00:00.000Z', files: [fcs('data/b.fcs')] },
+          { id: 'd2', name: 'Plate 2', createdAt: '2026-03-01T00:00:00.000Z', files: [fcs('data/b.fcs')] }
         ],
       },
       {
         id: 'p2',
         name: 'Beta',
         datasets: [{ id: 'd3', name: 'Plate 3', createdAt: '2026-02-01T00:00:00.000Z', files: [fcs('data/c.fcs'), fcs('data/nested/d.fcs')] }],
-      },
+      }
     ],
   };
 }
@@ -40,10 +40,16 @@ function fcsDetector(version = '1', overrides: Partial<DatasetDetector> = {}): D
 const manyDatasets = (count: number): MockDataset[] =>
   Array.from({ length: count }, (_, i) => ({ id: `m${i}`, name: `M${i}`, createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, i)).toISOString(), files: [fcs(`data/m${i}.fcs`)] }));
 
+interface ListingStats {
+  calls: string[];
+  inFlight: number;
+  maxInFlight: number;
+}
+
 /** Spies on the session's file listings, optionally slowing each down. */
-function watchListings(session: AppSession, delayMs = 0) {
+function watchListings(session: AppSession, delayMs = 0): ListingStats {
   const list = session.files.list.bind(session.files);
-  const stats = { calls: [] as string[], inFlight: 0, maxInFlight: 0 };
+  const stats: ListingStats = { calls: [], inFlight: 0, maxInFlight: 0 };
   jest.spyOn(session.files, 'list').mockImplementation(async (projectId, datasetId) => {
     stats.calls.push(datasetId);
     stats.inFlight += 1;
@@ -54,11 +60,6 @@ function watchListings(session: AppSession, delayMs = 0) {
   });
   return stats;
 }
-
-const summary = (progress: IndexProgress) => {
-  const { running, ...counts } = progress;
-  return { running, ...counts };
-};
 
 describe('the data index', () => {
   it('indexes every completed dataset, the launch project first and newest first, reporting each one', async () => {
@@ -71,7 +72,7 @@ describe('the data index', () => {
     const result = await index.run({ concurrency: 1 });
 
     expect(listings.calls).toEqual(['d3', 'd2', 'd1']);
-    expect(summary(result)).toEqual({
+    expect(result).toEqual({
       running: false, projectsTotal: 2, projectsDone: 2, datasetsTotal: 3, datasetsDone: 3, datasetsSkipped: 0, itemsFound: 4, errors: 0,
     });
     expect(index.progress).toEqual(result);
@@ -87,7 +88,7 @@ describe('the data index', () => {
       indexed_at: expect.any(String),
     });
     expect((await session.store.datasetsIndexed.list()).map((r) => [r.dataset_id, r.status, r.item_count, r.indexer_version])).toEqual([
-      ['d3', 'ok', 2, '1'], ['d2', 'ok', 1, '1'], ['d1', 'ok', 1, '1'],
+      ['d3', 'ok', 2, '1'], ['d2', 'ok', 1, '1'], ['d1', 'ok', 1, '1']
     ]);
   });
 
@@ -98,11 +99,11 @@ describe('the data index', () => {
 
     const again = await createDataIndex(session, fcsDetector('1')).run();
     expect(listings.calls).toEqual([]);
-    expect(summary(again)).toMatchObject({ datasetsDone: 3, datasetsSkipped: 3, itemsFound: 4 });
+    expect(again).toMatchObject({ datasetsDone: 3, datasetsSkipped: 3, itemsFound: 4 });
 
     const onlyB = fcsDetector('2', { detect: (files) => files.filter((f) => f.path.endsWith('b.fcs')).map((f) => ({ path: f.path, isFolder: false, kind: 'fcs', label: 'b', size: null, fileCount: null })) });
     const index = createDataIndex(session, onlyB);
-    expect(summary(await index.run())).toMatchObject({ datasetsSkipped: 0, itemsFound: 1 });
+    expect(await index.run()).toMatchObject({ datasetsSkipped: 0, itemsFound: 1 });
     expect(listings.calls).toHaveLength(3);
     expect((await index.items()).map((r) => r.path)).toEqual(['data/b.fcs']);
     expect((await session.store.datasetsIndexed.list()).every((r) => r.indexer_version === '2')).toBe(true);
@@ -112,7 +113,7 @@ describe('the data index', () => {
     const session = createMockSession('cytoweave', fixtures());
     const listings = watchListings(session);
     const index = createDataIndex(session, fcsDetector('1', { accepts: (dataset) => dataset.projectId === 'p1' }));
-    expect(summary(await index.run())).toMatchObject({ datasetsDone: 3, itemsFound: 2 });
+    expect(await index.run()).toMatchObject({ datasetsDone: 3, itemsFound: 2 });
     expect(listings.calls.sort()).toEqual(['d1', 'd2']);
     expect(await session.store.datasetsIndexed.get({ project_id: 'p2', dataset_id: 'd3' })).toMatchObject({ status: 'ok', item_count: 0 });
   });
@@ -139,28 +140,28 @@ describe('the data index', () => {
     jest.spyOn(session.files, 'list').mockRejectedValueOnce(new CirroApiError('Manifest unavailable', 503, []));
 
     const first = await createDataIndex(session, detector).run({ concurrency: 1 });
-    expect(summary(first)).toMatchObject({ datasetsDone: 3, errors: 2, itemsFound: 1 });
+    expect(first).toMatchObject({ datasetsDone: 3, errors: 2, itemsFound: 1 });
     expect((await session.store.datasetsIndexed.list()).map((r) => [r.dataset_id, r.status, r.error, r.item_count])).toEqual([
-      ['d3', 'error', 'Manifest unavailable', 0], ['d2', 'ok', null, 1], ['d1', 'error', 'Unreadable FCS header', 0],
+      ['d3', 'error', 'Manifest unavailable', 0], ['d2', 'ok', null, 1], ['d1', 'error', 'Unreadable FCS header', 0]
     ]);
 
     broken = false;
     const second = await createDataIndex(session, detector).run();
-    expect(summary(second)).toMatchObject({ datasetsDone: 3, datasetsSkipped: 1, errors: 0, itemsFound: 4 });
+    expect(second).toMatchObject({ datasetsDone: 3, datasetsSkipped: 1, errors: 0, itemsFound: 4 });
     expect((await session.store.datasetsIndexed.list()).every((r) => r.status === 'ok')).toBe(true);
   });
 
   it('records a detector that returns items the store cannot hold as an error', async () => {
     const session = createMockSession('cytoweave', fixtures());
     const index = createDataIndex(session, fcsDetector('1', { detect: () => [{ path: 'x', isFolder: false, kind: 'fcs', label: 'x', size: '1kB' as unknown as number, fileCount: null }] }));
-    expect(summary(await index.run())).toMatchObject({ errors: 3, itemsFound: 0 });
+    expect(await index.run()).toMatchObject({ errors: 3, itemsFound: 0 });
     expect((await session.store.datasetsIndexed.list())[0].error).toBe('file_list.size must be a number, not "1kB".');
   });
 
   it('leaves datasets that are not complete for a later run, without a record', async () => {
     const session = createMockSession('cytoweave', fixtures());
     const { id } = await session.api.datasets.uploadDataset({ projectId: 'p1', uploadDatasetRequest: { name: 'Uploading', processId: 'fcs', expectedFiles: ['x.fcs'] } });
-    expect(summary(await createDataIndex(session, fcsDetector()).run())).toMatchObject({ datasetsTotal: 3 });
+    expect(await createDataIndex(session, fcsDetector()).run()).toMatchObject({ datasetsTotal: 3 });
     expect(await session.store.datasetsIndexed.get({ project_id: 'p1', dataset_id: id })).toBeNull();
   });
 
@@ -218,7 +219,7 @@ describe('the data index', () => {
     const session = createMockSession('cytoweave', fixtures());
     const listings = watchListings(session);
     const result = await createDataIndex(session, fcsDetector()).run({ projectIds: ['p1', 'unknown'], concurrency: 1 });
-    expect(summary(result)).toMatchObject({ projectsTotal: 1, datasetsTotal: 2 });
+    expect(result).toMatchObject({ projectsTotal: 1, datasetsTotal: 2 });
     expect(listings.calls).toEqual(['d2', 'd1']);
   });
 
@@ -239,7 +240,7 @@ describe('the data index', () => {
       if (request.projectId === 'p2') throw new CirroApiError('Project is archived', 409, []);
       return getDatasets(request, init);
     });
-    expect(summary(await createDataIndex(session, fcsDetector()).run())).toMatchObject({ projectsDone: 2, datasetsDone: 2, errors: 1 });
+    expect(await createDataIndex(session, fcsDetector()).run()).toMatchObject({ projectsDone: 2, datasetsDone: 2, errors: 1 });
   });
 
   it('fails when the app may not list datasets at all', async () => {

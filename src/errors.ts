@@ -21,7 +21,7 @@ export class CirroApiError extends Error {
     message: string,
     readonly status: number,
     /** Further messages from the API, e.g. one per invalid field. */
-    readonly errors: string[],
+    readonly errors: string[]
   ) {
     super(message);
     this.name = 'CirroApiError';

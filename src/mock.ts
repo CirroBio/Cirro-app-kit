@@ -2,7 +2,7 @@
 // can be built and checked without a portal or a sign-in. Its API answers the requests the
 // kit itself makes, its file URLs are the fixture files' own, and datasets the app creates
 // are kept in memory (their files as object URLs) and show up in later listings.
-import type { Tag, UploadDatasetRequest } from '@cirrobio/api-client';
+import type { FetchAPI, Tag, UploadDatasetRequest } from '@cirrobio/api-client';
 import { FILES_PROCESS_ID, ObjectStore } from './files';
 import { ALL_APP_PERMISSIONS } from './permissions';
 import { createSession } from './session';
@@ -67,7 +67,7 @@ export function createMockSession(appId: string, fixtures: MockFixtures): AppSes
   });
 }
 
-function mockCirro(fixtures: MockFixtures, userId: string) {
+function mockCirro(fixtures: MockFixtures, userId: string): { fetchApi: FetchAPI; objects: ObjectStore } {
   const startedAt = new Date().toISOString();
   let created = 0;
   const projects: MockProjectState[] = fixtures.projects.map((project) => ({
@@ -98,16 +98,16 @@ function mockCirro(fixtures: MockFixtures, userId: string) {
     return dataset;
   };
   // A dataset's files are at s3://mock/<projectId>/<datasetId>/<path>.
-  const fromKey = (key: string) => {
+  const fromKey = (key: string): { dataset: MockDatasetState; path: string } => {
     const [projectId, datasetId, ...path] = key.split('/');
     return { dataset: findDataset(projectId, datasetId), path: path.join('/') };
   };
 
-  const projectJson = (project: MockProjectState) => ({
+  const projectJson = (project: MockProjectState): Record<string, unknown> => ({
     id: project.id, name: project.name, description: '', status: 'COMPLETED', tags: [], organization: '', classificationIds: [],
     billingAccountId: '',
   });
-  const datasetJson = (projectId: string, dataset: MockDatasetState) => ({
+  const datasetJson = (projectId: string, dataset: MockDatasetState): Record<string, unknown> => ({
     id: dataset.id, name: dataset.name, description: dataset.description, projectId, processId: dataset.processId,
     sourceDatasetIds: [], status: dataset.status, tags: dataset.tags, createdBy: dataset.createdBy, createdAt: dataset.createdAt,
     updatedAt: dataset.createdAt,
@@ -163,10 +163,10 @@ function mockCirro(fixtures: MockFixtures, userId: string) {
         accessKeyId: 'mock', secretAccessKey: 'mock', sessionToken: 'mock', region: MOCK_REGION,
         expiration: new Date(Date.now() + CREDENTIAL_LIFETIME_MS).toISOString(),
       };
-    }],
+    }]
   ];
 
-  const respond = (status: number, body: unknown) =>
+  const respond = (status: number, body: unknown): Response =>
     new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
   async function fetchApi(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {

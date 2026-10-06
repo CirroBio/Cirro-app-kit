@@ -3,7 +3,7 @@
 // change when the backend does.
 import {
   appSheetName, BOOKMARKS_TABLE, ColumnType, DATASETS_INDEXED_TABLE, FILE_LIST_TABLE, HISTORY_TABLE, SETTINGS_TABLE, TableSchema,
-  USER_ID_COLUMN,
+  USER_ID_COLUMN
 } from './conventions';
 import type { AppDataStore, AppTable, StoreBackend } from './types';
 
@@ -87,13 +87,13 @@ function memoryTable<Row extends object>(appId: string, userId: string, schema: 
 
   // Listeners run as microtasks, each with its own copy, so a throwing or mutating
   // listener cannot affect the write or the other listeners.
-  const deliver = (listener: (rows: Row[]) => void) => {
+  const deliver = (listener: (rows: Row[]) => void): void => {
     const snapshot = mine();
     queueMicrotask(() => {
       if (listeners.has(listener)) listener(snapshot);
     });
   };
-  const changed = () => listeners.forEach(deliver);
+  const changed = (): void => listeners.forEach(deliver);
 
   return {
     name: schema.name,

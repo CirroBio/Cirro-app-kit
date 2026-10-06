@@ -2,7 +2,7 @@
 // app permission guard (CONTRACT.md section 4), and errors that carry the API's message
 // (as @cirrobio/sdk's generateApiConfig and PortalErrorHandler do for the portal).
 import {
-  Configuration, DatasetsApi, ExecutionApi, FetchAPI, FileApi, MetadataApi, Middleware, ProcessesApi, ProjectsApi, SheetsApi,
+  Configuration, DatasetsApi, ExecutionApi, FetchAPI, FileApi, MetadataApi, Middleware, ProcessesApi, ProjectsApi, SheetsApi
 } from '@cirrobio/api-client';
 import { AppPermissionError, CirroApiError } from './errors';
 import { AppPermission, permissionForRequest } from './permissions';

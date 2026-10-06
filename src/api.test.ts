@@ -2,10 +2,12 @@ import { ProjectAccessType } from '@cirrobio/api-client';
 import { createApis } from './api';
 import { AppPermissionError, CirroApiError } from './errors';
 import type { AppPermission } from './permissions';
+import type { CirroApis } from './types';
 
-const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const json = (status: number, body: unknown): Response =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-function apis(permissions: AppPermission[], answer: Response = json(200, [])) {
+function apis(permissions: AppPermission[], answer: Response = json(200, [])): { api: CirroApis; fetchApi: jest.Mock<Promise<Response>, [string, RequestInit]> } {
   const fetchApi = jest.fn(async (_url: string, _init: RequestInit) => answer.clone());
   const api = createApis({
     basePath: 'https://tenant.example/api',

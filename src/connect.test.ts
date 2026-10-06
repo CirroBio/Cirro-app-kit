@@ -22,25 +22,32 @@ function sessionInit(overrides: Partial<AppSessionInit> = {}): AppSessionInit {
   };
 }
 
+interface FakeHost {
+  windows: HostWindows;
+  parent: { postMessage: jest.Mock };
+  deliver: (data: unknown, from?: { origin?: string; source?: unknown }) => void;
+  sent: () => AppMessage[];
+}
+
 /** The app's window (an EventTarget) and a fake portal window that records what the app posts. */
-function fakeHost() {
+function fakeHost(): FakeHost {
   const parent = { postMessage: jest.fn() };
   const windows: HostWindows = { self: new EventTarget(), parent, origin: ORIGIN };
-  const deliver = (data: unknown, { origin = ORIGIN, source = parent as unknown } = {}) => {
+  const deliver = (data: unknown, { origin = ORIGIN, source = parent as unknown } = {}): void => {
     windows.self.dispatchEvent(Object.assign(new Event('message'), { data, origin, source }));
   };
   const sent = (): AppMessage[] => parent.postMessage.mock.calls.map(([message]) => message);
   return { windows, parent, deliver, sent };
 }
 
-async function connected(init = sessionInit()) {
+async function connected(init = sessionInit()): Promise<FakeHost & { session: AppSession }> {
   const host = fakeHost();
   const connecting = connectToHost(host.windows, { appId: 'proteoscope' });
   host.deliver(hostMessage<InitMessage>({ type: 'init', session: init }));
   return { ...host, session: await connecting };
 }
 
-const tokenRequests = (sent: AppMessage[]) => sent.filter((m): m is TokenRequestMessage => m.type === 'token-request');
+const tokenRequests = (sent: AppMessage[]): TokenRequestMessage[] => sent.filter((m): m is TokenRequestMessage => m.type === 'token-request');
 
 beforeEach(() => {
   jest.useFakeTimers({ now: new Date('2026-10-06T12:00:00Z') });
@@ -220,7 +227,7 @@ describe('a portal-mode session', () => {
       { source: 'cirro-app', version: 1, type: 'navigate', target: { kind: 'dataset', projectId: 'p1', datasetId: 'd1' }, newTab: true },
       { source: 'cirro-app', version: 1, type: 'navigate', target: { kind: 'project', projectId: 'p1' }, newTab: false },
       { source: 'cirro-app', version: 1, type: 'context', context: { projectId: 'p1', datasetId: 'd1', path: 'data/a.cif' }, title: 'a.cif' },
-      { source: 'cirro-app', version: 1, type: 'context', context: {}, title: null },
+      { source: 'cirro-app', version: 1, type: 'context', context: {}, title: null }
     ]);
   });
 
@@ -239,7 +246,7 @@ describe('hostedMode and connectToCirro', () => {
   const globals = globalThis as unknown as { window?: unknown };
 
   /** A stand-in for `window` at `search`, framed by a fake portal or top-level. */
-  function stubWindow(search: string, framed: boolean) {
+  function stubWindow(search: string, framed: boolean): { win: EventTarget; parent: { postMessage: jest.Mock } } {
     const parent = { postMessage: jest.fn() };
     const win: EventTarget & { location: Partial<Location>; parent?: unknown } = Object.assign(new EventTarget(), {
       location: { search, origin: ORIGIN },
@@ -258,7 +265,7 @@ describe('hostedMode and connectToCirro', () => {
     ['?cirro-app=1', false, null],
     ['?cirro-app=mock', false, 'mock'],
     ['?cirro-app=mock', true, 'mock'],
-    ['', true, null],
+    ['', true, null]
   ])('%s, framed: %s → %s', (search, framed, mode) => {
     stubWindow(search, framed);
     expect(hostedMode()).toBe(mode);

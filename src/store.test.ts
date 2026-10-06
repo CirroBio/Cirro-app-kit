@@ -9,7 +9,7 @@ const bookmark = (id: string, overrides: Partial<BookmarkRow> = {}): BookmarkRow
 });
 
 /** Lets listeners, which run as microtasks, see what happened. */
-const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
+const settled = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('the memory store', () => {
   it('has the five standard tables, named for the app', () => {

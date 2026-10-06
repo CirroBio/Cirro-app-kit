@@ -1,6 +1,6 @@
 import { presignS3 } from './presign';
 
-const signature = (url: string) => new URL(url).searchParams.get('X-Amz-Signature');
+const signature = (url: string): string | null => new URL(url).searchParams.get('X-Amz-Signature');
 
 describe('presignS3', () => {
   it('matches AWS\'s published query-string example (GET examplebucket/test.txt)', async () => {

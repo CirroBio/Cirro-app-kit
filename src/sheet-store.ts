@@ -34,7 +34,7 @@ export function sheetInputFor<Row extends object>(appId: string, schema: TableSc
     sheetCreationMode: SheetCreationMode.Scratch,
     columns: [
       { name: USER_ID_COLUMN, dataType: ColumnDataType.String, required: true },
-      ...columns.map(([column, type]) => ({ name: column, dataType: COLUMN_DATA_TYPES[type], required: key.includes(column) })),
+      ...columns.map(([column, type]) => ({ name: column, dataType: COLUMN_DATA_TYPES[type], required: key.includes(column) }))
     ],
   };
 }

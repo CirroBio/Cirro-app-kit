@@ -4,9 +4,9 @@ import { HostConnectionError } from './errors';
 import { createMockSession } from './mock';
 import {
   AppMessage, appMessage, AppSessionInit, HelloMessage, HOSTED_APP_PARAM, HostedMode, hostedModeFromSearch, HostMessage,
-  isHostMessage, TokenRequestMessage,
+  isHostMessage, TokenRequestMessage
 } from './protocol';
-import { createSession, isExpiring, TokenGrant } from './session';
+import { createSession, isExpiring, SessionWithTokens, TokenGrant } from './session';
 import type { AppSession, ConnectOptions } from './types';
 import { KIT_VERSION } from './version';
 
@@ -46,21 +46,21 @@ export interface HostWindows {
 
 export function connectToHost(host: HostWindows, options: ConnectOptions): Promise<AppSession> {
   const timeoutMs = options.timeoutMs ?? CONNECT_TIMEOUT_MS;
-  const post = (message: AppMessage) => host.parent.postMessage(message, host.origin);
+  const post = (message: AppMessage): void => host.parent.postMessage(message, host.origin);
   let receive: (message: HostMessage) => void = () => undefined;
-  const onMessage = (event: Event) => {
+  const onMessage = (event: Event): void => {
     const { origin, source, data } = event as MessageEvent;
     if (origin === host.origin && source === host.parent && isHostMessage(data)) receive(data);
   };
   host.self.addEventListener('message', onMessage);
 
   return new Promise((resolve, reject) => {
-    const hello = () => post(appMessage<HelloMessage>({
+    const hello = (): void => post(appMessage<HelloMessage>({
       type: 'hello', appId: options.appId, appVersion: options.appVersion ?? null, kitVersion: KIT_VERSION,
     }));
     const interval = setInterval(hello, HELLO_INTERVAL_MS);
     const timeout = setTimeout(() => fail(new HostConnectionError(`Cirro did not answer within ${timeoutMs / 1000} s.`)), timeoutMs);
-    const fail = (error: unknown) => {
+    const fail = (error: unknown): void => {
       clearInterval(interval);
       clearTimeout(timeout);
       host.self.removeEventListener('message', onMessage);
@@ -95,12 +95,16 @@ interface PendingToken {
 }
 
 /** A portal-mode session, and the handler for the host's later messages to it. */
-function hostChannel(init: AppSessionInit, post: (message: AppMessage) => void, release: () => void) {
+function hostChannel(
+  init: AppSessionInit,
+  post: (message: AppMessage) => void,
+  release: () => void
+): { session: SessionWithTokens; receive: (message: HostMessage) => void } {
   let pending: PendingToken | null = null;
 
-  const requestToken = () => new Promise<TokenGrant>((resolve, reject) => {
+  const requestToken = (): Promise<TokenGrant> => new Promise<TokenGrant>((resolve, reject) => {
     const requestId = crypto.randomUUID();
-    const settle = () => {
+    const settle = (): void => {
       clearTimeout(timer);
       pending = null;
     };
@@ -127,7 +131,7 @@ function hostChannel(init: AppSessionInit, post: (message: AppMessage) => void, 
     },
   });
 
-  const receive = (message: HostMessage) => {
+  const receive = (message: HostMessage): void => {
     if (message.type === 'token') {
       const grant = { accessToken: message.accessToken, accessTokenExpiresAt: message.accessTokenExpiresAt };
       session.acceptToken(grant);

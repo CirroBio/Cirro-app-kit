@@ -5,7 +5,7 @@ import { Dataset, Project, Status } from '@cirrobio/api-client';
 import type { DatasetIndexedRow, FileListRow } from './conventions';
 import { AppPermissionError } from './errors';
 import type {
-  AppSession, DataIndex, DatasetDetector, IndexedDataset, IndexProgress, IndexRunOptions, LoadableItem,
+  AppSession, DataIndex, DatasetDetector, IndexedDataset, IndexProgress, IndexRunOptions, LoadableItem
 } from './types';
 
 const DEFAULT_CONCURRENCY = 4;
@@ -16,7 +16,7 @@ const idle = (): IndexProgress => ({
   running: false, projectsTotal: 0, projectsDone: 0, datasetsTotal: 0, datasetsDone: 0, datasetsSkipped: 0, itemsFound: 0, errors: 0,
 });
 
-const datasetKey = (projectId: string, datasetId: string) => `${projectId}/${datasetId}`;
+const datasetKey = (projectId: string, datasetId: string): string => `${projectId}/${datasetId}`;
 
 /** The app's index of what it can open in the user's projects, kept in `session.store`. */
 export function createDataIndex(session: AppSession, detector: DatasetDetector): DataIndex {
@@ -25,7 +25,7 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
   let progress = idle();
   let current: Promise<IndexProgress> | null = null;
 
-  const report = (change: Partial<IndexProgress>) => {
+  const report = (change: Partial<IndexProgress>): void => {
     progress = { ...progress, ...change };
     for (const listener of listeners) listener({ ...progress });
   };
@@ -56,7 +56,7 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async function indexDataset(project: Project, dataset: Dataset, previous: DatasetIndexedRow | undefined, signal?: AbortSignal) {
+  async function indexDataset(project: Project, dataset: Dataset, previous: DatasetIndexedRow | undefined, signal?: AbortSignal): Promise<void> {
     if (previous?.status === 'ok' && previous.indexer_version === detector.version) {
       report({
         datasetsDone: progress.datasetsDone + 1,
@@ -191,7 +191,7 @@ function isoDate(date: Date | undefined): string | null {
 /** Runs `work` over `items`, at most `limit` at a time; the first failure rejects. */
 async function eachLimited<T>(items: readonly T[], limit: number, work: (item: T) => Promise<void>): Promise<void> {
   let next = 0;
-  const worker = async () => {
+  const worker = async (): Promise<void> => {
     while (next < items.length) await work(items[next++]);
   };
   await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, worker));

@@ -54,15 +54,15 @@ export function createDatasetFiles({ api, app, portalUrl, objects }: FilesOption
   const details = new Map<string, Promise<DatasetDetail>>();
   const credentialCache = new Map<string, Promise<AWSCredentials>>();
 
-  const listing = (projectId: string, datasetId: string) =>
+  const listing = (projectId: string, datasetId: string): Promise<Listing> =>
     shared(listings, `${projectId}/${datasetId}`, () => loadListing(api, projectId, datasetId));
 
-  const detail = (projectId: string, datasetId: string) =>
+  const detail = (projectId: string, datasetId: string): Promise<DatasetDetail> =>
     shared(details, `${projectId}/${datasetId}`, () => api.datasets.getDataset({ projectId, datasetId }));
 
   async function credentials(projectId: string, request: ProjectFileAccessRequest): Promise<AWSCredentials> {
     const key = `${projectId}/${request.accessType}/${request.datasetId ?? ''}`;
-    const load = () => api.files.generateProjectFileAccessToken({ projectId, projectFileAccessRequest: request });
+    const load = (): Promise<AWSCredentials> => api.files.generateProjectFileAccessToken({ projectId, projectFileAccessRequest: request });
     const cached = await shared(credentialCache, key, load);
     if (cached.expiration.getTime() - Date.now() > CREDENTIAL_MARGIN_MS) return cached;
     credentialCache.delete(key);

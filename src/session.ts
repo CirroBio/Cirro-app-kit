@@ -4,7 +4,7 @@ import type { FetchAPI } from '@cirrobio/api-client';
 import { createApis } from './api';
 import { createDatasetFiles, ObjectStore, s3Objects } from './files';
 import {
-  AppMessage, AppSessionInit, appMessage, ContextMessage, launchContextToSearch, NavigateMessage, PortalTarget,
+  AppMessage, AppSessionInit, appMessage, ContextMessage, launchContextToSearch, NavigateMessage, PortalTarget
 } from './protocol';
 import { createMemoryStore } from './store';
 import type { AppSession, SessionMode, StandaloneSessionOptions } from './types';
@@ -44,7 +44,7 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
   let disposed = false;
   const permissions = new Set(init.permissions);
 
-  const acceptToken = (grant: TokenGrant) => {
+  const acceptToken = (grant: TokenGrant): void => {
     if (grant.accessTokenExpiresAt > token.accessTokenExpiresAt) token = grant;
   };
 
@@ -62,7 +62,7 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
     return refreshing;
   };
 
-  const portalUrl = (target: PortalTarget) => `${init.portalOrigin}${portalPath(target)}`;
+  const portalUrl = (target: PortalTarget): string => `${init.portalOrigin}${portalPath(target)}`;
   const api = createApis({ basePath: init.apiBasePath, accessToken: getAccessToken, permissions, fetchApi });
   const files = createDatasetFiles({ api, app: init.app, portalUrl, objects });
 

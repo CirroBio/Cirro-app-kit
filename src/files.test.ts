@@ -4,7 +4,8 @@ import { createDatasetFiles, s3Objects } from './files';
 import { ALL_APP_PERMISSIONS } from './permissions';
 
 const MINUTE = 60_000;
-const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const json = (status: number, body: unknown): Response =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 type Answer = (query: URLSearchParams, body: unknown) => Response | unknown;
 
@@ -16,9 +17,9 @@ interface Call {
 }
 
 /** Files over a fake Cirro API: `answers` maps `METHOD /path` to a response body (or a Response). */
-function setup(answers: Record<string, Answer>) {
+function setup(answers: Record<string, Answer>): { files: ReturnType<typeof createDatasetFiles>; calls: Call[]; called: (method: string, path: string) => Call[] } {
   const calls: Call[] = [];
-  const fetchApi = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const fetchApi = async (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
     const url = new URL(String(input));
     const call = { method: init.method ?? 'GET', path: url.pathname.replace(/^\/api/, ''), query: url.searchParams, body: typeof init.body === 'string' ? JSON.parse(init.body) : undefined };
     calls.push(call);
@@ -34,11 +35,11 @@ function setup(answers: Record<string, Answer>) {
     portalUrl: (target) => `https://tenant.example/${JSON.stringify(target)}`,
     objects: s3Objects,
   });
-  const called = (method: string, path: string) => calls.filter((c) => c.method === method && c.path === path);
+  const called = (method: string, path: string): Call[] => calls.filter((c) => c.method === method && c.path === path);
   return { files, calls, called };
 }
 
-const credentials = (lifetimeMs: number) => ({
+const credentials = (lifetimeMs: number): Record<string, string> => ({
   accessKeyId: 'ASIA', secretAccessKey: 'secret', sessionToken: 'session', region: 'us-west-2',
   expiration: new Date(Date.now() + lifetimeMs).toISOString(),
 });
@@ -213,7 +214,7 @@ describe('createDataset', () => {
       folder: ['Workspaces'],
       files: [
         { path: 'workspace.cwz', body: '{"gates":[]}', contentType: 'application/json' },
-        { path: 'figures/fig 1.png', body: new Uint8Array([137, 80, 78, 71]) },
+        { path: 'figures/fig 1.png', body: new Uint8Array([137, 80, 78, 71]) }
       ],
       tags: [{ key: 'Panel', value: 'T cells' }],
     }, { onProgress: (p) => progress.push(p), signal: controller.signal });
@@ -226,21 +227,21 @@ describe('createDataset', () => {
       tags: [
         { key: 'App', value: 'cytoweave', editable: true },
         { key: 'Folder', value: 'folder://Apps/CytoWeave/Workspaces', editable: true },
-        { key: 'Panel', value: 'T cells' },
+        { key: 'Panel', value: 'T cells' }
       ],
     }]);
     expect(called('POST', '/projects/p1/s3-token').map((c) => c.body)).toEqual([{ accessType: 'DATASET_UPLOAD', datasetId: 'new1' }]);
     const puts = fetchMock.mock.calls.map(([url, init]) => [new URL(String(url)), init as RequestInit] as const);
     expect(puts.map(([url, init]) => [url.origin + url.pathname, init.method])).toEqual([
       ['https://project-p1.s3.dualstack.us-west-2.amazonaws.com/datasets/new1/data/workspace.cwz', 'PUT'],
-      ['https://project-p1.s3.dualstack.us-west-2.amazonaws.com/datasets/new1/data/figures/fig%201.png', 'PUT'],
+      ['https://project-p1.s3.dualstack.us-west-2.amazonaws.com/datasets/new1/data/figures/fig%201.png', 'PUT']
     ]);
     expect(puts[0][1]).toMatchObject({ body: '{"gates":[]}', headers: { 'Content-Type': 'application/json' }, signal: controller.signal });
     expect(puts[1][1].headers).toBeUndefined();
     expect(progress).toEqual([
       { filesDone: 0, filesTotal: 2, currentFile: 'workspace.cwz' },
       { filesDone: 1, filesTotal: 2, currentFile: 'figures/fig 1.png' },
-      { filesDone: 2, filesTotal: 2, currentFile: null },
+      { filesDone: 2, filesTotal: 2, currentFile: null }
     ]);
     expect(result).toEqual({ projectId: 'p1', datasetId: 'new1', name: 'Gating', portalUrl: 'https://tenant.example/{"kind":"dataset","projectId":"p1","datasetId":"new1"}' });
   });
@@ -259,7 +260,7 @@ describe('createDataset', () => {
     [['/abs.txt'], 'Invalid file path "/abs.txt"'],
     [['a/../b.txt'], 'Invalid file path'],
     [['dir/'], 'Invalid file path'],
-    [['a.txt', 'a.txt'], '"a.txt" is listed twice'],
+    [['a.txt', 'a.txt'], '"a.txt" is listed twice']
   ])('refuses the files %j before creating anything', async (paths, message) => {
     const { files, calls } = setup({});
     await expect(files.createDataset({ projectId: 'p1', name: 'X', folder: [], files: paths.map((path) => ({ path, body: '' })) }))

@@ -24,7 +24,7 @@ describe('sheetInputFor', () => {
         { name: 'size', dataType: 'DOUBLE', required: false },
         { name: 'file_count', dataType: 'DOUBLE', required: false },
         { name: 'metadata', dataType: 'STRING', required: false },
-        { name: 'indexed_at', dataType: 'TIMESTAMP', required: false },
+        { name: 'indexed_at', dataType: 'TIMESTAMP', required: false }
       ],
     });
   });
