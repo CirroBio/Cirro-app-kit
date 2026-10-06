@@ -1,6 +1,9 @@
 import { connectToCirro, connectToHost, hostedMode, HostWindows } from './connect';
 import { HostConnectionError } from './errors';
-import { AppMessage, AppSessionInit, hostMessage, InitMessage, TokenErrorMessage, TokenMessage, TokenRequestMessage } from './protocol';
+import {
+  AppMessage, AppSessionInit, ContextMessage, hostMessage, InitMessage, isAppMessage, LaunchContext, TokenErrorMessage, TokenMessage,
+  TokenRequestMessage
+} from './protocol';
 import type { AppSession } from './types';
 import { KIT_VERSION } from './version';
 
@@ -229,6 +232,16 @@ describe('a portal-mode session', () => {
       { source: 'cirro-app', version: 1, type: 'context', context: { projectId: 'p1', datasetId: 'd1', path: 'data/a.cif' }, title: 'a.cif' },
       { source: 'cirro-app', version: 1, type: 'context', context: {}, title: null }
     ]);
+  });
+
+  it('leaves out unset context fields, which the host would refuse', async () => {
+    const { session, sent } = await connected();
+    // As a plain-JS app passes them.
+    session.reportContext({ projectId: 'p1', datasetId: null, path: '' } as unknown as LaunchContext, 'Plate 1');
+    session.reportContext({ projectId: undefined, datasetId: 'd1', path: 'data/a.fcs' });
+    const messages = sent().slice(-2);
+    expect(messages.map((m) => (m as ContextMessage).context)).toEqual([{ projectId: 'p1' }, { datasetId: 'd1', path: 'data/a.fcs' }]);
+    expect(messages.every(isAppMessage)).toBe(true);
   });
 
   it('stops listening on dispose and fails what is pending', async () => {

@@ -4,7 +4,7 @@ import type { FetchAPI } from '@cirrobio/api-client';
 import { createApis } from './api';
 import { createDatasetFiles, ObjectStore, s3Objects } from './files';
 import {
-  AppMessage, AppSessionInit, appMessage, ContextMessage, launchContextToSearch, NavigateMessage, PortalTarget
+  AppMessage, AppSessionInit, appMessage, ContextMessage, LaunchContext, launchContextToSearch, NavigateMessage, PortalTarget
 } from './protocol';
 import { createMemoryStore } from './store';
 import type { AppSession, SessionMode, StandaloneSessionOptions } from './types';
@@ -89,7 +89,7 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
       }
     },
     reportContext(context, title) {
-      post?.(appMessage<ContextMessage>({ type: 'context', context, title: title ?? null }));
+      post?.(appMessage<ContextMessage>({ type: 'context', context: setFields(context), title: title ?? null }));
     },
     dispose() {
       if (disposed) return;
@@ -99,6 +99,11 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
     },
     acceptToken,
   };
+}
+
+/** The context's set fields: plain-JS apps pass nulls and empty strings, and the host's guard drops a context that has them. */
+function setFields(context: LaunchContext): LaunchContext {
+  return Object.fromEntries(Object.entries(context).filter(([, value]) => value !== null && value !== undefined && value !== ''));
 }
 
 function portalPath(target: PortalTarget): string {
