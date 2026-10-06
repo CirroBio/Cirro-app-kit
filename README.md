@@ -55,8 +55,8 @@ if (mode) {
 ```
 
 `connectToCirro` says hello to the portal until it answers with the session, and rejects
-with `HostConnectionError` after `timeoutMs` (10 s by default). Without `cirro-app` in the
-URL it throws: check `hostedMode()` first.
+with `HostConnectionError` after `timeoutMs` (10 s by default). On a page that is not
+hosted (`hostedMode()` is null) it throws: check `hostedMode()` first.
 
 The session (`AppSession` in [`src/types.ts`](src/types.ts)) has:
 

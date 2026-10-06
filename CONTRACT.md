@@ -51,9 +51,11 @@ The host renders the app in an iframe whose `src` is
 /tools/<appId>/index.html?cirro-app=1
 ```
 
-- The `cirro-app=1` parameter tells the app, synchronously at boot, that it is hosted, so
-  it never waits on a handshake when opened standalone. `cirro-app=mock` (development
-  only) asks the kit for a mock session instead (section 9).
+- The `cirro-app` parameter tells the app, synchronously at boot, whether it is hosted, so
+  it never waits on a handshake when opened standalone. `cirro-app=1` means hosted by the
+  portal; `cirro-app=mock` (development only) means the dev mock (section 9). Any other
+  value, or none, means not hosted. Apps decide with the kit's `hostedMode()`, which
+  reads `1` as hosted only inside a frame.
 - `/tools/*` is served from the portal's own origin (CloudFront in deployed tenants, the
   Vite proxy to `VITE_TOOLS_ENDPOINT` locally). **Same origin is a requirement**: the
   host hands the app an access token, and does so only to a same-origin frame.
@@ -122,7 +124,7 @@ the host sends the **effective** set in `init`.
 |---|---|
 | `projects:read` | list the user's projects and read a project |
 | `datasets:read` | list datasets; read a dataset, its file listing, samples and sample sheet; query project files; read pipeline definitions |
-| `files:read` | read dataset file contents (`PROJECT_DOWNLOAD` and `SHARED_DATASET_DOWNLOAD` S3 tokens) |
+| `files:read` | read dataset file contents (`PROJECT_DOWNLOAD` and `SHARED_DATASET_DOWNLOAD` S3 tokens); also needs `datasets:read`, since the kit reads the dataset's listing and share status first |
 | `datasets:write` | create datasets (upload) and edit a dataset's name, description and tags |
 | `sheets:read` | read sheets and query their rows |
 | `sheets:write` | create sheets and insert, update and delete rows (also `SHEET_UPLOAD` tokens) |
@@ -165,6 +167,8 @@ Apps keep their own state (history, bookmarks, settings, discovery indexes) in
   `json` (any JSON value, stored as text). Nullable unless part of the key.
 - **Keys**: each table declares the columns that identify a row within one user's
   partition. `upsert` replaces the row with the same key.
+- **Subscriptions**: `subscribe` delivers asynchronously, the table's rows first and then
+  again after every change.
 
 ### Standard tables
 
@@ -206,6 +210,8 @@ ordinary datasets in a project the user picks, and are organized with folders:
   `appFolderTag`), and the tag `{ key: 'App', value: '<appId>' }` (`appTag`).
 - Each app documents its subfolders. Keep them few and meaningful, by kind of output
   first, e.g. `Apps/CytoWeave/Workspaces`, `Apps/Proteoscope/Figures`.
+- Its files are listed under `data/`: a file saved as `workspace.cwz` is read back as
+  `data/workspace.cwz`.
 - Datasets are immutable once complete, so "saving again" creates a new dataset; the
   app links versions through history, not by overwriting.
 
@@ -217,7 +223,9 @@ where it is. The kit's `DataIndex` does the walking; the app supplies a
 
 1. List the user's projects (or the ones the app asks for), the launch project first.
 2. List each project's datasets, newest first. Only `COMPLETED` datasets are indexed;
-   others are skipped without a record, so they are picked up once they complete.
+   others are skipped without a record, so they are picked up once they complete. A
+   project that cannot be listed is skipped and counted in `errors`; an
+   `AppPermissionError` fails the run.
 3. Skip datasets already in `datasets_indexed` with the detector's current `version`.
    Datasets are immutable, so a dataset is read once per detector version.
 4. For the rest (bounded concurrency, default 4): if `detector.accepts(dataset)` is
@@ -236,12 +244,15 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
 
 - The app is a static bundle that runs from any path prefix: relative asset URLs, no
   server of its own. Cirro-tools serves it at `/tools/<appId>/`.
-- **In hosted mode, root-absolute same-origin requests belong to the Cirro API.** The
-  app makes none of its own (`/api/...` on the portal origin is Cirro's backend); it
-  reaches Cirro only through the kit. Features that need the app's own server are hidden
-  or degrade, with a reason the user can read.
-- Standalone behavior is unchanged: without `cirro-app` in the URL the app runs exactly
-  as it did before, and the kit is never initialized.
+- **In hosted mode an app makes no requests to a server of its own**, root-absolute or
+  relative. Root-absolute same-origin requests belong to the Cirro API (`/api/...` on the
+  portal origin is Cirro's backend), and a relative URL resolves under `/tools/<appId>/`,
+  i.e. the CDN. The app reaches Cirro only through the kit. Features that need the app's
+  own server are hidden or degrade, with a reason the user can read.
+- A tool that is also a file viewer (proteoscope) keeps its viewer integration inert
+  whenever `hostedMode()` would return a mode.
+- Standalone behavior is unchanged: when not hosted (section 2) the app runs exactly as
+  it did before, and the kit is never initialized.
 - The kit is vendored, not fetched at runtime: bundled apps install
   `@cirrobio/api-client` and import the kit's ESM build; no-build apps vendor the
   single-file bundle `dist/cirro-app-kit.js` (the kit with the API client inlined).
@@ -249,12 +260,15 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
 
 ## 9. Development
 
-- `cirro-app=mock` makes `connectToCirro` return `createMockSession(fixtures)` using
-  fixtures the app supplies through `ConnectOptions.mock`. The mock answers the
-  API calls the kit makes from the fixtures, signs file URLs by returning each fixture
-  file's own URL, and records created datasets in memory. It exists so app UIs can be
-  built and checked without a portal or a sign-in. Never ship fixtures that point at
-  real data.
+- With `cirro-app=mock`, `connectToCirro({ ..., mock })` returns a session built with
+  `createMockSession(appId, fixtures)` from the fixtures the app supplies through
+  `ConnectOptions.mock`. The mock answers the API calls the kit makes from the fixtures,
+  signs file URLs by returning each fixture file's own URL, and records created datasets
+  in memory. It exists so app UIs can be built and checked without a portal or a
+  sign-in. Never ship fixtures that point at real data.
+- Packaging check: served by Cirro-tools' `pnpm serve:tools`,
+  `/tools/<appId>/index.html?cirro-app=mock` makes no requests outside `/tools/<appId>/`
+  except fixture files and public CORS services (`serve:tools` logs them).
 - Local end-to-end: build the tool in Cirro-tools, serve it at
   `http://localhost:8001/tools/<appId>/`, set `VITE_TOOLS_ENDPOINT=http://localhost:8001`
   in the portal's `.env.local`, and open `http://localhost:8000/apps/<appId>`.
