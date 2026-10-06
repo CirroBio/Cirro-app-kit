@@ -101,8 +101,12 @@ app                                   host (/apps/<appId>)
  |-- navigate (open dataset in portal) -->|  window.open / router navigate
 ```
 
+- The host answers `hello` only for the app it hosts: `app.id` in `init` is the catalog
+  id, and the kit rejects an `init` for another app. The host may delay mounting the
+  iframe until it can answer.
 - The kit treats a token as expiring 60 s before its `exp`. It asks with
-  `token-request`; the host may also push a `token` unprompted.
+  `token-request`; the host answers with a token valid for at least 2 minutes
+  (refreshing its own session first if needed), and may also push a `token` unprompted.
 - A `token-request` unanswered for 10 s fails the pending API call with
   `HostConnectionError`.
 - If `init` does not arrive within the connect timeout (default 10 s), `connectToCirro`
@@ -113,7 +117,13 @@ app                                   host (/apps/<appId>)
 - `context` is advisory. The host rewrites only `projectId`, `datasetId` and `path` in
   its own query string (with `replace`, so it does not grow the history), and sets the
   tab title to `<title> · <App name>` when a title is given. Reloading the portal URL
-  therefore reopens what the user was looking at.
+  therefore reopens what the user was looking at. An app reports `context` once it shows
+  something; until then the portal URL keeps the launch context.
+- Permissions and the launch project are resolved once, when the app loads. A later
+  `context` changes the portal URL (and the `launch` of any later `init`) but never
+  re-gates or re-scopes the running app.
+- A `navigate` to the app that is already open only changes the portal URL; an app moves
+  between its own views itself.
 
 ## 4. Permissions
 
@@ -151,6 +161,9 @@ per-app limits need both of these, and are future work:
 2. tokens scoped to the app (e.g. a delegated `AppRegistration` per app), or the host
    proxying API calls and checking each one.
 
+The same holds for project narrowing: an app launched without a `projectId` gets only
+the tenant's narrowing, so it can still reach projects whose admins turned it off.
+
 ## 5. App data storage
 
 Apps keep their own state (history, bookmarks, settings, discovery indexes) in
@@ -184,8 +197,10 @@ more with `store.table(schema)`.
 | `file_list` | `project_id`, `dataset_id`, `path` | `project_id`, `project_name`, `dataset_id`, `dataset_name`, `dataset_created_at`, `path`, `is_folder`, `kind`, `label`, `size`, `file_count`, `metadata`, `indexed_at` |
 
 `state` (history, bookmarks) is whatever the app needs to restore a view, e.g. a
-camera, a display, a gate selection. `path` is relative to the dataset root, as in the
-dataset's file listing; folders have no trailing slash.
+camera, a display, a gate selection: references and view parameters, never file
+contents, and at most 64 KB of JSON. `path` is relative to the dataset root, as in the
+dataset's file listing; folders have no trailing slash, and a folder item whose path is
+`''` is the dataset root.
 
 ### Backends
 
@@ -257,6 +272,12 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
   `@cirrobio/api-client` and import the kit's ESM build; no-build apps vendor the
   single-file bundle `dist/cirro-app-kit.js` (the kit with the API client inlined).
   Either way the vendored copy records the kit version it came from.
+- Every app also vendors `dist/cirro-app-mode.js` (`hostedMode()` alone, no imports),
+  checks it at boot, and loads the full kit only when hosted, so a page opened on its own
+  never downloads the kit.
+- If `/tools/*` is served with a Content-Security-Policy, its `connect-src` must allow
+  the S3 hosts the kit presigns for (`*.s3.dualstack.<region>.amazonaws.com`) and any
+  public service an app calls directly (Proteoscope: RCSB, AlphaFold DB, UniProt).
 
 ## 9. Development
 
@@ -286,10 +307,12 @@ interface ProjectAppConfig { projectId: string; appId: string; enabled: boolean;
 ```
 
 A missing config row means "enabled, everything the app requests". A project config can
-only narrow what the tenant config allows.
+only narrow what the tenant config allows. The portal defines these types in
+`src/app/data/services/app-catalog.service.ts`; they move into this package when the
+admin API lands.
 
 The whole Apps feature is a preview: users turn it on in **Account → Developer
-settings** (stored in the browser) until there is a tenant feature flag for it.
+Settings** (stored in the browser) until there is a tenant feature flag for it.
 
 ## 11. Shared UX vocabulary
 
