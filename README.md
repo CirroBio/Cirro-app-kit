@@ -25,6 +25,9 @@ build) next to them.
 - **No-build apps**: vendor `dist/cirro-app-kit.js`, one ES module with the API client
   inlined and no other imports, and load it with
   `import { ... } from './vendor/cirro-app-kit.js'`.
+- **Every app** also vendors `dist/cirro-app-mode.js` (4 KB, no imports): `hostedMode()`
+  alone. The app imports it at boot and loads the full kit only when the page is hosted,
+  so a page opened on its own never downloads or parses the kit.
 
 The kit needs a secure context (`https://` or `localhost`) for WebCrypto, which the
 portal's origin always is.
@@ -32,14 +35,15 @@ portal's origin always is.
 ## Connecting
 
 Whether the page is hosted is known synchronously from its URL, so an app opened on its
-own never waits for a handshake and never touches the kit.
+own never waits for a handshake and never loads the kit.
 
 ```js
-import { connectToCirro, hostedMode, HostConnectionError } from './vendor/cirro-app-kit.js';
+import { hostedMode } from './vendor/cirro-app-mode.js';
 
 const mode = hostedMode(); // 'portal' (in the portal's iframe), 'mock', or null
 let session = null;
 if (mode) {
+  const { connectToCirro, HostConnectionError } = await import('./vendor/cirro-app-kit.js');
   try {
     session = await connectToCirro({
       appId: 'proteoscope',
@@ -252,7 +256,7 @@ data.
 ## Development
 
 ```bash
-yarn build       # dist/: index.js (cjs), index.esm.js, types/, and cirro-app-kit.js (single file)
+yarn build       # dist/: index.js (cjs), index.esm.js, types/, cirro-app-kit.js (single file), cirro-app-mode.js
 yarn test
 yarn type-check
 ```

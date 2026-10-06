@@ -1,9 +1,10 @@
-// The app side of the host protocol (CONTRACT.md section 3): whether the page is hosted, the
-// handshake that gets a session from the portal, and access tokens refreshed through it.
+// The app side of the host protocol (CONTRACT.md section 3): the handshake that gets a
+// session from the portal, and access tokens refreshed through it.
 import { HostConnectionError } from './errors';
 import { createMockSession } from './mock';
+import { hostedMode } from './mode';
 import {
-  AppMessage, appMessage, AppSessionInit, HelloMessage, HOSTED_APP_PARAM, HostedMode, hostedModeFromSearch, HostMessage,
+  AppMessage, appMessage, AppSessionInit, HelloMessage, HOSTED_APP_PARAM, HostMessage,
   isHostMessage, TokenRequestMessage
 } from './protocol';
 import { createSession, isExpiring, SessionWithTokens, TokenGrant } from './session';
@@ -13,12 +14,6 @@ import { KIT_VERSION } from './version';
 const HELLO_INTERVAL_MS = 250;
 const CONNECT_TIMEOUT_MS = 10_000;
 const TOKEN_TIMEOUT_MS = 10_000;
-
-/** How the page is hosted, from its URL: `portal` only inside a frame. Null when standalone. */
-export function hostedMode(): HostedMode | null {
-  const mode = hostedModeFromSearch(window.location.search);
-  return mode === 'portal' && window.parent === window ? null : mode;
-}
 
 /**
  * The session the portal hands this app (or, with `?cirro-app=mock`, a mock session over

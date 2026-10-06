@@ -1,4 +1,5 @@
-import { connectToCirro, connectToHost, hostedMode, HostWindows } from './connect';
+import { connectToCirro, connectToHost, HostWindows } from './connect';
+import { hostedMode } from './mode';
 import { HostConnectionError } from './errors';
 import {
   AppMessage, AppSessionInit, ContextMessage, hostMessage, InitMessage, isAppMessage, LaunchContext, NavigateMessage, PortalTarget,

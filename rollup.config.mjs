@@ -53,6 +53,20 @@ export default defineConfig([
       typescript({
         compilerOptions: { composite: false, incremental: false, declaration: false, declarationMap: false, sourceMap: false },
       }),
+    ],
+  },
+  // For no-build apps: `hostedMode()` alone, so a page that is not hosted never loads the kit.
+  {
+    input: 'src/mode.ts',
+    output: {
+      file: 'dist/cirro-app-mode.js',
+      format: 'esm',
+      banner: `/*! @cirrobio/app-kit ${version} (hostedMode only) */`,
+    },
+    plugins: [
+      typescript({
+        compilerOptions: { composite: false, incremental: false, declaration: false, declarationMap: false, sourceMap: false },
+      }),
       exitAfterBuild,
     ],
   },
