@@ -37,7 +37,8 @@ export async function connectToCirro(options: ConnectOptions): Promise<AppSessio
 
 /** The windows the handshake runs between: `window` and `window.parent` in the browser, fakes in tests. */
 export interface HostWindows {
-  self: Pick<Window, 'addEventListener' | 'removeEventListener'>;
+  /** Where the host's messages arrive. */
+  self: EventTarget;
   parent: Pick<Window, 'postMessage'>;
   /** This page's origin, which must be the portal's. */
   origin: string;
