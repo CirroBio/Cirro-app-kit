@@ -139,8 +139,8 @@ function shared<T>(cache: Map<string, Promise<T>>, key: string, load: () => Prom
   return promise;
 }
 
-// The manifest lists at most `fileLimit` files per call (20 000 by default; dev's largest
-// datasets have 18 000), so page by `fileOffset` until `totalFiles`, as the portal's
+// The manifest lists at most `fileLimit` files per call (20 000 unless the request says
+// otherwise, per the API spec), so page by `fileOffset` until `totalFiles`, as the portal's
 // datasetFilesQuery and the Python SDK's get_assets_listing do.
 async function loadListing(api: CirroApis, projectId: string, datasetId: string): Promise<Listing> {
   const first = await api.datasets.getDatasetManifest({ projectId, datasetId });

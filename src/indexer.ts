@@ -18,10 +18,7 @@ const idle = (): IndexProgress => ({
 
 const datasetKey = (projectId: string, datasetId: string) => `${projectId}/${datasetId}`;
 
-/**
- * The app's index of what it can open. `progress.datasetsDone` counts skipped datasets too,
- * and `itemsFound` counts their items, so both describe everything the run covered.
- */
+/** The app's index of what it can open in the user's projects, kept in `session.store`. */
 export function createDataIndex(session: AppSession, detector: DatasetDetector): DataIndex {
   const { datasetsIndexed, fileList } = session.store;
   const listeners = new Set<(progress: IndexProgress) => void>();

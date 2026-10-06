@@ -192,11 +192,15 @@ export interface IndexProgress {
   running: boolean;
   projectsTotal: number;
   projectsDone: number;
+  /** Completed datasets in the projects listed so far. */
   datasetsTotal: number;
+  /** Datasets read, recorded or skipped. */
   datasetsDone: number;
   /** Already indexed under this detector version. */
   datasetsSkipped: number;
+  /** Items in the datasets done, skipped ones included. */
   itemsFound: number;
+  /** Datasets that could not be read, and projects that could not be listed. */
   errors: number;
 }
 
