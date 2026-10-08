@@ -3,7 +3,7 @@
 // `datasets_indexed` and `file_list` tables.
 import { Dataset, Project, Status } from '@cirrobio/api-client';
 import type { DatasetIndexedRow, FileListRow } from './conventions';
-import { AppPermissionError } from './errors';
+import { AppPermissionError, isLastingFailure } from './errors';
 import type {
   AppSession, DataIndex, DatasetDetector, IndexedDataset, IndexProgress, IndexRunOptions, LoadableItem
 } from './types';
@@ -13,7 +13,7 @@ const DEFAULT_CONCURRENCY = 4;
 const DATASETS_PAGE_SIZE = 5000;
 
 const idle = (): IndexProgress => ({
-  running: false, projectsTotal: 0, projectsDone: 0, datasetsTotal: 0, datasetsDone: 0, datasetsSkipped: 0, itemsFound: 0, errors: 0,
+  running: false, projectsTotal: 0, projectsDone: 0, datasetsTotal: 0, datasetsDone: 0, datasetsSkipped: 0, datasetsFailed: 0, itemsFound: 0, errors: 0,
 });
 
 const datasetKey = (projectId: string, datasetId: string): string => `${projectId}/${datasetId}`;
@@ -56,11 +56,15 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async function indexDataset(project: Project, dataset: Dataset, previous: DatasetIndexedRow | undefined, signal?: AbortSignal): Promise<void> {
-    if (previous?.status === 'ok' && previous.indexer_version === detector.version) {
+  async function indexDataset(
+    project: Project, dataset: Dataset, previous: DatasetIndexedRow | undefined, retryFailed: boolean, signal?: AbortSignal
+  ): Promise<void> {
+    if (previous?.indexer_version === detector.version && (previous.status === 'ok' || !retryFailed)) {
+      const failed = previous.status === 'error';
       report({
         datasetsDone: progress.datasetsDone + 1,
         datasetsSkipped: progress.datasetsSkipped + 1,
+        datasetsFailed: progress.datasetsFailed + (failed ? 1 : 0),
         itemsFound: progress.itemsFound + previous.item_count,
       });
       return;
@@ -84,9 +88,14 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
       if (previous && previous.item_count > 0) await removeItems(project.id, dataset.id);
       await fileList.upsertMany(items.map((item) => fileListRow(record, item, indexedAt)));
     } catch (e) {
-      // Recorded, so the run goes on; an errored dataset has no items and is retried next run.
       if (signal?.aborted) return;
-      error = e instanceof Error ? e.message : String(e);
+      // A passing failure leaves no record, so the next run reads the dataset again; a lasting
+      // one is recorded with no items and skipped until retried.
+      if (!isLastingFailure(e)) {
+        report({ datasetsDone: progress.datasetsDone + 1, errors: progress.errors + 1 });
+        return;
+      }
+      error = errorMessage(e);
       items = [];
       if (previous && previous.item_count > 0) await removeItems(project.id, dataset.id);
     }
@@ -103,11 +112,11 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
     report({
       datasetsDone: progress.datasetsDone + 1,
       itemsFound: progress.itemsFound + items.length,
-      errors: progress.errors + (error === null ? 0 : 1),
+      datasetsFailed: progress.datasetsFailed + (error === null ? 0 : 1),
     });
   }
 
-  async function indexAll({ projectIds, concurrency = DEFAULT_CONCURRENCY, signal }: IndexRunOptions): Promise<IndexProgress> {
+  async function indexAll({ projectIds, concurrency = DEFAULT_CONCURRENCY, retryFailed = false, signal }: IndexRunOptions): Promise<IndexProgress> {
     progress = idle();
     report({ running: true });
     try {
@@ -128,7 +137,7 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
         report({ datasetsTotal: progress.datasetsTotal + datasets.length });
         await eachLimited(datasets, concurrency, async (dataset) => {
           signal?.throwIfAborted();
-          await indexDataset(project, dataset, indexed.get(datasetKey(project.id, dataset.id)), signal);
+          await indexDataset(project, dataset, indexed.get(datasetKey(project.id, dataset.id)), retryFailed, signal);
         });
         report({ projectsDone: progress.projectsDone + 1 });
       }
@@ -163,7 +172,28 @@ export function createDataIndex(session: AppSession, detector: DatasetDetector):
       await datasetsIndexed.remove({ project_id: projectId, dataset_id: datasetId });
       await removeItems(projectId, datasetId);
     },
+    async recordFailure(projectId, datasetId, error) {
+      if (!isLastingFailure(error)) return false;
+      const previous = await datasetsIndexed.get({ project_id: projectId, dataset_id: datasetId });
+      const items = (await fileList.list()).filter((row) => row.project_id === projectId && row.dataset_id === datasetId);
+      await datasetsIndexed.upsert({
+        project_id: projectId,
+        dataset_id: datasetId,
+        dataset_name: previous?.dataset_name ?? items[0]?.dataset_name ?? '',
+        indexed_at: new Date().toISOString(),
+        indexer_version: detector.version,
+        item_count: 0,
+        status: 'error',
+        error: errorMessage(error),
+      });
+      for (const row of items) await fileList.remove(row);
+      return true;
+    },
   };
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function fileListRow(dataset: IndexedDataset, item: LoadableItem, indexedAt: string): FileListRow {

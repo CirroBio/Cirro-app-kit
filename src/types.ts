@@ -126,7 +126,7 @@ export interface DatasetFiles {
 
 // ---- App data storage ----
 
-export type StoreBackend = 'memory' | 'sheets';
+export type StoreBackend = 'memory' | 'browser' | 'sheets';
 
 /** One table, already narrowed to the current user's rows (`user_id` is never visible). */
 export interface AppTable<Row extends object> {
@@ -200,7 +200,9 @@ export interface IndexProgress {
   datasetsSkipped: number;
   /** Items in the datasets done, skipped ones included. */
   itemsFound: number;
-  /** Datasets that could not be read, and projects that could not be listed. */
+  /** Datasets that failed in a way that will fail again (`isLastingFailure`), this run or before; they are not read again until retried. */
+  datasetsFailed: number;
+  /** Datasets and projects that could not be read this run for a passing reason; the next run tries them again. */
   errors: number;
 }
 
@@ -209,6 +211,8 @@ export interface IndexRunOptions {
   projectIds?: string[];
   /** Datasets read at once; default 4. */
   concurrency?: number;
+  /** Reads again the datasets that failed before; otherwise they are skipped until the detector version changes. */
+  retryFailed?: boolean;
   signal?: AbortSignal;
 }
 
@@ -221,6 +225,11 @@ export interface DataIndex {
   items(): Promise<FileListRow[]>;
   /** Drops a dataset's rows so the next run reads it again. */
   forget(projectId: string, datasetId: string): Promise<void>;
+  /**
+   * Records that the app could not open a dataset it found, when `isLastingFailure(error)`:
+   * its items leave the index and later runs skip it until retried. Returns whether it was recorded.
+   */
+  recordFailure(projectId: string, datasetId: string, error: unknown): Promise<boolean>;
 }
 
 // ---- Development mock ----

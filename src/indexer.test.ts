@@ -1,7 +1,9 @@
-import { CirroApiError } from './errors';
+import { CirroApiError, HostConnectionError } from './errors';
 import { createDataIndex } from './indexer';
 import { createMockSession } from './mock';
-import type { AppSession, DatasetDetector, IndexProgress, LoadableItem, MockDataset, MockFile, MockFixtures } from './types';
+import type {
+  AppSession, DatasetDetector, DatasetFileEntry, IndexedDataset, IndexProgress, LoadableItem, MockDataset, MockFile, MockFixtures
+} from './types';
 
 const fcs = (path: string): MockFile => ({ path, size: 100, url: `http://localhost/${path}` });
 
@@ -73,7 +75,8 @@ describe('the data index', () => {
 
     expect(listings.calls).toEqual(['d3', 'd2', 'd1']);
     expect(result).toEqual({
-      running: false, projectsTotal: 2, projectsDone: 2, datasetsTotal: 3, datasetsDone: 3, datasetsSkipped: 0, itemsFound: 4, errors: 0,
+      running: false, projectsTotal: 2, projectsDone: 2, datasetsTotal: 3, datasetsDone: 3, datasetsSkipped: 0, datasetsFailed: 0, itemsFound: 4,
+      errors: 0,
     });
     expect(index.progress).toEqual(result);
     expect(reports[0].running).toBe(true);
@@ -128,33 +131,66 @@ describe('the data index', () => {
     }]);
   });
 
-  it('records a dataset it could not read as an error, and retries it next run', async () => {
+  it('remembers a dataset that will fail again, and skips it until the detector changes or a retry', async () => {
     const session = createMockSession('cytoweave', fixtures());
     let broken = true;
-    const detector = fcsDetector('1', {
-      detect: (files, dataset) => {
-        if (broken && dataset.datasetId === 'd1') throw new Error('Unreadable FCS header');
-        return fcsDetector().detect(files, dataset);
-      },
-    });
-    jest.spyOn(session.files, 'list').mockRejectedValueOnce(new CirroApiError('Manifest unavailable', 503, []));
+    const detect = (files: DatasetFileEntry[], dataset: IndexedDataset): LoadableItem[] => {
+      if (broken && dataset.datasetId === 'd1') throw new Error('Unreadable FCS header');
+      return fcsDetector().detect(files, dataset);
+    };
+    const stats = watchListings(session);
 
-    const first = await createDataIndex(session, detector).run({ concurrency: 1 });
-    expect(first).toMatchObject({ datasetsDone: 3, errors: 2, itemsFound: 1 });
-    expect((await session.store.datasetsIndexed.list()).map((r) => [r.dataset_id, r.status, r.error, r.item_count])).toEqual([
-      ['d3', 'error', 'Manifest unavailable', 0], ['d2', 'ok', null, 1], ['d1', 'error', 'Unreadable FCS header', 0]
-    ]);
+    const first = await createDataIndex(session, fcsDetector('1', { detect })).run({ concurrency: 1 });
+    expect(first).toMatchObject({ datasetsDone: 3, datasetsFailed: 1, errors: 0, itemsFound: 3 });
+    expect(await session.store.datasetsIndexed.get({ project_id: 'p1', dataset_id: 'd1' }))
+      .toMatchObject({ status: 'error', error: 'Unreadable FCS header', item_count: 0 });
 
     broken = false;
-    const second = await createDataIndex(session, detector).run();
-    expect(second).toMatchObject({ datasetsDone: 3, datasetsSkipped: 1, errors: 0, itemsFound: 4 });
-    expect((await session.store.datasetsIndexed.list()).every((r) => r.status === 'ok')).toBe(true);
+    stats.calls.length = 0;
+    const second = await createDataIndex(session, fcsDetector('1', { detect })).run();
+    expect(second).toMatchObject({ datasetsDone: 3, datasetsSkipped: 3, datasetsFailed: 1, itemsFound: 3 });
+    expect(stats.calls).toEqual([]);
+
+    const retried = await createDataIndex(session, fcsDetector('1', { detect })).run({ retryFailed: true });
+    expect(retried).toMatchObject({ datasetsSkipped: 2, datasetsFailed: 0, itemsFound: 4 });
+    expect(stats.calls).toEqual(['d1']);
+
+    await createDataIndex(session, fcsDetector('1', { detect })).recordFailure('p1', 'd1', new Error('Unreadable FCS header'));
+    stats.calls.length = 0;
+    expect(await createDataIndex(session, fcsDetector('2', { detect })).run()).toMatchObject({ datasetsSkipped: 0, datasetsFailed: 0, itemsFound: 4 });
+    expect(stats.calls).toHaveLength(3);
+  });
+
+  it('leaves no record of a dataset that failed for a passing reason, so the next run reads it again', async () => {
+    const session = createMockSession('cytoweave', fixtures());
+    jest.spyOn(session.files, 'list')
+      .mockRejectedValueOnce(new CirroApiError('Manifest unavailable', 503, []))
+      .mockRejectedValueOnce(new HostConnectionError('Cirro did not send a fresh access token in time.'));
+
+    expect(await createDataIndex(session, fcsDetector()).run({ concurrency: 1 })).toMatchObject({ datasetsDone: 3, errors: 2, datasetsFailed: 0 });
+    expect((await session.store.datasetsIndexed.list()).map((r) => r.dataset_id)).toEqual(['d1']);
+    expect(await createDataIndex(session, fcsDetector()).run()).toMatchObject({ datasetsSkipped: 1, errors: 0, itemsFound: 4 });
+  });
+
+  it('records a dataset the app could not open, dropping its items, when the failure will happen again', async () => {
+    const session = createMockSession('cytoweave', fixtures());
+    const index = createDataIndex(session, fcsDetector());
+    await index.run();
+
+    expect(await index.recordFailure('p2', 'd3', new TypeError('Failed to fetch'))).toBe(false);
+    expect((await index.items()).filter((row) => row.dataset_id === 'd3')).toHaveLength(2);
+
+    expect(await index.recordFailure('p2', 'd3', new Error('Not an FCS file'))).toBe(true);
+    expect((await index.items()).map((row) => row.dataset_id)).toEqual(['d2', 'd1']);
+    expect(await session.store.datasetsIndexed.get({ project_id: 'p2', dataset_id: 'd3' }))
+      .toMatchObject({ dataset_name: 'Plate 3', status: 'error', error: 'Not an FCS file', item_count: 0 });
+    expect(await index.run()).toMatchObject({ datasetsSkipped: 3, datasetsFailed: 1, itemsFound: 2 });
   });
 
   it('records a detector that returns items the store cannot hold as an error', async () => {
     const session = createMockSession('cytoweave', fixtures());
     const index = createDataIndex(session, fcsDetector('1', { detect: () => [{ path: 'x', isFolder: false, kind: 'fcs', label: 'x', size: '1kB' as unknown as number, fileCount: null }] }));
-    expect(await index.run()).toMatchObject({ errors: 3, itemsFound: 0 });
+    expect(await index.run()).toMatchObject({ datasetsFailed: 3, errors: 0, itemsFound: 0 });
     expect((await session.store.datasetsIndexed.list())[0].error).toBe('file_list.size must be a number, not "1kB".');
   });
 

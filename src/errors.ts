@@ -43,3 +43,17 @@ export class SheetStoreUnavailableError extends Error {
     this.name = 'SheetStoreUnavailableError';
   }
 }
+
+/**
+ * Whether reading a dataset failed in a way that will fail again: the API refused it, or its
+ * files are not what the app can read. A dropped connection, a lost session, a throttled or
+ * failing server and an abort are passing, so the dataset is tried again (CONTRACT.md section 7).
+ */
+export function isLastingFailure(error: unknown): boolean {
+  if (error instanceof HostConnectionError) return false;
+  if (error instanceof CirroApiError) return error.status !== 401 && error.status !== 429 && error.status < 500;
+  // fetch rejects with a TypeError when the network fails, and the API client wraps that in a
+  // FetchError. An abort is a DOMException, which is not an Error everywhere.
+  const name = typeof error === 'object' && error !== null && 'name' in error ? error.name : null;
+  return !['AbortError', 'TypeError', 'FetchError'].includes(String(name));
+}

@@ -6,7 +6,7 @@ import { createDatasetFiles, ObjectStore, s3Objects } from './files';
 import {
   AppMessage, AppSessionInit, appMessage, ContextMessage, LaunchContext, launchContextToSearch, NavigateMessage, PortalTarget
 } from './protocol';
-import { createMemoryStore } from './store';
+import { createBrowserStore, createMemoryStore } from './store';
 import type { AppSession, SessionMode, StandaloneSessionOptions } from './types';
 
 /** A token counts as expiring this long before it expires (CONTRACT.md section 3). */
@@ -75,7 +75,10 @@ export function createSession({ mode, init, refreshToken, post, fetchApi, object
     launch: init.launch,
     api,
     files,
-    store: createMemoryStore(init.app.id, init.user.id),
+    // The mock's datasets are made up afresh on every load, so nothing it indexes is worth keeping.
+    store: mode !== 'mock' && typeof indexedDB !== 'undefined'
+      ? createBrowserStore(init.app.id, init.user.id)
+      : createMemoryStore(init.app.id, init.user.id),
     can: (permission) => permissions.has(permission),
     getAccessToken,
     portalUrl,

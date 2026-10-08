@@ -145,10 +145,10 @@ the model covers to the one permission it needs, and returns `null` for everythi
 else. **Unmapped requests are denied**, so adding an endpoint to an app is an explicit
 change to this table.
 
-Effective permissions = requested ∩ tenant allowance ∩ project allowance (the project
-allowance applies only when the app was launched with a `projectId`). An app whose
-effective set is empty, or that is disabled for the tenant or the launch project, is not
-loaded: the host shows why instead of the iframe.
+Effective permissions = requested ∩ the tenant's allowance. An app whose effective set
+is empty, that is turned on for no projects, or that is turned on for selected projects
+and was launched without one of them as its `projectId`, is not loaded: the host shows
+why instead of the iframe.
 
 **Enforcement in v1 is cooperative.** The kit installs `permissionForRequest` as API
 client middleware and throws `AppPermissionError` before an uncovered or ungranted
@@ -161,8 +161,9 @@ per-app limits need both of these, and are future work:
 2. tokens scoped to the app (e.g. a delegated `AppRegistration` per app), or the host
    proxying API calls and checking each one.
 
-The same holds for project narrowing: an app launched without a `projectId` gets only
-the tenant's narrowing, so it can still reach projects whose admins turned it off.
+The same holds for project scope: an app turned on for selected projects is gated by its
+launch project, but once loaded it can reach every project its user can, including ones
+it is not turned on for.
 
 ## 5. App data storage
 
@@ -204,9 +205,14 @@ dataset's file listing; folders have no trailing slash, and a folder item whose 
 
 ### Backends
 
-- **Memory (v1 default).** Rows live in the page's memory and are gone when the app
-  reloads. Same semantics as the sheet backend, so app code does not change when the
-  backend does.
+- **Browser (v1 default).** Rows live in the page and are written to the browser's
+  IndexedDB (database `cirro-apps`, one record per table and user, keyed
+  `app_<appId>_<table>/<user id>`), so they survive a reload on the same browser. The
+  same semantics as the sheet backend, so app code does not change when the backend does.
+  Saved rows are a cache: a row that no longer fits its schema is dropped, and a table
+  that cannot be read starts empty.
+- **Memory.** The same, without the IndexedDB writes. The dev mock (section 9) uses it,
+  since its datasets are made up afresh on every load.
 - **Sheets (stub).** The intended home is one Cirro sheet per table, private to each
   user, at the tenant level. Cirro sheets today are project-scoped and visible to the
   project's members, so the backend cannot honor that yet. The kit ships the sheet
@@ -246,10 +252,23 @@ where it is. The kit's `DataIndex` does the walking; the app supplies a
 4. For the rest (bounded concurrency, default 4): if `detector.accepts(dataset)` is
    false, record it with zero items without listing files; otherwise list its files
    and call `detector.detect(files, dataset)`.
-5. Write the detected items to `file_list` and one row to `datasets_indexed`
-   (`status: 'error'` with the message when listing fails; errored datasets are retried
-   on the next run).
-6. Report progress after every dataset, so the app's gallery fills in as indexing runs.
+5. Write the detected items to `file_list` and one row to `datasets_indexed`.
+6. A dataset that fails is handled by whether it will fail again (`isLastingFailure`):
+   - **Lasting** (the API refused it, e.g. 403 or 404; or the detector could not make
+     sense of its files): recorded with `status: 'error'`, the message and no items, and
+     skipped like any indexed dataset. It is read again only when the detector's
+     `version` changes or the app runs with `retryFailed` (the user asked to retry).
+   - **Passing** (the network dropped, the session lapsed, the server answered 429 or
+     5xx, or the run was aborted): no record, so the next run reads it again.
+7. When an app cannot **open** an item it found, it calls `recordFailure(projectId,
+   datasetId, error)`. A lasting failure is recorded as in step 6 and the dataset's items
+   leave `file_list`, so the gallery stops offering what cannot open.
+8. Report progress after every dataset, so the app's gallery fills in as indexing runs.
+   `datasetsFailed` counts the failed datasets skipped or found in this run; the gallery
+   says how many there are and offers to retry them.
+
+The index lives in the app's store (section 5), so with the browser backend each
+dataset is read once per user, browser and detector version, not once per visit.
 
 Items can be files or folders (`is_folder`): a `.zarr` store or a structure-prediction
 output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure`,
@@ -299,20 +318,23 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
 
 ## 10. Administration (stubs in v1)
 
-Which apps exist, and what each may do, will be configured by tenant admins (for the
-tenant) and project admins (for their project). v1 has the screens and the data shape
-but nothing is persisted: there is no backend endpoint yet, so changes last until the
-portal tab reloads.
+Tenant admins configure each app on **System → Apps** (`/system/app-catalog`): which
+projects it opens in, and what it may do. Project pages only list the apps that open
+there. v1 has the screen and the data shape but nothing is persisted: there is no
+backend endpoint yet, so changes last until the portal tab reloads.
 
 ```ts
-interface TenantAppConfig  { appId: string; enabled: boolean; allowedPermissions: AppPermission[] }
-interface ProjectAppConfig { projectId: string; appId: string; enabled: boolean; allowedPermissions: AppPermission[] }
+interface TenantAppConfig {
+  appId: string;
+  allowedPermissions: AppPermission[];
+  projectScope: 'all' | 'none' | 'selected';
+  projectIds: string[]; // the projects a 'selected' app opens in
+}
 ```
 
-A missing config row means "enabled, everything the app requests". A project config can
-only narrow what the tenant config allows. The portal defines these types in
-`src/app/data/services/app-catalog.service.ts`; they move into this package when the
-admin API lands.
+A missing config row means "all projects, everything the app requests". The portal
+defines this type in `src/app/data/services/app-catalog.service.ts`; it moves into this
+package when the admin API lands.
 
 The whole Apps feature is a preview: users turn it on in **Account → Developer
 Settings** (stored in the browser) until there is a tenant feature flag for it.
@@ -321,12 +343,22 @@ Settings** (stored in the browser) until there is a tenant feature flag for it.
 
 The three apps look like themselves, but they speak about Cirro the same way:
 
+- **Start screen** — what a hosted app shows when nothing is open: a full page, not a
+  dialog, led by **Open from Cirro**, with **Upload…** beside it. Standalone apps keep
+  their own start screens.
 - **Open from Cirro** — the data browser: **Recent** (history), **Bookmarks**, and
-  **In Cirro** (the discovery gallery, with indexing progress and a project filter).
-  Shown on the app's start screen when nothing is open, and reachable from a menu.
-  While indexing adds items, a card stays where it was first shown (`createStableOrder`).
+  **In Cirro** (the discovery gallery, with indexing progress, a project filter, and
+  "N could not be read · Retry" when datasets have failed). Reachable from a menu once
+  something is open. While indexing adds items, a card stays where it was first shown
+  (`createStableOrder`).
+- **Upload…** — a hosted app's way to open local files: choosing them opens the save
+  dialog (folder prefilled `Apps/<App name>/Uploads`), the files become a dataset, and
+  the app then opens the local copy, recording the new dataset in history so Recent
+  reopens it from Cirro.
 - **Save to Cirro** — the save dialog: project, dataset name, folder (prefilled under
-  `Apps/<App name>/`), description; reports the new dataset with a link to it.
+  `Apps/<App name>/`), description; reports the new dataset with a link to it. A button
+  in the app's main toolbar whenever something is open, not only in a menu.
 - **Bookmark** — a star on whatever is open; restores the view, not just the file.
 - **Open in Cirro** — a link from anything loaded to its dataset in the portal.
-- Local files keep working ("Open file…"), next to Open from Cirro, never replaced by it.
+- Standalone, local files keep working ("Open file…") as before. Hosted, they go
+  through **Upload…**, so what the user works on is in Cirro.

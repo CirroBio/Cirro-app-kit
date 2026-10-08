@@ -1,5 +1,5 @@
 import { BookmarkRow, HISTORY_TABLE, SettingRow, STANDARD_TABLES, TableSchema } from './conventions';
-import { createMemoryStore, MemoryTables } from './store';
+import { createBrowserStore, createMemoryStore, MemoryTables, TableStorage } from './store';
 
 const setting = (key: string, value: unknown): SettingRow => ({ key, value, updated_at: '2026-10-06T12:00:00.000Z' });
 
@@ -142,5 +142,57 @@ describe('the memory store', () => {
     settings.subscribe(listener)();
     await settled();
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('the browser store', () => {
+  /** TableStorage over a Map, standing in for IndexedDB. */
+  const mapStorage = (saved = new Map<string, Array<Record<string, unknown>>>()): TableStorage & { saved: typeof saved } => ({
+    saved,
+    load: async (key) => saved.get(key),
+    save: async (key, rows) => {
+      saved.set(key, rows);
+    },
+  });
+
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('keeps each user\'s rows, under the table and user, and reads them back when the app loads again', async () => {
+    const storage = mapStorage();
+    const store = createBrowserStore('proteoscope', 'alice', storage);
+    expect(store.backend).toBe('browser');
+    await store.bookmarks.upsertMany([bookmark('b1'), bookmark('b2')]);
+    await store.bookmarks.remove({ id: 'b2' });
+    expect(storage.saved.size).toBe(0);
+    await jest.runOnlyPendingTimersAsync();
+    expect([...storage.saved.keys()]).toEqual(['app_proteoscope_bookmarks/alice']);
+
+    const reloaded = createBrowserStore('proteoscope', 'alice', storage);
+    await expect(reloaded.bookmarks.list()).resolves.toEqual([bookmark('b1')]);
+    await expect(createBrowserStore('proteoscope', 'bob', storage).bookmarks.list()).resolves.toEqual([]);
+  });
+
+  it('drops saved rows that no longer fit the schema, and starts empty when storage cannot be read', async () => {
+    const storage = mapStorage(new Map([['app_proteoscope_settings/alice', [
+      { user_id: 'alice', key: 'theme', value: 'dark', updated_at: '2026-10-06T12:00:00.000Z', retired: 1 },
+      { user_id: 'alice', key: 'zoom', value: 2, updated_at: 'yesterday' }
+    ]]]));
+    await expect(createBrowserStore('proteoscope', 'alice', storage).settings.list()).resolves.toEqual([setting('theme', 'dark')]);
+
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const broken: TableStorage = { load: () => Promise.reject(new Error('blocked')), save: async () => undefined };
+    await expect(createBrowserStore('proteoscope', 'alice', broken).settings.list()).resolves.toEqual([]);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('delivers saved rows to a subscriber first', async () => {
+    const storage = mapStorage(new Map([['app_proteoscope_settings/alice', [{ user_id: 'alice', ...setting('theme', 'dark') }]]]));
+    const seen: SettingRow[][] = [];
+    jest.useRealTimers();
+    createBrowserStore('proteoscope', 'alice', storage).settings.subscribe((rows) => seen.push(rows));
+    await settled();
+    expect(seen).toEqual([[setting('theme', 'dark')]]);
   });
 });

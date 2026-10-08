@@ -183,7 +183,8 @@ const unsubscribe = session.store.bookmarks.subscribe((rows) => render(rows));
   unset columns are `null`. `json` values are copied on the way in and out.
 - `subscribe` calls the listener with all rows (asynchronously) and again after every
   change, until you call the function it returns.
-- In v1 the store keeps rows in memory: they are gone when the app reloads. The sheet
+- Hosted, the store keeps rows in the browser's IndexedDB under the user's id, so they
+  survive a reload on the same browser; in mock mode they live in memory only. The sheet
   backend (`createSheetStore`, `sheetInputFor`) is a stub whose data methods throw
   `SheetStoreUnavailableError` until Cirro has tenant-level sheets private to each user.
 
@@ -205,14 +206,21 @@ const index = createDataIndex(session, {
 });
 index.onProgress((p) => showProgress(p.datasetsDone, p.datasetsTotal));
 session.store.fileList.subscribe((rows) => renderGallery(rows));
-await index.run(); // { projectsTotal, datasetsDone, datasetsSkipped, itemsFound, errors, ... }
+await index.run(); // { projectsTotal, datasetsDone, datasetsSkipped, datasetsFailed, itemsFound, errors, ... }
 const items = await index.items(); // file_list rows, newest dataset first
 ```
 
 - The launch project is indexed first; within a project, the newest datasets first. Only
   completed datasets are indexed; others are picked up once they complete.
 - A dataset already indexed under the detector's `version` is skipped (datasets are
-  immutable). One that failed is recorded with `status: 'error'` and retried next run.
+  immutable). One that failed in a way that will fail again (`isLastingFailure`: a 4xx
+  answer, files the detector cannot read) is recorded with `status: 'error'` and skipped
+  too, counted in `datasetsFailed`, until the version changes or `run({ retryFailed: true })`.
+  One that failed for a passing reason (network, session, 429 or 5xx) is counted in
+  `errors` and read again next run.
+- When an item the index found will not open, call `index.recordFailure(projectId,
+  datasetId, error)`: a lasting failure is recorded as above and the dataset's items leave
+  `fileList`, so the gallery stops offering them. It returns whether it recorded one.
 - At most `concurrency` datasets (default 4) are read at once. `run({ signal })` stops on
   abort and rejects with the abort reason; `run()` during a run returns that run.
   `run({ projectIds })` indexes only those projects.
