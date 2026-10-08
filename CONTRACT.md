@@ -336,8 +336,8 @@ A missing config row means "all projects, everything the app requests". The port
 defines this type in `src/app/data/services/app-catalog.service.ts`; it moves into this
 package when the admin API lands.
 
-The whole Apps feature is a preview: users turn it on in **Account → Developer
-Settings** (stored in the browser) until there is a tenant feature flag for it.
+The whole Apps feature is a preview, on by default: users can turn it off in **Account →
+Developer Settings** (stored in the browser) until there is a tenant feature flag for it.
 
 ## 11. Shared UX vocabulary
 
