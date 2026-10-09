@@ -9,6 +9,14 @@ the app's own data in per-user tables, and indexes what the user can open.
 kit, Cirro-tools (packaging) and the apps. The portal imports this package for the
 protocol types and guards, so both sides of the wire compile against one definition.
 
+Start a new app with `npx cirro-app init <folder>`: a page that connects to Cirro and lists
+the user's datasets, runnable on sample data with `?cirro-app=mock`
+([`templates/vanilla`](templates/vanilla)). To publish a built app to Cirro (the manifest,
+`cirro-app pack`, registering, private and public releases, versions per tenant), see
+[`docs/publishing.md`](docs/publishing.md). Draft Claude skills for integrating, reviewing
+and releasing an app are in [`skills/`](skills/). `cirro-app dev` and `cirro-app publish`
+are not available yet; they say what to do instead.
+
 ## Vendoring the kit
 
 Apps vendor a build of the kit rather than fetching it at runtime (CONTRACT.md section 8).

@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "files": [
-    "dist"
+    "bin",
+    "dist",
+    "templates"
   ],
+  "bin": {
+    "cirro-app": "bin/cirro-app.mjs"
+  },
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/types/index.d.ts",

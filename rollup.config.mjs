@@ -55,6 +55,17 @@ export default defineConfig([
       }),
     ],
   },
+  // The cirro-app command line, for Node: bin/cirro-app.mjs imports it.
+  {
+    input: 'src/cli.ts',
+    output: { file: 'dist/cli.mjs', format: 'esm' },
+    external: [/^node:/],
+    plugins: [
+      typescript({
+        compilerOptions: { composite: false, incremental: false, declaration: false, declarationMap: false, sourceMap: false },
+      }),
+    ],
+  },
   // For no-build apps: `hostedMode()` alone, so a page that is not hosted never loads the kit.
   {
     input: 'src/mode.ts',

@@ -23,10 +23,15 @@ export function appSheetName(appId: string, table: string): string {
   return `app_${appId}_${table}`;
 }
 
+/** Whether `value` can be an app name, which is also a folder name (section 1). */
+export function isAppFolderName(value: string): boolean {
+  return FOLDER_SEGMENT.test(value.trim());
+}
+
 /** `Apps/<App name>/<segments...>`; every segment must be a valid portal folder name. */
 export function appFolderPath(appName: string, ...segments: string[]): string {
   const parts = [APPS_FOLDER_ROOT, appName, ...segments].map((s) => s.trim()).filter(Boolean);
-  const invalid = parts.find((s) => !FOLDER_SEGMENT.test(s));
+  const invalid = parts.find((s) => !isAppFolderName(s));
   if (invalid) throw new Error(`Invalid folder name "${invalid}": use letters, digits, spaces, "_", "-" and ".".`);
   return parts.join('/');
 }

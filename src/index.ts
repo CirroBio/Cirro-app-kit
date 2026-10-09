@@ -5,6 +5,8 @@ export * from './conventions';
 export * from './errors';
 export type * from './types';
 export { KIT_VERSION } from './version';
+export { checkManifest, compareVersions, isSemver, MANIFEST_FILE } from './manifest';
+export type { AppFileType, AppManifest, ManifestCheck } from './manifest';
 export { connectToCirro } from './connect';
 export { createAppSession } from './session';
 export { createMockSession } from './mock';

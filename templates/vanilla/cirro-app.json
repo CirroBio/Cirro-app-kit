@@ -1,0 +1,10 @@
+{
+  "id": "myapp",
+  "name": "My App",
+  "version": "0.1.0",
+  "entry": "index.html",
+  "permissions": ["projects:read", "datasets:read", "files:read"],
+  "opens": [],
+  "description": "Lists the datasets in your Cirro projects.",
+  "license": "MIT"
+}
