@@ -17,6 +17,21 @@ the user's datasets, runnable on sample data with `?cirro-app=mock`
 and releasing an app are in [`skills/`](skills/). `cirro-app dev` and `cirro-app publish`
 are not available yet; they say what to do instead.
 
+## Where the kit lives
+
+The kit is developed in Cirro-portal (`packages/app-kit`), next to the portal that hosts
+apps, and mirrored with its history to
+[CirroBio/Cirro-app-kit](https://github.com/CirroBio/Cirro-app-kit) (private) for app
+developers. Change it in Cirro-portal, then update the mirror from there:
+
+```bash
+git subtree split --prefix=packages/app-kit -b app-kit-mirror
+git push git@github.com:CirroBio/Cirro-app-kit.git app-kit-mirror:main
+```
+
+Outside the portal it builds and tests with `npm install && npm run build && npm test`;
+`npm run lint` needs the portal's ESLint config.
+
 ## Vendoring the kit
 
 Apps vendor a build of the kit rather than fetching it at runtime (CONTRACT.md section 8).

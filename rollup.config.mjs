@@ -26,7 +26,7 @@ export default defineConfig([
       { file: 'dist/index.esm.js', format: 'esm', sourcemap: true },
     ],
     plugins: [
-      // With tsconfig-base's composite/incremental, a build after `rimraf dist` trusts the
+      // With tsconfig.json's composite/incremental, a build after `rimraf dist` trusts the
       // incremental state in .rollup.cache, emits no declarations for unchanged files, and
       // leaves dist/types empty (see packages/dashboard/rollup.config.mjs).
       typescript({ declarationDir: 'dist/types', outputToFilesystem: true, compilerOptions: { composite: false, incremental: false } }),
@@ -49,7 +49,7 @@ export default defineConfig([
     },
     plugins: [
       nodeResolve({ browser: true }),
-      // tsconfig-base's composite/incremental require declaration output, which this build does not make.
+      // tsconfig.json's composite/incremental require declaration output, which this build does not make.
       typescript({
         compilerOptions: { composite: false, incremental: false, declaration: false, declarationMap: false, sourceMap: false },
       }),
