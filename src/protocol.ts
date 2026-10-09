@@ -25,6 +25,8 @@ export interface AppTenant {
 export interface AppIdentity {
   id: string;
   name: string;
+  /** The version the host runs for this tenant (CONTRACT.md section 12); null in the dev mock. */
+  version: string | null;
 }
 
 /** What the app should show first; every field is optional. */
@@ -58,7 +60,7 @@ export type PortalTarget =
 interface AppEnvelope { source: typeof APP_SOURCE; version: typeof PROTOCOL_VERSION }
 interface HostEnvelope { source: typeof HOST_SOURCE; version: typeof PROTOCOL_VERSION }
 
-export type HelloMessage = AppEnvelope & { type: 'hello'; appId: string; appVersion: string | null; kitVersion: string };
+export type HelloMessage = AppEnvelope & { type: 'hello'; appId: string; appVersion: string | null; kitVersion: string | null };
 export type TokenRequestMessage = AppEnvelope & { type: 'token-request'; requestId: string };
 export type NavigateMessage = AppEnvelope & { type: 'navigate'; target: PortalTarget; newTab: boolean };
 export type ContextMessage = AppEnvelope & { type: 'context'; context: LaunchContext; title: string | null };
@@ -110,7 +112,7 @@ export function isPortalTarget(value: unknown): value is PortalTarget {
 function isAppSessionInit(value: unknown): value is AppSessionInit {
   if (!isObject(value)) return false;
   const { app, user, tenant, permissions } = value;
-  return isObject(app) && isNonEmptyString(app.id) && isNonEmptyString(app.name)
+  return isObject(app) && isNonEmptyString(app.id) && isNonEmptyString(app.name) && isNullableString(app.version)
     && isObject(user) && isNonEmptyString(user.id) && isNullableString(user.email) && isNullableString(user.name)
     && isObject(tenant) && isString(tenant.id) && isString(tenant.name)
     && isNonEmptyString(value.apiBasePath)
@@ -124,7 +126,7 @@ function isAppSessionInit(value: unknown): value is AppSessionInit {
 export function isAppMessage(data: unknown): data is AppMessage {
   if (!isObject(data) || data.source !== APP_SOURCE || data.version !== PROTOCOL_VERSION) return false;
   switch (data.type) {
-    case 'hello': return isNonEmptyString(data.appId) && isNullableString(data.appVersion) && isString(data.kitVersion);
+    case 'hello': return isNonEmptyString(data.appId) && isNullableString(data.appVersion) && isNullableString(data.kitVersion);
     case 'token-request': return isNonEmptyString(data.requestId);
     case 'navigate': return isPortalTarget(data.target) && typeof data.newTab === 'boolean';
     case 'context': return isLaunchContext(data.context) && isNullableString(data.title);

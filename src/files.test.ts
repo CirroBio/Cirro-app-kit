@@ -31,7 +31,7 @@ function setup(answers: Record<string, Answer>): { files: ReturnType<typeof crea
   const api = createApis({ basePath: 'https://tenant.example/api', accessToken: async () => 'token', permissions: new Set(ALL_APP_PERMISSIONS), fetchApi });
   const files = createDatasetFiles({
     api,
-    app: { id: 'cytoweave', name: 'CytoWeave' },
+    app: { id: 'cytoweave', name: 'CytoWeave', version: '1.0.0' },
     portalUrl: (target) => `https://tenant.example/${JSON.stringify(target)}`,
     objects: s3Objects,
   });

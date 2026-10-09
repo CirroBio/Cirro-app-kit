@@ -4,7 +4,7 @@ import { createAppSession } from './session';
 const HOUR = 3_600_000;
 
 const init = (accessTokenExpiresAt: number): AppSessionInit => ({
-  app: { id: 'cytoweave', name: 'CytoWeave' },
+  app: { id: 'cytoweave', name: 'CytoWeave', version: '1.0.0' },
   user: { id: 'u1', email: null, name: null },
   tenant: { id: 't1', name: 'Tenant' },
   apiBasePath: 'https://tenant.example/api',

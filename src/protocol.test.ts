@@ -5,7 +5,7 @@ import {
 } from './protocol';
 
 const session: AppSessionInit = {
-  app: { id: 'proteoscope', name: 'Proteoscope' },
+  app: { id: 'proteoscope', name: 'Proteoscope', version: '0.7.0' },
   user: { id: 'u1', email: 'u1@example.com', name: null },
   tenant: { id: 't1', name: 'Tenant' },
   apiBasePath: 'https://tenant.example/api',
@@ -29,6 +29,17 @@ describe('message guards', () => {
     expect(isAppMessage({ ...hello, type: 'shutdown' })).toBe(false);
     expect(isAppMessage(null)).toBe(false);
     expect(isAppMessage('hello')).toBe(false);
+  });
+
+  it('accepts a hello from an app that does not use the kit', () => {
+    expect(isAppMessage(appMessage<HelloMessage>({ type: 'hello', appId: 'cytoweave', appVersion: '0.8.0', kitVersion: null }))).toBe(true);
+    expect(isAppMessage(appMessage({ type: 'hello', appId: 'cytoweave', appVersion: '0.8.0', kitVersion: 1 } as never))).toBe(false);
+  });
+
+  it('requires the app version in init, which is null only in the dev mock', () => {
+    expect(isHostMessage(hostMessage<InitMessage>({ type: 'init', session: { ...session, app: { ...session.app, version: null } } }))).toBe(true);
+    const { version: _version, ...withoutVersion } = session.app;
+    expect(isHostMessage(hostMessage({ type: 'init', session: { ...session, app: withoutVersion } } as never))).toBe(false);
   });
 
   it('rejects an init with an unknown permission or a missing token', () => {

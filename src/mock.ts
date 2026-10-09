@@ -52,7 +52,7 @@ export function createMockSession(appId: string, fixtures: MockFixtures): AppSes
   return createSession({
     mode: 'mock',
     init: {
-      app: { id: appId, name: fixtures.appName },
+      app: { id: appId, name: fixtures.appName, version: null },
       user,
       tenant: { id: 'mock', name: 'Mock tenant', ...fixtures.tenant },
       apiBasePath: `${MOCK_ORIGIN}${API_PATH}`,

@@ -13,7 +13,7 @@ const HOUR = 3_600_000;
 
 function sessionInit(overrides: Partial<AppSessionInit> = {}): AppSessionInit {
   return {
-    app: { id: 'proteoscope', name: 'Proteoscope' },
+    app: { id: 'proteoscope', name: 'Proteoscope', version: '0.7.0' },
     user: { id: 'u1', email: 'u1@example.com', name: 'User One' },
     tenant: { id: 't1', name: 'Tenant' },
     apiBasePath: `${ORIGIN}/api`,
@@ -73,7 +73,7 @@ describe('the handshake', () => {
     host.deliver(hostMessage<InitMessage>({ type: 'init', session: sessionInit() }));
     const session = await connecting;
     expect(session.mode).toBe('portal');
-    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope' });
+    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope', version: '0.7.0' });
     expect(session.launch).toEqual({ projectId: 'p1' });
     expect(session.can('projects:read')).toBe(true);
     expect(session.can('files:read')).toBe(false);
@@ -122,7 +122,7 @@ describe('the handshake', () => {
   it('refuses a session for another app', async () => {
     const host = fakeHost();
     const connecting = connectToHost(host.windows, { appId: 'proteoscope' });
-    host.deliver(hostMessage<InitMessage>({ type: 'init', session: sessionInit({ app: { id: 'cytoweave', name: 'CytoWeave' } }) }));
+    host.deliver(hostMessage<InitMessage>({ type: 'init', session: sessionInit({ app: { id: 'cytoweave', name: 'CytoWeave', version: '1.0.0' } }) }));
     await expect(connecting).rejects.toThrow('Cirro sent a session for the app "cytoweave", but this is "proteoscope".');
   });
 });
@@ -314,7 +314,7 @@ describe('hostedMode and connectToCirro', () => {
     stubWindow('?cirro-app=mock', false);
     const session = await connectToCirro({ appId: 'proteoscope', mock: async () => ({ appName: 'Proteoscope', projects: [] }) });
     expect(session.mode).toBe('mock');
-    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope' });
+    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope', version: null });
   });
 
   it('needs fixtures for a mock session', async () => {

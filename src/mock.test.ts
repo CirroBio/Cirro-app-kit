@@ -33,7 +33,7 @@ describe('a mock session', () => {
   it('is made from the fixtures', () => {
     const session = createMockSession('proteoscope', fixtures());
     expect(session.mode).toBe('mock');
-    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope' });
+    expect(session.app).toEqual({ id: 'proteoscope', name: 'Proteoscope', version: null });
     expect(session.user).toEqual({ id: 'dev', email: 'mock.user@example.com', name: 'Dev User' });
     expect(session.tenant).toEqual({ id: 'mock', name: 'Mock tenant' });
     expect(session.launch).toEqual({ projectId: 'p1', datasetId: 'd1' });

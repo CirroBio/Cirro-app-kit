@@ -29,7 +29,10 @@ two sides of the wire compile against one definition.
   folder root (`Apps/<App name>/`), so it is limited to the portal's folder-segment
   characters `[A-Za-z0-9 _.-]`.
 
-The v1 catalog is hardcoded in the portal:
+- **App ids are global and never reused**: an app that is withdrawn keeps its id
+  (section 10).
+
+The catalog comes from the app registry (section 10). Its first three apps:
 
 | App id | App name | Tool |
 |---|---|---|
@@ -75,7 +78,7 @@ Envelope: `{ source: 'cirro-app' | 'cirro-app-host', version: 1, type, ... }`.
 
 | type | fields | meaning |
 |---|---|---|
-| `hello` | `appId`, `appVersion`, `kitVersion` | I am loaded and want a session. Re-sent every 250 ms until `init` arrives. |
+| `hello` | `appId`, `appVersion`, `kitVersion` | I am loaded and want a session. Re-sent every 250 ms until `init` arrives. `appVersion` is the app's own claim, shown but not trusted; `kitVersion` is null for an app that does not use the kit. |
 | `token-request` | `requestId` | My access token expires soon; send a fresh one. |
 | `navigate` | `target`, `newTab` | Open a portal page (a project, a dataset, another app). |
 | `context` | `context`, `title` | I am now showing this; reflect it in the portal URL and tab title. |
@@ -92,7 +95,7 @@ Envelope: `{ source: 'cirro-app' | 'cirro-app-host', version: 1, type, ... }`.
 
 ```
 app                                   host (/apps/<appId>)
- |-- hello ------------------------------>|  resolve catalog entry, effective permissions
+ |-- hello ------------------------------>|  resolve the app, running version, permissions
  |<------------------------------- init --|  token, user, tenant, launch, permissions
  |   ... API calls with the token ...     |
  |-- token-request (60 s before expiry) ->|  authProvider.getAccessToken()
@@ -127,8 +130,8 @@ app                                   host (/apps/<appId>)
 
 ## 4. Permissions
 
-An app asks for permissions in its catalog entry; an admin can narrow them (section 10);
-the host sends the **effective** set in `init`.
+An app asks for permissions in its manifest (section 12); the tenant admin reviews and
+allows them (section 10); the host sends the **effective** set in `init`.
 
 | Permission | Covers |
 |---|---|
@@ -145,10 +148,10 @@ the model covers to the one permission it needs, and returns `null` for everythi
 else. **Unmapped requests are denied**, so adding an endpoint to an app is an explicit
 change to this table.
 
-Effective permissions = requested ∩ the tenant's allowance. An app whose effective set
-is empty, that is turned on for no projects, or that is turned on for selected projects
-and was launched without one of them as its `projectId`, is not loaded: the host shows
-why instead of the iframe.
+Effective permissions = what the running version requests ∩ what the tenant admin
+allowed. An app that is not enabled in its launch project, or (launched without a
+project) not enabled in any project the user can see, is not loaded: the host shows why
+instead of the iframe (section 10).
 
 **Enforcement in v1 is cooperative.** The kit installs `permissionForRequest` as API
 client middleware and throws `AppPermissionError` before an uncovered or ungranted
@@ -161,9 +164,8 @@ per-app limits need both of these, and are future work:
 2. tokens scoped to the app (e.g. a delegated `AppRegistration` per app), or the host
    proxying API calls and checking each one.
 
-The same holds for project scope: an app turned on for selected projects is gated by its
-launch project, but once loaded it can reach every project its user can, including ones
-it is not turned on for.
+The same holds for project scope: an app is gated by its launch project, but once
+loaded it can reach every project its user can, including ones it is not enabled in.
 
 ## 5. App data storage
 
@@ -316,25 +318,72 @@ output folder is one item. `kind` is the app's own vocabulary (`fcs`, `structure
   `http://localhost:8001/tools/<appId>/`, set `VITE_TOOLS_ENDPOINT=http://localhost:8001`
   in the portal's `.env.local`, and open `http://localhost:8000/apps/<appId>`.
 
-## 10. Administration (stubs in v1)
+## 10. Registry and enablement
 
-Tenant admins configure each app on **System → Apps** (`/system/app-catalog`): which
-projects it opens in, and what it may do. Project pages only list the apps that open
-there. v1 has the screen and the data shape but nothing is persisted: there is no
-backend endpoint yet, so changes last until the portal tab reloads.
+Who may offer an app, to whom, and where it is turned on. This is the design the backend
+is to implement; until then the portal mocks it (`src/app/data/services/app-registry.service.ts`,
+kept in the browser's localStorage) behind the screens described here.
 
-```ts
-interface TenantAppConfig {
-  appId: string;
-  allowedPermissions: AppPermission[];
-  projectScope: 'all' | 'none' | 'selected';
-  projectIds: string[]; // the projects a 'selected' app opens in
-}
+### Records
+
+| Record | Set by | Fields |
+|---|---|---|
+| Developer account | itself (email sign-in on the registry site) | email, name |
+| Organization | its admins | name, admins, members |
+| App | its owner: a user, or any admin or member of the owning organization | id, `toolId`, name, description, logo, provider, license (SPDX id or `commercial`), support contact, visibility (`private` / `public`), state (`active` / `withdrawn`) |
+| Version | owner; review by Cirro | version, manifest (section 12), bundle name, size and sha-256, check results, review state (public apps) |
+| Tenant grant | owner, private apps only | tenant URL, scope (`all` / `selected` + project ids) |
+| Version assignment | owner, any app | tenant URL, version |
+| Tenant installation | tenant admin | scope (`all` / `selected` + project ids), `reviewedPermissions`, `allowedPermissions`, `runningVersion` |
+| Project opt-out | project admin | project id |
+
+### Releases
+
+- **Private apps** are released to the tenants the owner grants, each for all projects
+  or listed ones, without review.
+- **Public apps** are released to every tenant, for all projects, once Cirro has
+  approved one of their versions; each later version is reviewed too.
+- **Version offered to a tenant:** the owner's version assignment for it if any.
+  Otherwise the newest approved version (public apps) or the newest version (private
+  apps). An assigned version of a public app that Cirro has not approved is labeled
+  as not reviewed.
+
+### Installation
+
+A tenant admin adds an app from the catalog of public apps, or by typing a private
+app's exact id (no suggestions). An id that is not released to the tenant gets the same
+answer as one that does not exist.
+
+- **Scope:** all projects, or selected ones. Either way, only projects the release
+  covers.
+- **Permissions:**
+  - The admin reviews the version's requested permissions and allows some or all of
+    them.
+  - `reviewedPermissions` records what they have seen; `allowedPermissions` records
+    what they allowed.
+- **Running version:** the installation runs `runningVersion`.
+  - When the offered version changes, the installation moves to it at once if
+    everything it requests has been reviewed.
+  - Otherwise it keeps the old version, and the admin sees an update waiting for
+    review.
+- **When a release is withdrawn or narrowed,** the installation remains, shown as no
+  longer available or with the projects it lost.
+
+### The rule
+
+```
+enabled(app, project) = app active
+                    AND released to the tenant, covering the project
+                    AND installed, covering the project
+                    AND not opted out in the project
+                    AND (running version's requested ∩ allowedPermissions) is not empty
+launchable(app)       = enabled in at least one project the user can see
 ```
 
-A missing config row means "all projects, everything the app requests". The portal
-defines this type in `src/app/data/services/app-catalog.service.ts`; it moves into this
-package when the admin API lands.
+An app opened from a project needs `enabled(app, project)`; one opened without a project
+needs `launchable(app)`. Project admins (and tenant admins, who are project admins
+everywhere) may opt an app out of their project; the tenant admin sees opt-outs but
+does not override them.
 
 The whole Apps feature is a preview, on by default: users can turn it off in **Account →
 Developer Settings** (stored in the browser) until there is a tenant feature flag for it.
@@ -362,3 +411,46 @@ The three apps look like themselves, but they speak about Cirro the same way:
 - **Open in Cirro** — a link from anything loaded to its dataset in the portal.
 - Standalone, local files keep working ("Open file…") as before. Hosted, they go
   through **Upload…**, so what the user works on is in Cirro.
+
+## 12. Manifest, versions and packing
+
+Every bundle has `cirro-app.json` at its root (`MANIFEST_FILE`). The kit exports its
+type (`AppManifest`) and checker (`checkManifest`), which the registry runs on upload and
+the CLI runs before packing.
+
+```json
+{
+  "id": "cytoweave",
+  "name": "CytoWeave",
+  "version": "0.9.0",
+  "entry": "index.html",
+  "permissions": ["projects:read", "datasets:read", "files:read", "datasets:write"],
+  "opens": [{ "extension": "fcs", "label": "Flow cytometry" }, { "extension": "cwz" }],
+  "description": "Flow cytometry analysis in the browser.",
+  "homepage": "https://github.com/robert-mcdermott/cytoweave",
+  "license": "Apache-2.0"
+}
+```
+
+| Field | Rule |
+|---|---|
+| `id` | the app id (section 1) |
+| `name` | the app name (section 1), no spaces at either end |
+| `version` | semantic version; each upload must be greater than the app's previous versions (`compareVersions`) |
+| `entry` | the page the portal loads, a path inside the bundle |
+| `permissions` | what the app asks for (section 4), each once |
+| `opens` | file types the portal offers to open with the app: lowercase extension without the dot, optional label; may be empty |
+| `description`, `homepage`, `license` | optional strings; `license` is an SPDX id or `commercial` |
+
+Unknown fields are errors, so a misspelled field is caught.
+
+- **`init.session.app.version`** is the version the host runs for the tenant (section
+  10); null in the dev mock. In the portal demo it is a label: Cirro-tools serves one
+  build per tool, whatever the version.
+- **Packing:**
+  - `cirro-app init <dir>` starts an app from the kit's template (`templates/vanilla`),
+    with the kit's builds vendored and the folder's name as its app ID.
+  - `cirro-app validate [dir]` checks the manifest and that `entry` exists.
+  - `cirro-app pack [dir] [--out file]` then writes `<id>-<version>.zip` with every
+    file but dotfiles, manifest at the root, deterministic bytes.
+  - The CLI ships in this package (`bin/cirro-app.mjs`) and needs only Node.
