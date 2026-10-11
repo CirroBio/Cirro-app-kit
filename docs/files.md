@@ -44,6 +44,12 @@ The manifest also carries `viz`, `tables` and `artifacts` for datasets that prod
 
 Signing options: `download` (sets a Content-Disposition filename), `filename`, `gzip` (requests gzip encoding), `timeout` (minutes), `region`.
 
+Reading part of a large file (a `.zarr.zip`, `.h5ad`, BAM) by range from a signed URL:
+
+- Don't send HEAD: the presigned URL is for GET only, and HEAD is refused. Take the file's length from the dataset manifest, or from the `Content-Range` of a `bytes=0-0` GET.
+- Expect 206 for every ranged read.
+- On 401 or 403, the URL has expired. Re-sign once, shared by all in-flight reads, and retry.
+
 For libraries that fetch by path or with range requests (Zarr, OME-TIFF, genome tracks), signing each URL yourself is impractical. [Viewers](viewers.md#libraries-that-fetch-files-themselves) covers the three approaches: `patchFetch` for libraries that use `fetch`, a function-valued URL for igv.js, and a fetch override for `@gmod` readers. Outside `ViewerProvider`, give the library a custom fetch or URL resolver that calls `getSignedUrlFromProjectPath` per request.
 
 ## Uploading
