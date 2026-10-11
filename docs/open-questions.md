@@ -7,13 +7,13 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | Does a registered Public App's client ID belong to the same Cognito user pool `/info/system` reports, so `AmplifyAuthProvider(clientId)` works with it? | Both templates; [authentication](authentication.md) |
 | What is the API base URL for standalone apps: `https://<tenant>/api` (React packages) or `https://api.<tenant>` (Python client)? | [Calling the API](calling-the-api.md); deploy config |
 | Do the Cirro API and `/info/system` accept CORS requests from registered external origins? | Standalone apps without a proxy |
-| Do project buckets allow CORS from registered app origins, or does each origin need an admin change? | [Files](files.md); standalone viewers |
+| Do project buckets allow CORS from a registered app's production origin, or does each origin need an admin change? (On dev.cirro.bio, `http://localhost` dev origins work for signed GETs, ranged reads and uploads.) | [Files](files.md); standalone viewers |
 | What `principalType` does the UI set for a Public App? | Scripted registration in [app types and registration](app-types-and-registration.md) |
 | Which permissions do file reads need, and is `GENERATE_DOWNLOAD_TOKEN` among them? | Registration guidance |
 | Access-token lifetime and refresh-token rotation for Public Apps | Session behavior |
 | Is the image viewer in `Cirro-client-ts` the recommended starting point, and are more examples planned? | [Viewers](viewers.md) |
 | Which permissions gate each capability in the [capability map](building-on-cirro.md#capability-map)? The mapping is inferred from permission names | Registration guidance |
-| Do discussions of type `NOTES` created through the API appear as notes in the Cirro UI? | [Provenance notes](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates) |
+| Do discussions of type `NOTES` created through the API appear as notes in the Cirro UI? (They are created and read back through the API on dev.cirro.bio.) | [Provenance notes](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates) |
 | Can a delegated user token register custom pipelines, or is that limited to admins and maintainers? | [Apps that ship their own pipeline](building-on-cirro.md#an-app-that-ships-its-own-pipeline) |
 | Which OAuth scopes can a Public App registration allow, and who sets them? (On dev.cirro.bio: only `openid`, and the registration API has no scopes field.) | [Authentication](authentication.md#amplifyauthprovider) |
 | Which registration permission lets an app read the signed-in user's own role? (`getUser` on self is refused with "Not allowed to MANAGE_MEMBERS" for a project-scoped app.) | [Permissions](permissions.md#checking-before-offering-an-action) |

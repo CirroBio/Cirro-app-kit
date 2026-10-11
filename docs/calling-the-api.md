@@ -53,7 +53,7 @@ List endpoints that page return `{ data, nextToken }`. Pass `nextToken` back to 
 
 The sdk turns any non-2xx response into an `ApiError`, with the server's `message` and a list of field `errors`. Show `message` to users and log `errors`.
 
-`ApiError` doesn't include the HTTP status code (a [known issue](packages.md#known-issues)), so code using `DataService` can't tell a 403 from any other failure. Where the app needs to react to a refusal (hiding a feature, explaining who can fix it), make that call through an API class configured without the sdk's error handler. The generated client then throws a `ResponseError` that carries the response:
+`ApiError` doesn't include the HTTP status code (a [known issue](packages.md#known-issues)), so code using `DataService` can't tell a 403 from any other failure by status. A refused permission does say so in the message, which names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio), and that's enough to explain a refusal to the user. Where the app needs to react to a refusal (hiding a feature, explaining who can fix it), make that call through an API class configured without the sdk's error handler. The generated client then throws a `ResponseError` that carries the response:
 
 ```typescript
 import { Configuration, ResponseError, ExecutionApi } from "@cirrobio/api-client";

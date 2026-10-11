@@ -44,6 +44,13 @@ The manifest also carries `viz`, `tables` and `artifacts` for datasets that prod
 
 Signing options: `download` (sets a Content-Disposition filename), `filename`, `gzip` (requests gzip encoding), `timeout` (minutes), `region`.
 
+File credentials:
+
+- `FileService` caches project read credentials per instance, so create one per app (as `DataService` is), not one per component.
+- `/projects/{id}/s3-token` can answer 429 when several requests arrive at once. This was seen on dev.cirro.bio with several apps signed in as one user. Retry 429s with backoff.
+
+`FileSystemObject`s from `ManifestParser` carry `path`, which is the file's **folder**, and `relativePath`, which is the file's path within the dataset. Match files on `relativePath`; matching on `path` silently finds nothing.
+
 Reading part of a large file (a `.zarr.zip`, `.h5ad`, BAM) by range from a signed URL:
 
 - Don't send HEAD: the presigned URL is for GET only, and HEAD is refused. Take the file's length from the dataset manifest, or from the `Content-Range` of a `bytes=0-0` GET.
