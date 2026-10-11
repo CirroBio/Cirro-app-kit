@@ -104,7 +104,7 @@ Things to get right:
 - **Mount exactly what's needed.** `mountedDatasets` decides what the user sees; mount the datasets the app is working with, not the whole project.
 - **Pick the environment deliberately.** `getWorkspaceEnvironments` lists what's available, with default compute; let the user confirm size if it affects cost.
 
-Booting takes minutes, workspaces cost money until they stop, and the user can be kept in the app by embedding the workspace in an iframe. [Workspaces](workspaces.md) covers the boot experience, embedding, auto-stop and getting results back.
+Booting takes minutes, each user can have only a few workspaces per project, workspaces open in a new tab (they can't be embedded in another site), and they cost money until they stop. [Workspaces](workspaces.md) covers all of it.
 
 ### Provenance by default: notes on everything the app creates
 

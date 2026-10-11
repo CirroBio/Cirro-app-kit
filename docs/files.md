@@ -28,7 +28,7 @@ import { ManifestParser } from "@cirrobio/sdk";
 const manifest = await data.datasets.getDatasetManifest({ projectId, datasetId });
 const assets = new ManifestParser(manifest, ctx).generateAssets();   // pass true to include folder entries
 assets.totalSize;            // human-readable, e.g. "1.2 GB"
-assets[0].name; assets[0].path; assets[0].size; assets[0].kind; assets[0].url;  // url is s3://...
+assets[0].name; assets[0].relativePath; assets[0].size; assets[0].kind; assets[0].url;  // url is s3://...; path is the folder
 ```
 
 The manifest also carries `viz`, `tables` and `artifacts` for datasets that produce them, and a `domain` for the bucket. Prefer `manifest.domain` over `getProjectS3Bucket(projectId)`, which the SDK marks for deprecation.

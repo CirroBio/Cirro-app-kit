@@ -18,6 +18,7 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | Which OAuth scopes can a Public App registration allow, and who sets them? (On dev.cirro.bio: only `openid`, and the registration API has no scopes field.) | [Authentication](authentication.md#amplifyauthprovider) |
 | Which registration permission lets an app read the signed-in user's own role? (`getUser` on self is refused with "Not allowed to MANAGE_MEMBERS" for a project-scoped app.) | [Permissions](permissions.md#checking-before-offering-an-action) |
 | Why does `calculatePipelineCost` return `totalCost: null` ("Cost not available") for every pipeline on dev.cirro.bio? | [Building on Cirro](building-on-cirro.md#capability-map) |
+| Can Cirro add registered app origins to workspace servers' `frame-ancestors`, so apps can embed workspaces? (Today: `'self'`, the portal and `http://localhost:8000` only.) | [Workspaces](workspaces.md#handing-the-user-into-the-workspace) |
 | What is Cirro's role-to-permission mapping (`OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR`)? Apps need it to gate features before calling | [Permissions](permissions.md#checking-before-offering-an-action) |
 | Is an app's effective access the intersection of its registered permissions and the user's role? | [Permissions](permissions.md) |
 | Can a 403 response tell the app whether the registration or the user's role refused the action? | [Permissions](permissions.md#the-server-has-the-final-word) |
@@ -31,5 +32,3 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | What do sheet mappings to a target entity do once saved? | [Sheets](sheets.md#concepts) |
 | Will the sdk's `ApiError` carry the HTTP status code? | [Known issues](packages.md#known-issues) |
 | Does the magic-link handler's `CALLBACK_URLS` include registered Public App origins, so emailed sign-in links can return to an external app? | [Authentication](authentication.md#amplifyauthprovider) |
-| Does a workspace's `connectionUrl` allow framing from a registered app's origin, and which origin does it use? | [Workspaces](workspaces.md#embedding-in-an-iframe) |
-| How long does a workspace typically take to reach `RUNNING`, per environment? | [Workspaces](workspaces.md#booting-takes-minutes-say-so) |

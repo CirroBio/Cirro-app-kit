@@ -18,7 +18,7 @@ sequenceDiagram
   end
   App->>API: connectWorkspace
   API-->>App: connectionUrl, expiresAt
-  App->>WS: iframe src = connectionUrl (or a new tab)
+  App->>WS: open connectionUrl in a new tab
   loop while the user is active
     App->>API: postponeAutoStop(autoStopTimeout)
   end
@@ -28,7 +28,7 @@ sequenceDiagram
 
 ## Booting takes minutes; say so
 
-Starting a workspace usually takes a few minutes: the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
+Starting a workspace usually takes a few minutes (`cirro-jupyter-minimal` took 3 min 52 s on dev.cirro.bio): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
 
 - Before starting, say how long it will take ("Starting a workspace takes a few minutes") and what it will cost if the compute choice affects that.
 - While it boots, show the elapsed time and the current `statusMessage`, and let the user keep working elsewhere in the app. Don't block the whole UI.
@@ -42,19 +42,21 @@ Cirro limits how many workspaces one user can have in a project (5 on dev.cirro.
 - Reuse first, as above. An app should rarely need more than one workspace per purpose.
 - At the limit, don't just show the error. List the user's workspaces in the project, with their names, status and last start, and offer to reuse one or delete one the user picks. Deleting needs the user's explicit confirmation, because files inside a workspace that weren't saved to the project are lost with it.
 
-## Embedding in an iframe
+## Handing the user into the workspace
 
-An app can keep the user in context by showing the workspace inside its own page:
+Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. Confirmed on dev.cirro.bio, 2026-10-11, by two apps. Embedding would need Cirro to allow app origins; see [open questions](open-questions.md).
 
-```tsx
-const { connectionUrl } = await dataService.workspaces.connectWorkspace({ projectId, workspaceId });
-return <iframe src={connectionUrl} title="Workspace" style={{ width: "100%", height: "100%", border: 0 }}
-               allow="clipboard-read; clipboard-write" />;
+```ts
+async function openWorkspace(projectId: string, workspaceId: string) {
+  const tab = window.open("", "_blank");   // during the click, or popup blockers win
+  const { connectionUrl } = await dataService.workspaces.connectWorkspace({ projectId, workspaceId });
+  if (tab) tab.location.href = connectionUrl;
+}
 ```
 
-- Call `connectWorkspace` when the iframe is about to load, not ahead of time: the URL expires at `expiresAt`.
-- Always offer "Open in new tab" next to the iframe. Whether the workspace's server allows framing from your origin is [not yet confirmed](open-questions.md), and some tools (RStudio, VS Code) behave better in a full tab anyway. If the iframe fails to load, fall back to the tab.
-- Add the workspace's origin to your CSP `frame-src` (see [deployment](deployment.md)).
+- Call `connectWorkspace` on every click. `connectionUrl` carries a single-use `cirro-authenticate` code and expires about 5 minutes after it's issued (`expiresAt`), so never cache or reuse one.
+- Open the tab synchronously in the click handler, then set its location once `connectWorkspace` returns. Otherwise browsers block the late `window.open`.
+- Keep the workspace's state in your own UI while the user works in the other tab: status, auto-stop time, and buttons to extend, stop, and open again.
 
 ## Auto-stop
 
