@@ -5,7 +5,7 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | Question | Affects |
 | --- | --- |
 | Does a registered Public App's client ID belong to the same Cognito user pool `/info/system` reports, so `AmplifyAuthProvider(clientId)` works with it? | Both templates; [authentication](authentication.md) |
-| Does a Public App allow every scope `AmplifyAuthProvider` requests, including `aws.cognito.signin.user.admin`? | [Authentication](authentication.md) |
+| Which OAuth scopes does a new Public App registration allow by default, and can the registrant set them? (On dev.cirro.bio, 2026-10-10: only `openid`.) Does the Cirro API accept an access token issued with `openid` alone? | [Authentication](authentication.md#amplifyauthprovider) |
 | What is the API base URL for standalone apps: `https://<tenant>/api` (React packages) or `https://api.<tenant>` (Python client)? | [Calling the API](calling-the-api.md); deploy config |
 | Do the Cirro API and `/info/system` accept CORS requests from registered external origins? | Standalone apps without a proxy |
 | Do project buckets allow CORS from registered app origins, or does each origin need an admin change? | [Files](files.md); standalone viewers |

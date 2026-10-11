@@ -4,6 +4,7 @@ import { AppConfigProvider } from "@cirrobio/react-core";
 import { AmplifyAuthProvider, AuthenticationContextProvider, LoginWrapper } from "@cirrobio/react-auth";
 import { config, configProblems } from "./config";
 import { ConfigError } from "./ConfigError";
+import { ConfigGate } from "./ConfigGate";
 import { App } from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
@@ -16,11 +17,13 @@ if (configProblems.length) {
   root.render(
     <React.StrictMode>
       <AppConfigProvider apiBasePath={config.api} authProvider={auth}>
-        <AuthenticationContextProvider fetchUserInfo>
-          <LoginWrapper>
-            <App />
-          </LoginWrapper>
-        </AuthenticationContextProvider>
+        <ConfigGate>
+          <AuthenticationContextProvider fetchUserInfo>
+            <LoginWrapper>
+              <App />
+            </LoginWrapper>
+          </AuthenticationContextProvider>
+        </ConfigGate>
       </AppConfigProvider>
     </React.StrictMode>
   );
