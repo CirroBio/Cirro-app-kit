@@ -52,7 +52,7 @@ const url = await fileService.getSignedUrlFromProjectPath(fileAccessContext, "da
 
 ## Libraries that fetch files themselves
 
-Viewers like Zarr, OME-TIFF and genome-track readers take a URL and make their own requests, often ranged or relative, so you can't sign each request yourself. How to sign them depends on how the library makes requests.
+Viewers like Zarr, OME-TIFF and genome browsers take a URL and make their own requests, often ranged or relative, so you can't sign each request yourself. How to sign them depends on how the library makes requests.
 
 **Libraries that use `fetch`** (zarrita, geotiff.js): set `patchFetch` on `ViewerProvider` and give the library `getPatchedSignUrl(s3Url)`:
 
@@ -63,20 +63,30 @@ const store = new FetchStore(getPatchedSignUrl(zarr.url));
 
 `getPatchedSignUrl` prefixes the S3 URL with `https://sign/`. The patched global `fetch` recognizes the prefix, signs the request with project credentials, and forwards it with its headers, so range requests keep working.
 
-**Libraries that use `XMLHttpRequest`** never pass through the patched `fetch`. igv.js is one (3.8.9 loads through its own `XMLHttpRequest` wrapper), but it accepts a function as a track's `url` and calls it before every request, so each ranged read gets a freshly signed URL:
+**Genome browsers.** JBrowse 2 (`@jbrowse/react-linear-genome-view2`, verified with 4.3.0) reads every file through an *internet account* when one claims the file's location. Register one in a small runtime plugin that claims `s3://` URIs and signs each request just before it's made. Signing is local once the sdk has project credentials, so it adds no network round trip, and long sessions never meet an expired URL:
 
-```tsx
-const sign = (file: FileSystemObject) => () => fileService.getSignedUrlFromProjectFile(file);
-igv.createBrowser(div, {
-  genome: "hg38",
-  tracks: [{
-    type: "alignment", format: "bam", name: bam.name,
-    url: sign(bam),
-    // Indexes are read once per track, so one signed URL with a longer timeout (minutes) is enough.
-    indexURL: await fileService.getSignedUrlFromProjectFile(bai, { timeout: 60 }),
-  }],
-});
+```ts
+const stateModel = InternetAccount.named("CirroProjectFilesAccount")
+  .props({ type: types.literal("CirroProjectFilesAccount"), configuration: ConfigurationReference(configSchema) })
+  .views(() => ({ handlesLocation: (loc: UriLocation) => loc.uri.startsWith("s3://") }))
+  .actions(() => ({
+    async getToken() { return "signed-per-request"; },   // the signed URL is the credential
+    getFetcher(loc: UriLocation) {
+      return async (_input: RequestInfo | URL, init?: RequestInit) => fetch(await signUrl(loc.uri), init);
+    },
+  }));
 ```
+
+Give tracks locations like `{ uri: file.url, locationType: "UriLocation", internetAccountId: "cirro-project-files" }`, where `file.url` is the manifest file's `s3://` URL. Pass the account in `internetAccounts`, the plugin in `plugins`, and create the view **without** a web-worker RPC (the default for `createViewState`): the account's fetcher calls back into the app, which a worker can't do. `signUrl(s3Url)` is `fileService.getSignedUrlFromProjectFile(file)`. A file outside the dataset's manifest (another dataset in the project, or `s3://pubweb-references/…`) signs the same way with `{ url, fileAccessContext: ProjectFileAccessContext.projectDownload({ id: projectId }) }`.
+
+Gotchas:
+- **Don't close tracks you'll keep.** Closing a track aborts its reads, and an unindexed file (BED, small VCF) aborted mid-download stays stuck in its adapter. Hide only the tracks that leave; reorder the rest with `view.moveTrackToBottom(track.id)`, which takes the open track's instance `id`, not the configuration's `trackId`.
+- **Layout callbacks:** the view measures its width with a resize observer, which doesn't run in a hidden or background tab. `view.initialized` stays false there; that's expected.
+- **Whole-file formats** (BedAdapter, VcfAdapter) download the entire file into memory. Prefer indexed files (bigBed, tabix) above a few tens of MB.
+- **Figures:** `renderToSvg(view, { rasterizeLayers: false })` from `@jbrowse/plugin-linear-genome-view` returns the view as SVG for the figure builder. Its `viewBox` is wider than its `width`; scale by the viewBox. View highlights (`view.setHighlight`) are not in the SVG (checked in 4.3.0).
+- **CSP:** `connect-src` for the project bucket plus the assemblies' hosts (`https://hgdownload.soe.ucsc.edu` for UCSC `.2bit` and contig aliases, `https://jbrowse.org` for the hosted human gene tracks and search indexes). No `worker-src` without the worker RPC.
+
+igv.js (3.8.9) loads through its own `XMLHttpRequest` wrapper, which `patchFetch` never reaches. Instead, give each track's `url` as a function, `() => fileService.getSignedUrlFromProjectFile(file)`; igv calls it before every request. Sign `indexURL` once with a longer `timeout`.
 
 **Libraries with a pluggable fetch.** `@gmod/tabix`, `@gmod/bam` and `@gmod/bbi` read through `generic-filehandle2`'s `RemoteFile`, which takes a `fetch` override, so you can sign each read without patching the global:
 
