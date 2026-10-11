@@ -27,7 +27,7 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 ## User permissions
 
-- [ ] Actions are gated on the user's project role through one capability check, not scattered role checks
+- [ ] Every action handles a 403 with a message saying who can fix it; any role checks live in one place, not scattered through the UI
 - [ ] Every action handles a 403 with a message saying who can fix it, and the UI updates to match
 - [ ] Walked through the app as a `COLLABORATOR`-only test user
 

@@ -46,7 +46,11 @@ Users sign in as themselves, so the app inherits their access, no more. The same
 
 ### Checking before offering an action
 
-Cirro doesn't expose a "can this user do X" endpoint. What the app can read is the user's **role in each project**:
+Cirro doesn't expose a "can this user do X" endpoint. The user's **role in each project** is in their user record, but reading it usually isn't possible for an app: `getUser`, even on the signed-in user, and `getProjectUsers` both returned 403 "Not allowed to MANAGE_MEMBERS" for a project-scoped Public App on dev.cirro.bio (2026-10-11). `MANAGE_MEMBERS` is a governance permission; don't request it just to read roles.
+
+So by default **the role is unknown**. Show actions as available, and let the server decide (next section). Don't set `fetchUserInfo` on `AuthenticationContextProvider`: it calls `getUser` and fails.
+
+If a registration does let the app read the user record, here is how to read the role:
 
 ```typescript
 import type { ProjectRole } from "@cirrobio/api-client";
@@ -56,7 +60,7 @@ const roleIn = (projectId: string): ProjectRole | undefined =>
   me.projectAssignments.find((a) => a.projectId === projectId)?.role;
 ```
 
-Roles are `OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR` and `NONE`. In a React app with `react-auth`, `useAuthenticator().userInfo` already holds this when `fetchUserInfo` is set.
+Roles are `OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR` and `NONE`.
 
 Turn roles into the app's own capabilities in one place, rather than scattering role checks through the UI:
 
@@ -85,7 +89,7 @@ Client-side checks are for a better experience, not for security, and they can b
 
 - **Treat a 403 as authoritative.** Catch errors on every action, and when it's a permission failure (detecting a 403 needs the workaround in [calling the API](calling-the-api.md#errors), since the sdk's `ApiError` has no status code), update the UI to match rather than retrying.
 - **Explain who can fix it.** A 403 can come from either layer, and the response may not say which. A good message covers both: "You don't have permission to run pipelines in this project. A project owner can change your role, or a Cirro admin can grant this app access."
-- **Re-check after errors.** After a 403, refresh the user's details (`useAuthenticator().refresh()` or `getUser` again) so the rest of the UI catches up.
+- **Remember refusals.** After a 403, disable that action for that project for the rest of the session, with the explanation, so the user doesn't hit it again.
 
 ## Degrading gracefully
 

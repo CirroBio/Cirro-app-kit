@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useAppConfig } from "@cirrobio/react-core";
 import { useAuthenticator } from "@cirrobio/react-auth";
 import type { Dataset, Project } from "@cirrobio/api-client";
-import { can, roleIn } from "./capabilities";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function App() {
   const { appConfig, dataService, authProvider } = useAppConfig();
-  const { userInfo } = useAuthenticator();
+  const { authInfo } = useAuthenticator();
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
   const [error, setError] = useState("");
@@ -25,7 +24,7 @@ export function App() {
         <h1>Cirro app</h1>
         <span>
           {/* Always show which tenant the user is signed in to */}
-          {appConfig?.tenantInfo?.name} · {userInfo?.name}{" "}
+          {appConfig?.tenantInfo?.name} · {authInfo?.username}{" "}
           <button onClick={() => authProvider.signOut()}>Sign out</button>
         </span>
       </header>
@@ -40,8 +39,7 @@ export function App() {
             <li key={p.id}>
               <button onClick={() => setSelected(p)} aria-current={p.id === selected?.id}>
                 {p.name}
-              </button>{" "}
-              <small>{roleIn(userInfo, p.id).toLowerCase()}</small>
+              </button>
             </li>
           ))}
         </ul>
@@ -53,7 +51,6 @@ export function App() {
 
 function Datasets({ project }: { project: Project }) {
   const { dataService } = useAppConfig();
-  const { userInfo } = useAuthenticator();
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
@@ -75,13 +72,7 @@ function Datasets({ project }: { project: Project }) {
   return (
     <section>
       <h2>{project.name}</h2>
-      <p>
-        Project ID <code>{project.id}</code>
-        {/* An example of gating a feature on the user's role; see src/capabilities.ts */}
-        {can(userInfo, project.id, "createDatasets")
-          ? " · You can add datasets here."
-          : " · You can view this project but not add datasets."}
-      </p>
+      <p>Project ID <code>{project.id}</code></p>
       {error && <p role="alert">Could not load datasets: {error}</p>}
       <table>
         <thead><tr><th align="left">Dataset</th><th align="left">ID</th><th align="left">Created</th></tr></thead>

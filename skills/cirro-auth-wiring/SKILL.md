@@ -22,7 +22,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/authentication.md` before writing auth code; it
 
 ## User permissions
 
-Signing in as the user means the app only has the user's access. Set up a single capability check from the user's project role and handle 403s as described in `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md`, so features degrade instead of failing.
+Signing in as the user means the app only has the user's access. Most registrations can't read the user's project role (`getUser` is refused without `MANAGE_MEMBERS`), so don't set `fetchUserInfo`. Offer actions, handle 403s, and remember refusals, as described in `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md`, so features degrade instead of failing.
 
 ## Verify
 

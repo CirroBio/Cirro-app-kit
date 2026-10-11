@@ -26,7 +26,7 @@ Method and field names come from a generated client and are easy to guess wrong.
 ## Permissions
 
 - When adding a call to a new API, add its permission to `cirro-permissions.json` (required or optional, with a reason or feature), per `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md`.
-- Gate the UI for the action on the app's capability check, never on the assumption the user can do it, and handle a 403 with a message saying who can fix it.
+- Handle a 403 on every action with a message saying who can fix it, and disable that action for the project afterwards. Gate on the user's role only if the registration can read it (usually it can't; see the permissions doc).
 - Check every permission a multi-step flow needs at the start of the flow.
 
 ## Provenance and cost

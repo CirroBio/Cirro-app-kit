@@ -60,7 +60,7 @@ import { AmplifyAuthProvider, AuthenticationContextProvider, LoginWrapper } from
 const auth = new AmplifyAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
 
 <AppConfigProvider apiBasePath={import.meta.env.VITE_CIRRO_API} authProvider={auth}>
-  <AuthenticationContextProvider fetchUserInfo>
+  <AuthenticationContextProvider>
     <LoginWrapper>
       <App />   {/* useAppConfig().dataService and useAuthenticator() work here */}
     </LoginWrapper>
@@ -68,13 +68,13 @@ const auth = new AmplifyAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
 </AppConfigProvider>
 ```
 
-`useAuthenticator()` returns `{ authStatus, authInfo, userInfo, refresh }`; `userInfo` is only populated with `fetchUserInfo`. For viewers, see [viewers](viewers.md).
+`useAuthenticator()` returns `{ authStatus, authInfo, userInfo, refresh }`. `authInfo` holds the signed-in user's `username`. `userInfo` is only populated with `fetchUserInfo`, which calls `getUser` and is refused for most app registrations; see [permissions](permissions.md#checking-before-offering-an-action). For viewers, see [viewers](viewers.md).
 
 What to know about it:
 
 - It redirects back to `window.location.origin`, so register bare origins, not paths.
 - Emailed sign-in links are half-handled, and probably can't work for external apps. `loginEmail` (what `LoginWrapper`'s email option calls) asks Cirro to email a link to `window.location.origin + "/magic-link"`, but nothing in `react-auth` 0.0.8 calls `finishLoginEmail`. The link is `<redirectUri>#<base64url(JSON {username, userCode, iat, exp})>.<signature>`: the whole fragment is the `challenge`, and `username` is in its first segment (Cirro-backend `CustomAuthHandler/magic_link.py`). The backend only accepts a `redirectUri` from its deploy-time `CALLBACK_URLS` setting (`auth_config.py`), which most likely lists the Cirro portal and not registered app origins; that is [not yet confirmed](open-questions.md). Offer SSO only, and filter the `COGNITO` provider out of the login options, unless a sent link has been redeemed end to end on your tenant.
-- It requests the scopes `openid`, `email`, `phone`, `profile` and `aws.cognito.signin.user.admin` (hard-coded in `react-auth` 0.0.8). Cognito rejects the whole request if the registration disallows any one of them: sign-in returns to the app with `?error=invalid_request&error_description=invalid_scope`. A Public App registered on dev.cirro.bio on 2026-10-10 allowed only `openid`, and `AppRegistrationInput` has no scopes field, so the registrant can't change this; it's a platform setting. Until it changes, re-run `Amplify.configure` with `scopes: ["openid"]` after the provider's `configure()`. That reaches the login page; whether the Cirro API accepts the resulting token is [not yet confirmed](open-questions.md). `getCurrentUser` needs only claims an openid-only ID token carries (`cognito:username`, `sub`, `auth_time`, `cognito:groups`).
+- It requests the scopes `openid`, `email`, `phone`, `profile` and `aws.cognito.signin.user.admin` (hard-coded in `react-auth` 0.0.8), and Cognito rejects the whole sign-in if the registration disallows any one of them: the app comes back with `?error=invalid_request&error_description=invalid_scope`. Public Apps on dev.cirro.bio allow only `openid` (2026-10-10), and `AppRegistrationInput` has no scopes field. The API accepts tokens issued with `openid` alone (verified 2026-10-11), and `getCurrentUser` needs only claims those tokens carry. Both templates therefore use `CirroAuthProvider` (`src/auth.ts`), which re-runs `Amplify.configure` with `scopes: ["openid"]` after the provider's own `configure()` and hides the emailed-link option.
 - `react-auth` needs MUI 7 and Emotion as peers, and has [known issues](packages.md#known-issues) with workarounds. Mount `AuthenticationContextProvider` only after the tenant config has loaded; see the app template's `ConfigGate`.
 
 ## Checking it works

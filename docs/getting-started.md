@@ -92,7 +92,6 @@ With a template running, read [building on Cirro](building-on-cirro.md) for what
 
 - List the permissions your app uses in `cirro-permissions.json`, with a reason for each; see [permissions](permissions.md). Ask for any new ones to be added to your development registration.
 - Look up methods in the [API reference](../reference/api-surface.md), and see [calling the API](calling-the-api.md), [working with files](files.md) and [Sheets](sheets.md).
-- Keep [`src/capabilities.ts`](../templates/app/src/capabilities.ts) as the one place the app decides what a user's role allows.
 
 ## 6. Ship it
 

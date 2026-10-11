@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ViewerProvider } from "@cirrobio/react-tool";
-import { AmplifyAuthProvider } from "@cirrobio/react-auth";
+import { CirroAuthProvider } from "./auth";
 import { Viewer } from "./Viewer";
 
 const api = (import.meta.env.VITE_CIRRO_API ?? "").trim();
@@ -30,7 +30,7 @@ if (problems.length) {
   );
 } else {
   // Created once. Embedded viewers use the Cirro session, so an empty client ID is fine there.
-  const auth = new AmplifyAuthProvider(clientId || undefined);
+  const auth = new CirroAuthProvider(clientId || undefined);
   root.render(
     <React.StrictMode>
       <ViewerProvider apiBasePath={api || "/api"} authProvider={auth} patchFetch>
