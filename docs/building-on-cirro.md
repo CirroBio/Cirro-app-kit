@@ -152,7 +152,7 @@ Set the tag when the entity is created, where the API allows it, rather than in 
 | Custom pipeline | `CustomProcessInput.tags` |
 | Dashboard | `DashboardInput.tags` |
 
-Entities without tags (workspaces, discussions) are identified by a name prefix and the provenance note instead. Check the installed `@cirrobio/api-client` for a `tags` field before assuming an entity has none.
+Entities without tags (workspaces, discussions) are identified by a name prefix and the provenance note instead, e.g. `my-app / RNA velocity`. Workspace names must start with a letter or digit and may contain only letters, digits, spaces and `.&-@!#'()/` (Cirro rejects anything else with a 400), so `/` makes a good separator and `:` does not. Check the installed `@cirrobio/api-client` for a `tags` field before assuming an entity has none.
 
 ### Other patterns
 
