@@ -35,6 +35,13 @@ Starting a workspace usually takes a few minutes: the instance has to be provisi
 - Reuse before creating. List the project's workspaces (`getWorkspaces`), and offer to start a `SUSPENDED` one the app created earlier for the same purpose instead of making a new one. Find them by name prefix and provenance note, since workspaces don't carry tags (see [Tagging what the app creates](building-on-cirro.md#tag-everything-the-app-creates)).
 - When it's ready, tell the user even if they've moved to another part of the app.
 
+## The per-user limit
+
+Cirro limits how many workspaces one user can have in a project (5 on dev.cirro.bio). Stopped workspaces count toward it. At the limit, `createWorkspace` is refused with a message saying so ("5 out of 5"). So:
+
+- Reuse first, as above. An app should rarely need more than one workspace per purpose.
+- At the limit, don't just show the error. List the user's workspaces in the project, with their names, status and last start, and offer to reuse one or delete one the user picks. Deleting needs the user's explicit confirmation, because files inside a workspace that weren't saved to the project are lost with it.
+
 ## Embedding in an iframe
 
 An app can keep the user in context by showing the workspace inside its own page:
