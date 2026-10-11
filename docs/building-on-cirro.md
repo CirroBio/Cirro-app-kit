@@ -34,7 +34,7 @@ Each row is something an app can use. Permission names are the likely ones for e
 | **Dataset storage** | Read datasets and files; upload new datasets; update names, descriptions and tags | `DatasetsApi`, `FileApi`; see [files](files.md) | `VIEW_DATASET`, `CREATE_DATASET`, `EDIT_DATASET`, `GENERATE_DOWNLOAD_TOKEN` |
 | **Pipeline execution** | Run a pipeline on datasets, track tasks and logs, see what runs cost, stop runs; outputs become new datasets. `ProcessesApi.calculatePipelineCost` returned no estimate on dev.cirro.bio, so estimate from what recent completed runs cost (`ExecutionApi.calculateCost` per run, which can take ~20 s on older runs, so load it in the background). For a run's duration use its tasks' `requestedAt` and `stoppedAt`: a dataset's `updatedAt` moves whenever it is edited | `ExecutionApi` (`runAnalysis`, `getTasksForExecution`, `getExecutionLogs`, `calculateCost`, `stopAnalysis`) | `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` |
 | **Pipelines as app code** | Register a Nextflow or Cromwell pipeline from a GitHub repo, including the app's own repo, and keep it in sync | `ProcessesApi` (`createCustomProcess`, `syncCustomProcess`, `getProcessParameters`, `calculatePipelineCost`) | `CREATE_CUSTOM_PIPELINE`, `MANAGE_CUSTOM_PIPELINES` |
-| **Interactive workspaces** | Create a workspace with datasets mounted, start it, and get a connection URL to hand the user into it | `WorkspacesApi` (`createWorkspace`, `startWorkspace`, `connectWorkspace`, `stopWorkspace`) | `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` |
+| **Interactive workspaces** | Create a workspace with datasets mounted (it starts by itself), restart a stopped one, and get a connection URL to hand the user into it | `WorkspacesApi` (`createWorkspace`, `startWorkspace`, `connectWorkspace`, `stopWorkspace`) | `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` |
 | **Sharing between projects** | Publish datasets from one project and subscribe to them in another, without copying | `SharingApi` | `VIEW_PROJECT_SHARES`, `MANAGE_PROJECT_SHARES` |
 | **Sample metadata** | Read and update sample metadata and the project's metadata schema | `MetadataApi` | `VIEW_PROJECT_METADATA`, `EDIT_PROJECT_METADATA` |
 | **Sheets (relational tables)** | A database in the project: typed tables with keys and relationships, joined views, read-only SQL, file ingest. See [Sheets](sheets.md) | `SheetsApi` | `VIEW_SHEET_DATA`, `CREATE_SHEET`, `EDIT_SHEET_DATA`, `SHEET_RAW_QUERY` |
@@ -90,7 +90,6 @@ sequenceDiagram
   participant API as Cirro API
   participant WS as Workspace
   App->>API: createWorkspace(mounted datasets, environment, compute)
-  App->>API: startWorkspace
   loop until RUNNING
     App->>API: getWorkspace (status)
   end

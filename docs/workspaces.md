@@ -12,9 +12,8 @@ sequenceDiagram
   participant API as Cirro API
   participant WS as Workspace
   App->>API: createWorkspace(mountedDatasets, environmentId, computeConfig, autoStopTimeout)
-  App->>API: startWorkspace
   loop every 10-15 s until RUNNING or FAILED
-    App->>API: getWorkspace → status, statusMessage
+    App->>API: getWorkspace → status
   end
   App->>API: connectWorkspace
   API-->>App: connectionUrl, expiresAt
@@ -24,15 +23,15 @@ sequenceDiagram
   end
 ```
 
-`Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `SUSPENDED` (stopped, can be started again). `FAILED` carries a `statusMessage`; `getWorkspaceLogs` has the detail.
+`createWorkspace` starts the workspace by itself. Calling `startWorkspace` straight after fails with "Workspace is already changing state"; call it only to restart a stopped workspace you're reusing. `Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `COMPLETED`, which is what a stopped, restartable workspace reports (on dev.cirro.bio, stopping took about 5.5 minutes). `FAILED` means it couldn't start; `getWorkspaceLogs` has the detail. `statusMessage` can carry internal identifiers such as an ECS task ARN, so log it rather than showing it to users.
 
 ## Booting takes minutes; say so
 
-Starting a workspace usually takes a few minutes (`cirro-jupyter-minimal` took 3 min 52 s on dev.cirro.bio): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
+Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyter-minimal` took 3 min 52 s and `cirro-jupyter-r` about 5.5 min): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
 
 - Before starting, say how long it will take ("Starting a workspace takes a few minutes") and what it will cost if the compute choice affects that.
-- While it boots, show the elapsed time and the current `statusMessage`, and let the user keep working elsewhere in the app. Don't block the whole UI.
-- Reuse before creating. List the project's workspaces (`getWorkspaces`), and offer to start a `SUSPENDED` one the app created earlier for the same purpose instead of making a new one. Find them by name prefix and provenance note, since workspaces don't carry tags (see [Tagging what the app creates](building-on-cirro.md#tag-everything-the-app-creates)).
+- While it boots, show the elapsed time and the status in plain words, and let the user keep working elsewhere in the app. Don't block the whole UI.
+- Reuse before creating. List the project's workspaces (`getWorkspaces`), and offer to start a stopped (`COMPLETED`) one the app created earlier for the same purpose instead of making a new one. Find them by name prefix and provenance note, since workspaces don't carry tags (see [Tagging what the app creates](building-on-cirro.md#tag-everything-the-app-creates)).
 - When it's ready, tell the user even if they've moved to another part of the app.
 
 ## The per-user limit
