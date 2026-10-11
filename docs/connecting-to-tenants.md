@@ -97,7 +97,7 @@ Each tenant has its own API URL and issues your app its own client ID. Users of 
 - `id`: a short slug, stable for the life of the entry; the app remembers the user's choice by it.
 - `api`: the tenant's API base URL (`/api` in development, through the dev proxy).
 - `clientId`: the client ID the tenant's admins issued **for this app**. Client IDs of Public Apps are not secrets, so the file can be public and committed.
-- `portal` (optional): the tenant's web address, for links that open an item in Cirro. `/info/system` doesn't report it, and `api` is a proxy path in development.
+- `portal` (optional): the tenant's web address, for links that open an item in Cirro. `/info/system` doesn't report it, and `api` is a proxy path in development. Paths under it (from the Cirro portal's router): `/project/{projectId}`, `/project/{projectId}/dataset/{datasetId}`, `/project/{projectId}/dataset/{datasetId}/pipeline/{processId}` (Cirro's own form for running a pipeline on that dataset), `/project/{projectId}/workspace/{workspaceId}`, `/project/{projectId}/sheets`.
 - `name`, `addedAt`, `contact`: shown in the picker, or kept for whoever maintains the file.
 
 Adding a tenant: the tenant's admins register the app with your production origin as a redirect URI and send you the client ID; you add an entry. Removing one: delete the entry. Users who chose it see the picker on their next visit.

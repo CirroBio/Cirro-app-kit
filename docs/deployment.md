@@ -32,6 +32,8 @@ frame-ancestors https://<cirro tenant>;
 
 An app that embeds [workspaces](workspaces.md) in an iframe also needs `frame-src` for the origin of the workspace's `connectionUrl`.
 
+Apps that read files with WebAssembly (h5wasm, DuckDB-WASM, Pyodide) need `'wasm-unsafe-eval'` in `script-src`, and `worker-src 'self' blob:` when the reader runs in a worker. Range reads from the browser need the project bucket's CORS to allow the `Range` request header.
+
 `style-src 'unsafe-inline'` is needed by MUI/Emotion. The SDK's S3 client uses dual-stack endpoints, hence the `s3.dualstack` host. The region and Cognito domain come from the tenant's `/info/system` response (`region`, `auth.endpoint`).
 
 ## Before the first production deploy

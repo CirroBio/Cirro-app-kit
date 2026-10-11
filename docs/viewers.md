@@ -52,14 +52,39 @@ const url = await fileService.getSignedUrlFromProjectPath(fileAccessContext, "da
 
 ## Libraries that fetch files themselves
 
-Viewers like igv.js, Zarr and OME-TIFF readers take a URL and make their own requests, often ranged or relative, so you can't sign each request yourself. Set `patchFetch` on `ViewerProvider` and give the library `getPatchedSignUrl(s3Url)`:
+Viewers like Zarr, OME-TIFF and genome-track readers take a URL and make their own requests, often ranged or relative, so you can't sign each request yourself. How to sign them depends on how the library makes requests.
+
+**Libraries that use `fetch`** (zarrita, geotiff.js): set `patchFetch` on `ViewerProvider` and give the library `getPatchedSignUrl(s3Url)`:
 
 ```tsx
 import { getPatchedSignUrl } from "@cirrobio/react-tool";
-igv.createBrowser(div, { tracks: [{ url: getPatchedSignUrl(bam.url), indexURL: getPatchedSignUrl(bai.url) }] });
+const store = new FetchStore(getPatchedSignUrl(zarr.url));
 ```
 
-`getPatchedSignUrl` prefixes the S3 URL with `https://sign/`. The patched global `fetch` recognizes the prefix, signs the request with project credentials, and forwards it with its headers, so range requests keep working. This only works for libraries that use `fetch`; ones that use `XMLHttpRequest` need a signed URL per request or a custom loader.
+`getPatchedSignUrl` prefixes the S3 URL with `https://sign/`. The patched global `fetch` recognizes the prefix, signs the request with project credentials, and forwards it with its headers, so range requests keep working.
+
+**Libraries that use `XMLHttpRequest`** never pass through the patched `fetch`. igv.js is one (3.8.9 loads through its own `XMLHttpRequest` wrapper), but it accepts a function as a track's `url` and calls it before every request, so each ranged read gets a freshly signed URL:
+
+```tsx
+const sign = (file: FileSystemObject) => () => fileService.getSignedUrlFromProjectFile(file);
+igv.createBrowser(div, {
+  genome: "hg38",
+  tracks: [{
+    type: "alignment", format: "bam", name: bam.name,
+    url: sign(bam),
+    // Indexes are read once per track, so one signed URL with a longer timeout (minutes) is enough.
+    indexURL: await fileService.getSignedUrlFromProjectFile(bai, { timeout: 60 }),
+  }],
+});
+```
+
+**Libraries with a pluggable fetch.** `@gmod/tabix`, `@gmod/bam` and `@gmod/bbi` read through `generic-filehandle2`'s `RemoteFile`, which takes a `fetch` override, so you can sign each read without patching the global:
+
+```ts
+new RemoteFile(file.url, { fetch: async (_url, init) => fetch(await fileService.getSignedUrlFromProjectFile(file), init) });
+```
+
+Check which a library uses before promising it works: search its bundle for `XMLHttpRequest` and `fetch(`.
 
 ## Converting a static-site viewer
 

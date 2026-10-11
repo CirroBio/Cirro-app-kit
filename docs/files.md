@@ -44,7 +44,7 @@ The manifest also carries `viz`, `tables` and `artifacts` for datasets that prod
 
 Signing options: `download` (sets a Content-Disposition filename), `filename`, `gzip` (requests gzip encoding), `timeout` (minutes), `region`.
 
-For libraries that fetch by path or with range requests (igv.js indexes, Zarr, OME-TIFF), signing each URL yourself is impractical. In a `ViewerProvider` tool, turn on `patchFetch` and pass `getPatchedSignUrl(s3Url)` to the library (see [viewers](viewers.md#libraries-that-fetch-files-themselves)). Outside `ViewerProvider`, give the library a custom fetch or URL resolver that calls `getSignedUrlFromProjectPath` per request.
+For libraries that fetch by path or with range requests (Zarr, OME-TIFF, genome tracks), signing each URL yourself is impractical. [Viewers](viewers.md#libraries-that-fetch-files-themselves) covers the three approaches: `patchFetch` for libraries that use `fetch`, a function-valued URL for igv.js, and a fetch override for `@gmod` readers. Outside `ViewerProvider`, give the library a custom fetch or URL resolver that calls `getSignedUrlFromProjectPath` per request.
 
 ## Uploading
 
@@ -57,11 +57,14 @@ import { ProjectAccessType } from "@cirrobio/api-client";
 // 1. Create the dataset; expectedFiles lists the relative paths you will upload
 const created = await data.datasets.uploadDataset({
   projectId: project.id,
-  uploadDatasetRequest: { name, description, processId, expectedFiles: fileList.map(f => f.name) },
+  uploadDatasetRequest: { name, description, processId, expectedFiles: fileList.map(f => f.name),
+                          tags: [{ key: "cirro-app", value: APP_ID }] },
 });  // → { id, message, uploadPath, bucket }
 
-// 2. Get upload credentials for that dataset and upload each file under uploadPath
-const ctx = new ProjectFileAccessContext(project, null, { accessType: ProjectAccessType.DatasetUpload, datasetId: created.id });
+// 2. Get upload credentials for that dataset and upload each file under uploadPath.
+//    The context takes the dataset's detail (non-null in sdk 0.13.37), so fetch it.
+const dataset = await data.datasets.getDataset({ projectId: project.id, datasetId: created.id });
+const ctx = new ProjectFileAccessContext(project, dataset, { accessType: ProjectAccessType.DatasetUpload, datasetId: created.id });
 const credentials = await files.getProjectAccessCredentials(ctx);
 for (const file of fileList) {
   const upload = uploadFile({ bucket: created.bucket, path: `${created.uploadPath}/${file.name}`, file, credentials });
