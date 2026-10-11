@@ -1,0 +1,9 @@
+{
+  "app": "cirro-app",
+  "scope": "project",
+  "required": [
+    { "permission": "VIEW_PROJECT", "reason": "List the projects the signed-in user can open" },
+    { "permission": "VIEW_DATASET", "reason": "List the datasets in the selected project" }
+  ],
+  "optional": []
+}

@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 14 * * 1"   # weekly: catch breaking releases of @cirrobio packages
+
+jobs:
+  templates:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [app, viewer]
+        packages: [pinned, latest]
+    defaults:
+      run:
+        working-directory: templates/${{ matrix.template }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Use latest published @cirrobio packages
+        if: matrix.packages == 'latest'
+        run: npm pkg get dependencies | node -e 'const d=JSON.parse(require("fs").readFileSync(0));for (const k of Object.keys(d)) if (k.startsWith("@cirrobio/")) console.log(k)' | xargs -I{} npm pkg set "dependencies.{}=latest"
+      - run: npm install --no-audit --no-fund
+      - run: cp .env.example .env
+      - run: npm run build
+      - name: Scan template
+        run: python3 ../../tools/scan.py .
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check relative links
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          bad = []
+          for root, dirs, files in os.walk("."):
+              dirs[:] = [d for d in dirs if d not in ("node_modules", ".git")]
+              for f in files:
+                  if not f.endswith(".md"):
+                      continue
+                  path = os.path.join(root, f)
+                  for target in re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", open(path).read()):
+                      if target.startswith(("http://", "https://", "mailto:")):
+                          continue
+                      if not os.path.exists(os.path.normpath(os.path.join(root, target))):
+                          bad.append(f"{path}: {target}")
+          print("\n".join(bad) or "all links ok")
+          sys.exit(1 if bad else 0)
+          PY

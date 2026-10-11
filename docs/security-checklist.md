@@ -1,0 +1,52 @@
+# Security checklist
+
+In a browser app, any script running on your page can use the signed-in user's Cirro token and project file credentials. Most of this checklist is about keeping that set of scripts small and the app's reach narrow. Go through it before the first production deploy, before requesting admin approval, and after changing auth, permissions or file-access code.
+
+## Start with the scanner
+
+```bash
+python3 tools/scan.py path/to/your-app
+```
+
+It flags likely problems: secrets in code or env files, tokens in web storage or logs, raw HTML rendering, unpinned Cirro packages, a missing client ID, and the default API base. Treat each finding as a lead, not a verdict; confirm it in the code. It exits non-zero on any high-severity finding, so it can run in CI.
+
+## Registration
+
+- [ ] Registered as a Public App (the only type this kit uses); the app holds no secret and acts as the signed-in user
+- [ ] `cirro-permissions.json` exists, lists every permission the code uses with a reason, and nothing more
+- [ ] Optional permissions really are optional: the app works with only the required ones
+- [ ] Redirect URIs list only origins you control; no stale preview URLs or wildcards
+
+## Tokens and credentials
+
+- [ ] No client secret or app credentials of any kind anywhere in the bundle or repo
+- [ ] Tokens come from the auth provider on each call (`tokenGetter`), not cached in app state
+- [ ] Tokens and AWS file credentials kept in memory or the auth library's storage; never written to `localStorage` by your code, logged, or put in URLs
+- [ ] Sign-out calls the provider's `signOut()` and clears cached file credentials
+- [ ] Any static-token provider is unreachable in production builds
+
+## User permissions
+
+- [ ] Actions are gated on the user's project role through one capability check, not scattered role checks
+- [ ] Every action handles a 403 with a message saying who can fix it, and the UI updates to match
+- [ ] Walked through the app as a `COLLABORATOR`-only test user
+
+## Rendering
+
+- [ ] Dataset names, descriptions, metadata and file contents rendered as text; any HTML rendering (for example a dataset's markdown README) goes through a sanitizer
+
+## Third-party code
+
+- [ ] Every third-party script loaded at runtime (analytics, widgets, CDN libraries) reviewed or removed; each one can read tokens
+- [ ] Dependencies pinned, Cirro packages to exact versions; `npm audit --omit=dev` has no unaddressed high-severity issues
+
+## Deployment
+
+- [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, Cognito and S3 (see [deployment](deployment.md#content-security-policy))
+- [ ] Embedded viewers send `frame-ancestors` for the Cirro origin only
+- [ ] Production `VITE_CIRRO_API` is the full tenant URL, unless deliberately proxied
+- [ ] Project bucket CORS allows the production origin, if the app reads files directly
+
+## Viewers
+
+- [ ] Aware of the `event.origin` gap in `react-tool`'s embedded message handler ([known issues](packages.md#known-issues))

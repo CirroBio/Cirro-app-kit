@@ -1,0 +1,7 @@
+{
+  "name": "cirro-app-kit",
+  "version": "0.1.0",
+  "description": "Docs, templates and Claude skills for building browser apps, viewers and tools on the Cirro platform.",
+  "author": { "name": "Sam Minot" },
+  "keywords": ["cirro", "oauth", "react", "viewer"]
+}
