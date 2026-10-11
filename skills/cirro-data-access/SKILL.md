@@ -31,7 +31,7 @@ Method and field names come from a generated client and are easy to guess wrong.
 
 ## Provenance and cost
 
-- When code creates a dataset, workspace or pipeline run, also add a provenance note and a `created-by` tag, following "Provenance by default" in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`. Mention it to the user if they didn't ask for it, so they can opt out.
+- When code creates a dataset, workspace or pipeline run, also add a provenance note, and tag every taggable entity with `cirro-app: <APP_ID>`, following "Provenance by default" and "Tag everything the app creates" in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`. For long-running work, use `${CLAUDE_PLUGIN_ROOT}/docs/workspaces.md`.
 - Before code that spends money (pipeline runs, workspaces), add a cost estimate and an explicit confirmation step. Treat governance actions (roles, shares) per the trust-boundaries table in the same doc.
 
 ## Errors to explain, not retry

@@ -67,28 +67,76 @@ A complete request is quicker to approve. Include:
 
 ## Serving more than one tenant
 
-Each tenant has its own API URL and gives your app its own client ID. You can handle that in two ways:
+Each tenant has its own API URL and issues your app its own client ID. Users of one deployed app may belong to different tenants, and tenants come and go as admins approve or withdraw the app. You can handle that in two ways:
 
 | Approach | How | Good for |
 | --- | --- | --- |
-| **One build per tenant** | Build with that tenant's `VITE_CIRRO_API` and `VITE_CIRRO_CLIENT_ID`, and deploy each to its own URL (for example `tenant-a.myapp.org`) | A few tenants; tenants that want the app on their own domain |
-| **One build, many tenants** | Ship a `tenants.json` mapping each tenant to its API URL and client ID, and choose the tenant at startup, from the hostname or a picker | Many tenants; a single public URL |
+| **Runtime tenant registry** (recommended) | Serve a `tenants.json` next to the app listing each tenant's API URL and client ID; the app fetches it at startup and shows a tenant picker | Any number of tenants; adding or removing one is a file edit, with no rebuild |
+| **One build per tenant** | Build with that tenant's `VITE_CIRRO_API` and `VITE_CIRRO_CLIENT_ID`, and deploy each to its own URL (for example `tenant-a.myapp.org`) | One tenant, or tenants that want the app on their own domain |
 
-For a single build, register every origin in every tenant that will use it, and pick the tenant before anything calls Cirro:
+### The tenant registry
+
+`tenants.json` is fetched at runtime, not imported, so the deployer adds or removes a tenant by editing one file on the host:
+
+```json
+{
+  "tenants": [
+    {
+      "id": "dev",
+      "name": "Cirro (dev)",
+      "api": "https://dev.cirro.bio/api",
+      "clientId": "1a2b3c4d5e6f7g8h9i0j",
+      "addedAt": "2026-10-10",
+      "contact": "admins@example.org"
+    }
+  ]
+}
+```
+
+- `id`: a short slug, stable for the life of the entry; the app remembers the user's choice by it.
+- `api`: the tenant's API base URL (`/api` in development, through the dev proxy).
+- `clientId`: the client ID the tenant's admins issued **for this app**. Client IDs of Public Apps are not secrets, so the file can be public and committed.
+- `name`, `addedAt`, `contact`: shown in the picker, or kept for whoever maintains the file.
+
+Adding a tenant: the tenant's admins register the app with your production origin as a redirect URI and send you the client ID; you add an entry. Removing one: delete the entry. Users who chose it see the picker on their next visit.
+
+Each app has its own registry, because each app has its own registration in each tenant: a tenant may approve one app and not another. Apps that share a host still keep separate files.
+
+### Choosing the tenant at startup
+
+Pick the tenant before anything calls Cirro, and create the auth provider for it:
 
 ```typescript
-// tenants.json: { "tenant-a": { "name": "...", "api": "https://...", "clientId": "..." }, ... }
-import tenants from "./tenants.json";
+type Tenant = { id: string; name: string; api: string; clientId: string };
+const TENANT_KEY = "cirro-tenant";   // the tenant's id is not sensitive
 
-const fromHost = window.location.hostname.split(".")[0];
-const saved = sessionStorage.getItem("cirro-tenant");
-const tenant = tenants[fromHost] ?? tenants[saved ?? ""];   // otherwise show a tenant picker
+export async function loadTenants(): Promise<Tenant[]> {
+  const res = await fetch(`${import.meta.env.BASE_URL}tenants.json`, { cache: "no-cache" });
+  if (!res.ok) throw new Error(`Could not load tenants.json (HTTP ${res.status})`);
+  const { tenants } = await res.json();
+  if (!Array.isArray(tenants) || !tenants.length) throw new Error("tenants.json lists no tenants");
+  return tenants;
+}
 
-const auth = new AmplifyAuthProvider(tenant.clientId);
+export const savedTenant = (tenants: Tenant[]) =>
+  tenants.find((t) => t.id === localStorage.getItem(TENANT_KEY));
+
+export function chooseTenant(t: Tenant) {
+  localStorage.setItem(TENANT_KEY, t.id);
+  window.location.reload();          // providers are created once, for one tenant
+}
+
+// main.tsx: render a picker until savedTenant() returns one, then
+// const auth = new AmplifyAuthProvider(tenant.clientId);
 // <AppConfigProvider apiBasePath={tenant.api} authProvider={auth}>…
 ```
 
-After the tenant's config loads, show its name and logo (`tenantInfo.name` and `tenantInfo.tenantLogoUrl`) so users can see which environment they're signed in to. Never mix data between tenants in one session: switching tenant means signing out and starting again.
+- With a single entry, skip the picker.
+- After the tenant's config loads, show its name and logo (`tenantInfo.name` and `tenantInfo.tenantLogoUrl`) so users can see which environment they're signed in to.
+- Never mix data between tenants in one session: switching tenant means signing out, clearing the saved choice, and starting again.
+- If the saved tenant is no longer in the file, clear the choice and show the picker.
+
+Register every origin the app is served from in every tenant that uses it.
 
 ## Embedded viewers
 

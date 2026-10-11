@@ -29,3 +29,5 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | Which permission gates each `SheetsApi` method, and what does `auditReadAccess` do? | [Sheets](sheets.md#permissions) |
 | What do sheet mappings to a target entity do once saved? | [Sheets](sheets.md#concepts) |
 | Will the sdk's `ApiError` carry the HTTP status code? | [Known issues](packages.md#known-issues) |
+| Does a workspace's `connectionUrl` allow framing from a registered app's origin, and which origin does it use? | [Workspaces](workspaces.md#embedding-in-an-iframe) |
+| How long does a workspace typically take to reach `RUNNING`, per environment? | [Workspaces](workspaces.md#booting-takes-minutes-say-so) |

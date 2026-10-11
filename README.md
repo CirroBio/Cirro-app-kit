@@ -37,6 +37,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 - [Calling the API](docs/calling-the-api.md): `DataService`, pagination, errors
 - [Sheets](docs/sheets.md): relational tables in the project as the app's database; schemas, views, SQL, ingest
 - [Working with files](docs/files.md): file credentials, signed URLs, uploads
+- [Workspaces](docs/workspaces.md): interactive containers launched by the app; boot time, embedding in an iframe, auto-stop
 - [Viewers and tools](docs/viewers.md): `ViewerProvider`, embedded and standalone modes, converting static-site viewers
 - [Deployment](docs/deployment.md): build config, hosting, Content Security Policy
 - [Security checklist](docs/security-checklist.md)

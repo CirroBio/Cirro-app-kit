@@ -103,8 +103,8 @@ Things to get right:
 
 - **Mount exactly what's needed.** `mountedDatasets` decides what the user sees; mount the datasets the app is working with, not the whole project.
 - **Pick the environment deliberately.** `getWorkspaceEnvironments` lists what's available, with default compute; let the user confirm size if it affects cost.
-- **Connection URLs expire.** Call `connectWorkspace` at the moment the user clicks, not ahead of time.
-- **Workspaces cost money while running.** Set `autoStopTimeout`, and tell the user the workspace stays in their project after they leave the app.
+
+Booting takes minutes, workspaces cost money until they stop, and the user can be kept in the app by embedding the workspace in an iframe. [Workspaces](workspaces.md) covers the boot experience, embedding, auto-stop and getting results back.
 
 ### Provenance by default: notes on everything the app creates
 
@@ -135,7 +135,24 @@ A useful note says, in plain language:
 - the inputs (dataset names and IDs) and the parameters used;
 - why, if the user gave a reason or label.
 
-Pair notes with a tag such as `created-by: my-app` on datasets (`updateDataset` with `tags`), so assets can be found by app as well as read about. The cost is a few lines of code; the benefit is a project whose history makes sense years later.
+Pair notes with the app's tag (below), so assets can be found by app as well as read about. The cost is a few lines of code; the benefit is a project whose history makes sense years later.
+
+### Tag everything the app creates
+
+Every taggable entity an app creates carries one tag naming the app: `{ key: "cirro-app", value: APP_ID }`. `APP_ID` is a stable slug chosen once for the app (`spatial-data-studio`), not its registration or client ID, which differ in every tenant. With it, a user or another app can find everything an app made with one filter, in any tenant.
+
+Set the tag when the entity is created, where the API allows it, rather than in a second call:
+
+| Entity | Where the tag goes |
+| --- | --- |
+| Uploaded dataset | `uploadDataset({ uploadDatasetRequest: { …, tags } })` |
+| Pipeline run (its output dataset) | `runAnalysis({ runAnalysisRequest: { …, tags } })` |
+| Existing dataset the app modifies | `updateDataset` with the existing tags plus the app's, never replacing the user's |
+| Sheet | `TableSheetInput.tags` / `ViewSheetInput.tags`; also give the app its own sheet namespace |
+| Custom pipeline | `CustomProcessInput.tags` |
+| Dashboard | `DashboardInput.tags` |
+
+Entities without tags (workspaces, discussions) are identified by a name prefix and the provenance note instead. Check the installed `@cirrobio/api-client` for a `tags` field before assuming an entity has none.
 
 ### Other patterns
 

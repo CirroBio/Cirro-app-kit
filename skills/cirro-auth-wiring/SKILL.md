@@ -11,7 +11,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/authentication.md` before writing auth code; it
 
 1. **Which provider.** Use the "Choosing a provider" table in the authentication doc. Default to `AmplifyAuthProvider(clientId)` when the app uses Cirro's React packages, since it supports the tenant's SSO and emailed sign-in links.
 2. **Does the registration match the code?** App type matches the architecture; redirect URIs are bare origins for `AmplifyAuthProvider`; permissions cover what the code calls. If you can't see the registration, ask the user for its type, redirect URIs and permissions, or read it with `AppRegistrationsApi.getAppRegistration`.
-3. **Where does the client ID come from?** Build-time env (`VITE_CIRRO_CLIENT_ID`), never hard-coded.
+3. **Where does the client ID come from?** Never hard-coded. One tenant: build-time env (`VITE_CIRRO_CLIENT_ID`). Users in several tenants: a runtime `tenants.json` and a tenant picker, per "Serving more than one tenant" in `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`.
 
 ## Implement
 

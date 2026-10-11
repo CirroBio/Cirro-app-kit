@@ -46,6 +46,7 @@ const sheets = new SheetsApi(generateApiConfig({ basePath, tokenGetter }));
 Look sheets up by namespace and table name rather than storing IDs: IDs differ between projects and tenants, names don't.
 
 ```typescript
+const APP_ID = "my-app";
 const NAMESPACE = "my_app";
 const TABLE = "qc_review";
 
@@ -63,7 +64,7 @@ async function ensureReviewSheet(projectId: string): Promise<string> {
       namespaceName: NAMESPACE,
       tableName: TABLE,
       sheetCreationMode: SheetCreationMode.Scratch,
-      tags: [{ key: "created-by", value: "my-app" }],
+      tags: [{ key: "cirro-app", value: APP_ID }],
       columns: [
         { name: "sample_id", dataType: ColumnDataType.String, required: true, unique: true },
         { name: "dataset", dataType: ColumnDataType.String, semanticType: SemanticColumnType.CirroDataset },
@@ -120,7 +121,7 @@ For more than a few hundred rows, write a file and ingest it rather than inserti
 
 - **Give the app its own namespace.** Put every sheet the app owns under one `namespaceName` (for example `my_app`), so its tables are easy to find and never collide with people's own sheets.
 - **Link, don't copy.** Store references to Cirro objects in `CIRRO_DATASET`, `CIRRO_FILE` and `CIRRO_FOLDER` columns rather than copying data or paths into the sheet.
-- **Leave provenance.** Tag sheets the app creates (`created-by: my-app`) and attach a note, as for any other object the app creates (see [provenance by default](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates)). For row-level history, add `created_by` and `updated_at` columns and fill them in.
+- **Leave provenance.** Tag sheets the app creates with the [app tag](building-on-cirro.md#tag-everything-the-app-creates) and attach a note, as for any other object the app creates (see [provenance by default](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates)). For row-level history, add `created_by` and `updated_at` columns and fill them in.
 - **Let pipelines and the app share tables.** A pipeline can write results into a sheet that the app then filters and annotates, and a view can join them with the app's own tables. Pin the schema to the same release as the pipeline (see [an app that ships its own pipeline](building-on-cirro.md#an-app-that-ships-its-own-pipeline)).
 - **Assume other writers.** People can edit sheets in the Cirro UI while your app is open. Re-read before acting on a row, write partial updates, and show what changed. Don't assume transactions or locking.
 - **Expect sheets you didn't make.** If the app reads sheets people created, read `columns` from `getSheet` and adapt rather than hard-coding a layout.

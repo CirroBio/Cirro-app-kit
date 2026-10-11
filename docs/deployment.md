@@ -7,7 +7,7 @@
 | `VITE_CIRRO_API` | Full tenant API URL. Use `/api` only if the host proxies `/api` to the Cirro tenant, or the app is served embedded |
 | `VITE_CIRRO_CLIENT_ID` | The registered app's client ID for that tenant |
 
-Build once per tenant; client IDs differ between tenants.
+Build once per tenant; client IDs differ between tenants. An app serving several tenants instead ships a runtime `tenants.json` and builds once; see [serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant).
 
 ## Hosting
 
@@ -29,6 +29,8 @@ img-src 'self' data: blob: https://*.s3.amazonaws.com;
 style-src 'self' 'unsafe-inline';
 frame-ancestors https://<cirro tenant>;
 ```
+
+An app that embeds [workspaces](workspaces.md) in an iframe also needs `frame-src` for the origin of the workspace's `connectionUrl`.
 
 `style-src 'unsafe-inline'` is needed by MUI/Emotion. The SDK's S3 client uses dual-stack endpoints, hence the `s3.dualstack` host. The region and Cognito domain come from the tenant's `/info/system` response (`region`, `auth.endpoint`).
 

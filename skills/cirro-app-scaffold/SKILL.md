@@ -7,7 +7,7 @@ description: Start a new browser app, portal, dashboard or viewer that runs on C
 
 Facts live in the repo's docs; this skill is the order of work and the decisions. Read the docs named at each step rather than relying on memory.
 
-## 1. Settle four questions
+## 1. Settle five questions
 
 If the app's purpose is still open (what it creates, whether it needs compute, a workspace hand-off, sharing), read `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md` and use its design questions before choosing a template.
 
