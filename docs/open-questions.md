@@ -25,7 +25,7 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | What is the public Cirro tenant's address, and can developers self-register a test app there before requesting approval? | [Connecting to tenants](connecting-to-tenants.md) |
 | How is an embedded viewer added to a tenant as a tool, and who does it? | [Connecting to tenants](connecting-to-tenants.md#embedded-viewers) |
 | Can one registration be offered to many tenants (for example through registration templates or `OFFICIAL` publisher status), or must each tenant register separately? | [Serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant) |
-| Do sheet writes validate `required`, `unique`, `allowedValues` and foreign keys, and what error comes back when they fail? | [Sheets](sheets.md) |
+| Do sheet writes validate `required`, `unique`, `allowedValues` and foreign keys, and what error comes back when they fail? (A `CIRRO_DATASET` column does validate its reference format: 400 on a bare ID.) | [Sheets](sheets.md) |
 | Are there transactions, optimistic concurrency or rate limits for sheet writes? | [Sheets](sheets.md#patterns) |
 | Where must a file be uploaded for `triggerIngest` (`stagingUploadPath`, `SHEET_UPLOAD` credentials), and which file types are accepted? | [Sheets](sheets.md#bulk-loads) |
 | Which permission gates each `SheetsApi` method, and what does `auditReadAccess` do? | [Sheets](sheets.md#permissions) |
