@@ -45,7 +45,7 @@ Steps 1 to 6 happen once per session. Steps 7 to 10 repeat for each API call and
 | Non-Amplify stack, or you prefer a standard OIDC library | [Custom provider over oidc-client-ts](#public-app-over-oidc-client-ts) |
 | Local development without a login loop | [Static token](#static-token-development-only); never ship it |
 
-Prefer `AmplifyAuthProvider` with the React packages: it supports the tenant's SSO providers and Cirro's emailed sign-in links, which a generic OIDC library won't.
+Prefer `AmplifyAuthProvider` with the React packages: it supports the tenant's SSO providers and can request Cirro's emailed sign-in links, which a generic OIDC library can't (redeeming the link needs a route in your app; see below).
 
 ## AmplifyAuthProvider
 
@@ -73,6 +73,7 @@ const auth = new AmplifyAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
 What to know about it:
 
 - It redirects back to `window.location.origin`, so register bare origins, not paths.
+- Emailed sign-in links are half-handled. `loginEmail` (what `LoginWrapper`'s email option calls) asks Cirro to email a link to `window.location.origin + "/magic-link"`, but nothing in `react-auth` 0.0.8 calls `finishLoginEmail`. Your app must serve `/magic-link` (rewrite it to `index.html` on the host), read the link's parameters, and call `authProvider.finishLoginEmail({ username, challenge })`. Which parameters the link carries is [not yet confirmed](open-questions.md). Until you've built and tested that route, hide the email option and offer SSO only.
 - It requests the scopes `openid`, `email`, `phone`, `profile` and `aws.cognito.signin.user.admin`. Whether a Public App allows all of these is [not yet confirmed](open-questions.md).
 - `react-auth` needs MUI 7 and Emotion as peers, and has two [known issues](packages.md#known-issues) with workarounds.
 
