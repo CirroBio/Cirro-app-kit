@@ -30,4 +30,4 @@ Run the four checks in "Checking it works" in the authentication doc. On failure
 
 ## Be explicit about what's unconfirmed
 
-If the code depends on anything in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md` (for example whether a Public App's client ID works with `AmplifyAuthProvider`), tell the user, rather than presenting it as settled.
+If the code depends on anything in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md` (for example whether a project bucket allows the production origin), tell the user, rather than presenting it as settled.

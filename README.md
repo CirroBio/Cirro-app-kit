@@ -34,6 +34,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 - [Architecture](docs/architecture.md): the front-end-only model, and why back-end apps are out of scope
 - [Cirro TypeScript packages](docs/packages.md): which `@cirrobio` package does what, and known issues
 - [Authentication](docs/authentication.md): the sign-in flow and auth providers, including a custom OIDC example
+- [Apps without a build step](docs/no-build.md): signing in, calling the API and reading and writing files with `fetch` alone, for plain-JavaScript and desktop apps
 - [Calling the API](docs/calling-the-api.md): `DataService`, pagination, errors
 - [Sheets](docs/sheets.md): relational tables in the project as the app's database; schemas, views, SQL, ingest
 - [Working with files](docs/files.md): file credentials, signed URLs, uploads
