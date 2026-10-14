@@ -40,13 +40,13 @@ Steps 1 to 6 happen once per session. Steps 7 to 10 repeat for each API call and
 
 | Situation | Use |
 | --- | --- |
-| Viewer or tool built on `@cirrobio/react-tool` | `new AmplifyAuthProvider(clientId)` passed to `ViewerProvider` |
-| React app using Cirro's login UI | `AppConfigProvider` + `AuthenticationContextProvider` + `LoginWrapper` with `AmplifyAuthProvider(clientId)` |
+| Viewer or tool built on `@cirrobio/react-tool` | `new CirroAuthProvider(clientId)` passed to `ViewerProvider` |
+| React app using Cirro's login UI | `AppConfigProvider` + `AuthenticationContextProvider` + `LoginWrapper` with `CirroAuthProvider(clientId)` |
 | Non-Amplify stack, or you prefer a standard OIDC library | [Custom provider over oidc-client-ts](#public-app-over-oidc-client-ts) |
 | No bundler, no React, or no dependencies allowed | Call Cognito and the API with `fetch`: [apps without a build step](no-build.md) |
 | Local development without a login loop | [Static token](#static-token-development-only); never ship it |
 
-Prefer `AmplifyAuthProvider` with the React packages: it supports the tenant's SSO providers and can request Cirro's emailed sign-in links, which a generic OIDC library can't (redeeming the link needs a route in your app; see below).
+Prefer `AmplifyAuthProvider` with the React packages, through the templates' `CirroAuthProvider` subclass (copy `src/auth.ts` from either template; used unmodified, `AmplifyAuthProvider` fails sign-in with `invalid_scope`, as explained below): it supports the tenant's SSO providers and can request Cirro's emailed sign-in links, which a generic OIDC library can't (redeeming the link needs a route in your app; see below).
 
 ## AmplifyAuthProvider
 
@@ -56,9 +56,10 @@ In a React app without `ViewerProvider` (this is what the [app template](../temp
 
 ```tsx
 import { AppConfigProvider } from "@cirrobio/react-core";
-import { AmplifyAuthProvider, AuthenticationContextProvider, LoginWrapper } from "@cirrobio/react-auth";
+import { AuthenticationContextProvider, LoginWrapper } from "@cirrobio/react-auth";
+import { CirroAuthProvider } from "./auth";  // the template's src/auth.ts
 
-const auth = new AmplifyAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
+const auth = new CirroAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
 
 <AppConfigProvider apiBasePath={import.meta.env.VITE_CIRRO_API} authProvider={auth}>
   <AuthenticationContextProvider>

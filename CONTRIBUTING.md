@@ -21,3 +21,8 @@ Move the answer from `docs/open-questions.md` into the doc it affects, and remov
 - Both templates build.
 - `python3 tools/scan.py templates/app` and `templates/viewer` report no findings.
 - Relative links in `docs/` resolve (CI checks this).
+- The docs site builds without warnings: `pip install "mkdocs==1.6.1" "mkdocs-material==9.7.7" && mkdocs build --strict` (CI checks this; `mkdocs serve` previews it). Add new pages to `nav` in `mkdocs.yml`.
+
+## The docs site
+
+Every push to `main` publishes `README.md`, `docs/`, `reference/`, the template READMEs and this file to a private GitHub Pages site, visible only to people with access to this repo. The pages are the Markdown as written; `site-hooks/links.py` sends links to code (templates, tools) to GitHub, so write relative links that work on GitHub and the site follows.

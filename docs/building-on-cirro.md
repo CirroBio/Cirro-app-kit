@@ -76,7 +76,7 @@ What this buys you:
 
 - **One version for the whole app.** Pin the registered pipeline to the same release tag as the frontend, so the UI always calls a pipeline whose parameters it understands.
 - **The UI can be driven by the pipeline.** `getProcessParameters` returns the pipeline's parameter schema, so forms can be generated from it rather than duplicated.
-- **Costs are visible before they're incurred.** Call `calculatePipelineCost` or `calculateCost` and show the estimate before submitting.
+- **Costs are visible before they're incurred.** Show an estimate before submitting, from what recent completed runs cost (`calculateCost`); `calculatePipelineCost` returned no estimate on dev.cirro.bio (see the [capability map](#capability-map)).
 
 Registering the pipeline is a one-time admin step, done by the app's maintainers, not by the app at runtime for each user. Treat `createCustomProcess` as deployment tooling.
 

@@ -17,7 +17,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 | Path | Contents |
 | --- | --- |
 | [`docs/`](docs) | The developer guide |
-| [`templates/`](templates) | Buildable starters: `app` (sign-in, projects with your role, datasets) and `viewer` (a dataset's files, embedded or standalone) |
+| [`templates/`](templates) | Buildable starters: `app` (sign-in, projects, datasets) and `viewer` (a dataset's files, embedded or standalone) |
 | [`tools/scan.py`](tools/scan.py) | Pre-deploy scanner for common security and configuration mistakes |
 | [`tools/api_surface.py`](tools/api_surface.py) | Regenerates the API reference for any installed version of the packages |
 | [`reference/`](reference) | Generated API method list and common response models |

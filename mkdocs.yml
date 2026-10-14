@@ -1,0 +1,93 @@
+site_name: Cirro App Kit
+site_description: Building browser apps, viewers and tools on the Cirro platform
+site_url: https://studious-bassoon-nkl4qqy.pages.github.io/
+repo_url: https://github.com/CirroBio/Cirro-app-kit
+repo_name: CirroBio/Cirro-app-kit
+edit_uri: edit/main/
+
+# The site mirrors the repo layout so the Markdown's relative links work both
+# on GitHub and here: site-hooks/links.py replaces the docs_dir file list with
+# the repo paths in SITE_PATHS, and points links to code (templates, tools) at
+# GitHub.
+docs_dir: docs
+watch:
+  - README.md
+  - CONTRIBUTING.md
+  - reference
+  - templates/app/README.md
+  - templates/viewer/README.md
+hooks:
+  - site-hooks/links.py
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.footer
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    anchors: warn
+
+nav:
+  - Home: README.md
+  - Start here:
+      - Cirro in five minutes: docs/concepts.md
+      - Getting started: docs/getting-started.md
+      - App template: templates/app/README.md
+      - Viewer template: templates/viewer/README.md
+      - Building on Cirro: docs/building-on-cirro.md
+  - Registration and access:
+      - App types and registration: docs/app-types-and-registration.md
+      - Permissions: docs/permissions.md
+      - Authentication: docs/authentication.md
+  - Building:
+      - Architecture: docs/architecture.md
+      - Cirro TypeScript packages: docs/packages.md
+      - Calling the API: docs/calling-the-api.md
+      - Working with files: docs/files.md
+      - Sheets: docs/sheets.md
+      - Workspaces: docs/workspaces.md
+      - Viewers and tools: docs/viewers.md
+      - Apps without a build step: docs/no-build.md
+  - Shipping:
+      - Deployment: docs/deployment.md
+      - Connecting to tenants: docs/connecting-to-tenants.md
+      - Security checklist: docs/security-checklist.md
+      - Troubleshooting: docs/troubleshooting.md
+  - Reference:
+      - API surface: reference/api-surface.md
+      - Response models: reference/models.md
+      - Open questions: docs/open-questions.md
+  - Contributing: CONTRIBUTING.md
