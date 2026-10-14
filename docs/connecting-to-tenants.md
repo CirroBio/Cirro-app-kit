@@ -6,7 +6,7 @@ Deploying your app as a website makes it reachable, but not useful yet. Users ca
 
 A Cirro **tenant** is an independent research environment, usually run by or for one institution, with its own users, projects, data, governance and admins. Each tenant has its own web address, API and sign-in.
 
-There is also a **public Cirro tenant**, run by Cirro, open to researchers who aren't part of an institutional tenant. It's the natural first place to connect an app, and the place to start if you're developing an app without an institutional home.
+There is also a **public Cirro tenant** (app.cirro.bio), run by Cirro, open to researchers who aren't part of an institutional tenant. It's the natural first place to connect an app, and the place to start if you're developing an app without an institutional home.
 
 An app is connected tenant by tenant. Connecting to one tenant gives no access to any other; each tenant reviews and approves the app on its own terms.
 

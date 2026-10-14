@@ -25,7 +25,7 @@ Inside a `ViewerProvider` tool, use the `dataService` from `useViewerServices()`
 
 ## Base path
 
-`basePath` defaults to `/api`, which only works when the app is served from the Cirro origin, embedded in the Cirro UI, or behind a dev proxy (both templates include one). A standalone app must set the tenant's API URL. Which form is correct for external apps, `https://<tenant>/api` or `https://api.<tenant>`, is [not yet confirmed](open-questions.md).
+`basePath` defaults to `/api`, which only works when the app is served from the Cirro origin, embedded in the Cirro UI, or behind a dev proxy (both templates include one). A standalone app must set the tenant's API URL, `https://<tenant>/api`. That form answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so a standalone app needs no proxy. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12.
 
 ## Resources
 
@@ -48,6 +48,8 @@ python3 tools/api_surface.py node_modules > api-surface.md
 ## Pagination
 
 List endpoints that page return `{ data, nextToken }`. Pass `nextToken` back to get the next page, and stop when it's empty. In a UI, fetch pages on demand rather than everything up front.
+
+The exception is a list the user searches or filters, which needs every item. `getDatasets` accepts `limit: 1000`; a project of 1,875 datasets came back in two requests in under a second (dev.cirro.bio, 2026-10-12). A dataset's manifest pages differently: `getDatasetManifest` takes `fileOffset` and `fileLimit` and reports `totalFiles`, so ask again from the count received until it is reached.
 
 ## Errors
 
@@ -87,3 +89,5 @@ const projects = await new ProjectsApi(config).getProjects();
 ```
 
 You lose the sdk's error mapping and file utilities.
+
+Calling the API with plain `fetch` (see [apps without a build step](no-build.md)), two things differ from the generated client. Some calls succeed with an empty body, such as posting a message to a discussion (`POST /discussions/{id}/messages`), so read the body as text and parse it only when there is one. And a 403's body can carry an empty `message`, so name the refused action yourself.

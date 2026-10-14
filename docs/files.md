@@ -87,7 +87,7 @@ for (const file of fileList) {
 }
 ```
 
-`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). Check how `uploadPath` is formatted (trailing slash or not) on the first real response before joining paths.
+`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). `uploadPath` is the dataset's own data folder (`datasets/<datasetId>/data`); join a name to it with one `/` whether or not it ends in one. An uploaded file appears in the manifest as `data/<name>`, and names may contain folders: `fcs/A1.fcs` becomes `data/fcs/A1.fcs`. The dataset turns `COMPLETED` by itself once every expected file has arrived (dev.cirro.bio, 2026-10-12).
 
 ## Pitfalls
 

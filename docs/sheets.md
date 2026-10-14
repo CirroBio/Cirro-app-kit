@@ -15,6 +15,8 @@ For an app, that means a database you don't have to run. A browser-only app gets
 
 Don't use a sheet for secrets or tokens, per-user UI preferences (every project member with access can see the rows), large binary data (use datasets), or high-frequency writes such as telemetry.
 
+Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is `true` on dev.cirro.bio and `false` on the public tenant (app.cirro.bio, 2026-10-12). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
+
 ## Concepts
 
 | Concept | What it is |

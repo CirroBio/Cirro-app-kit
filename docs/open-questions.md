@@ -4,13 +4,10 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 
 | Question | Affects |
 | --- | --- |
-| Does a registered Public App's client ID belong to the same Cognito user pool `/info/system` reports, so `AmplifyAuthProvider(clientId)` works with it? | Both templates; [authentication](authentication.md) |
-| What is the API base URL for standalone apps: `https://<tenant>/api` (React packages) or `https://api.<tenant>` (Python client)? | [Calling the API](calling-the-api.md); deploy config |
-| Do the Cirro API and `/info/system` accept CORS requests from registered external origins? | Standalone apps without a proxy |
-| Do project buckets allow CORS from a registered app's production origin, or does each origin need an admin change? (On dev.cirro.bio, `http://localhost` dev origins work for signed GETs, ranged reads and uploads.) | [Files](files.md); standalone viewers |
+| Do project buckets allow CORS from a registered app's production origin on every tenant, or does each origin need an admin change? (On dev.cirro.bio a project bucket answers preflights for any origin, `https://example.org` included, with `Access-Control-Allow-Origin: *` for GET and PUT with `Range`, 2026-10-12; other tenants not checked.) | [Files](files.md); standalone viewers |
 | What `principalType` does the UI set for a Public App? | Scripted registration in [app types and registration](app-types-and-registration.md) |
 | Which permissions do file reads need, and is `GENERATE_DOWNLOAD_TOKEN` among them? | Registration guidance |
-| Access-token lifetime and refresh-token rotation for Public Apps | Session behavior |
+| Refresh-token lifetime and rotation for Public Apps (access tokens last 15 minutes: `expires_in` 900 on dev.cirro.bio, 2026-10-12) | Session behavior |
 | Is the image viewer in `Cirro-client-ts` the recommended starting point, and are more examples planned? | [Viewers](viewers.md) |
 | Which permissions gate each capability in the [capability map](building-on-cirro.md#capability-map)? The mapping is inferred from permission names | Registration guidance |
 | Do discussions of type `NOTES` created through the API appear as notes in the Cirro UI? (They are created and read back through the API on dev.cirro.bio.) | [Provenance notes](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates) |
@@ -22,7 +19,7 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | What is Cirro's role-to-permission mapping (`OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR`)? Apps need it to gate features before calling | [Permissions](permissions.md#checking-before-offering-an-action) |
 | Is an app's effective access the intersection of its registered permissions and the user's role? | [Permissions](permissions.md) |
 | Can a 403 response tell the app whether the registration or the user's role refused the action? | [Permissions](permissions.md#the-server-has-the-final-word) |
-| What is the public Cirro tenant's address, and can developers self-register a test app there before requesting approval? | [Connecting to tenants](connecting-to-tenants.md) |
+| Will the public tenant (app.cirro.bio) let developers self-register a test app? (Its `/info/system` reports `appRegistrationsEnabled: false`, 2026-10-12, so today Cirro support registers apps there.) | [Connecting to tenants](connecting-to-tenants.md) |
 | How is an embedded viewer added to a tenant as a tool, and who does it? | [Connecting to tenants](connecting-to-tenants.md#embedded-viewers) |
 | Can one registration be offered to many tenants (for example through registration templates or `OFFICIAL` publisher status), or must each tenant register separately? | [Serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant) |
 | Do sheet writes validate `required`, `unique`, `allowedValues` and foreign keys, and what error comes back when they fail? (A `CIRRO_DATASET` column does validate its reference format: 400 on a bare ID.) | [Sheets](sheets.md) |

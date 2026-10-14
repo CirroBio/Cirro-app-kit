@@ -19,7 +19,7 @@ Method and field names come from a generated client and are easy to guess wrong.
 ## Decisions
 
 - **Where the DataService comes from.** Inside `ViewerProvider`: `useViewerServices().dataService`. Under `AppConfigProvider`: `useAppConfig().dataService`. Otherwise one module-level instance.
-- **Base path.** If the project has no API URL configured, ask which tenant they target rather than guessing; the standalone form is in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md`.
+- **Base path.** If the project has no API URL configured, ask which tenant they target rather than guessing; the standalone form is `https://<tenant>/api` (`${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md#base-path`), never `https://api.<tenant>`, which browsers can't read.
 - **Files.** Pick the access context by what is being read (`datasetDownload` handles shared datasets); store `FileSystemObject`s and sign at the moment of use; keep credentials in memory.
 - **Uploads.** Create the dataset with `uploadDataset`, then upload under the returned path, as in the files doc. Ask which data type (process) the user is uploading if it isn't clear.
 
