@@ -44,7 +44,8 @@ Until a registration is approved, only the person who created it can sign in to 
 You need Node.js 20 or later.
 
 ```bash
-cp -r templates/app my-cirro-app && cd my-cirro-app
+git clone https://github.com/CirroBio/Cirro-app-kit.git
+cp -r Cirro-app-kit/templates/app my-cirro-app && cd my-cirro-app
 cp .env.example .env
 ```
 
@@ -56,7 +57,7 @@ CIRRO_PROXY_TARGET=https://<the tenant's web address>
 VITE_CIRRO_CLIENT_ID=<your client ID>
 ```
 
-In development, the template sends API calls through a local proxy to the tenant, which avoids browser cross-origin restrictions. Then:
+In development, the template sends API calls through a local proxy to the tenant, so development and production differ only in `VITE_CIRRO_API`. (The tenant API also accepts direct cross-origin calls; see [calling the API](calling-the-api.md#base-path).) Then:
 
 ```bash
 npm install
@@ -66,7 +67,7 @@ npm run dev
 Open `http://localhost:5173`. Use exactly that address: `127.0.0.1` or another port won't match the registered redirect URI. Sign in with your Cirro account, and you should see:
 
 - the tenant's name and your name in the header,
-- your projects, each with your role in it,
+- your projects,
 - the selected project's datasets, with their IDs.
 
 If the page says **App not configured**, it lists what's missing in `.env`. If sign-in fails, check the first rows of [troubleshooting](troubleshooting.md): `redirect_mismatch` and `invalid_client` are nearly always the address or the client ID.
@@ -76,7 +77,7 @@ If the page says **App not configured**, it lists what's missing in `.env`. If s
 Copy a project ID and a dataset ID from the app, then stop the app (both templates use port 5173, the one registered).
 
 ```bash
-cp -r templates/viewer my-cirro-viewer && cd my-cirro-viewer
+cd .. && cp -r Cirro-app-kit/templates/viewer my-cirro-viewer && cd my-cirro-viewer
 cp .env.example .env        # same three values as the app
 npm install
 npm run dev

@@ -21,9 +21,9 @@ Write viewers to work in both: read everything from `useViewerState()`, never fr
 
 ```tsx
 import { ViewerProvider } from "@cirrobio/react-tool";
-import { AmplifyAuthProvider } from "@cirrobio/react-auth";
+import { CirroAuthProvider } from "./auth";  // the template's src/auth.ts
 
-const auth = new AmplifyAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);  // module scope
+const auth = new CirroAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);  // module scope
 
 export default function Root() {
   return (
@@ -34,7 +34,7 @@ export default function Root() {
 }
 ```
 
-Pass a client ID only if the viewer will run standalone as a registered Public App. Without one, `AmplifyAuthProvider` uses Cirro's own UI client, which is right for viewers that only run embedded.
+`CirroAuthProvider` is the template's `AmplifyAuthProvider` subclass that requests only the `openid` scope; see [authentication](authentication.md#amplifyauthprovider). Pass a client ID only if the viewer will run standalone as a registered Public App. Without one, it uses Cirro's own UI client, which is right for viewers that only run embedded.
 
 ## Inside the viewer
 
@@ -109,7 +109,7 @@ The result reads live data under each viewer's own permissions, and nothing expi
 
 ## Local development
 
-Run the dev server, then open `http://localhost:5173/?projectId=<id>&datasetId=<id>&file=<path>`, where `file` is relative to the manifest's domain. If the tenant API rejects cross-origin calls from localhost, use the template's dev proxy (`CIRRO_PROXY_TARGET`) with `VITE_CIRRO_API=/api`. Cirro's `Cirro-client-ts` repo includes an image viewer example (`examples/image-viewer`).
+Run the dev server, then open `http://localhost:5173/?projectId=<id>&datasetId=<id>&file=<path>`, where `file` is relative to the manifest's domain. The template's `.env.example` sends API calls through its dev proxy (`VITE_CIRRO_API=/api`, `CIRRO_PROXY_TARGET`); setting `VITE_CIRRO_API` to the tenant API URL works too, since that URL accepts cross-origin calls ([base path](calling-the-api.md#base-path)). Cirro's `Cirro-client-ts` repo includes an image viewer example (`examples/image-viewer`).
 
 ## API: ViewerProvider props
 
@@ -117,7 +117,7 @@ Run the dev server, then open `http://localhost:5173/?projectId=<id>&datasetId=<
 | --- | --- | --- | --- |
 | `children` | ReactNode | | The viewer |
 | `apiBasePath` | string | `/api` | Ignored when embedded (always `/api`) |
-| `authProvider` | `InteractiveAuthenticationProvider` | `new AmplifyAuthProvider()` (Cirro UI client) | Pass `new AmplifyAuthProvider(clientId)` for a registered app |
+| `authProvider` | `InteractiveAuthenticationProvider` | `new AmplifyAuthProvider()` (Cirro UI client) | Pass `new CirroAuthProvider(clientId)` for a registered app |
 | `patchFetch` | boolean | `false` | Patch global `fetch` to sign `getPatchedSignUrl(...)` URLs |
 
 Internally it nests: viewer state (mode detection, query params or postMessage) → `AppConfigProvider` (loads `/info/system`, configures auth, builds `DataService`) → loader → `AuthenticationContextProvider` → `LoginWrapper` (shows login if signed out) → viewer context (loads project, dataset, manifest; builds `FileService`; patches fetch).

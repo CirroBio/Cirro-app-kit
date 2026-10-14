@@ -9,7 +9,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/viewers.md` first; it covers modes, wiring, sta
 
 ## Decide
 
-1. **Embedded, standalone, or both?** Embedded-only viewers use `AmplifyAuthProvider()` without a client ID; standalone needs a registered Public App (see cirro-auth-wiring).
+1. **Embedded, standalone, or both?** Embedded-only viewers use the template's `CirroAuthProvider()` without a client ID; standalone needs a registered Public App (see cirro-auth-wiring).
 2. **How does the rendering library load data?** If it takes URLs and fetches itself, check whether it uses `fetch` or `XMLHttpRequest`, then follow "Libraries that fetch files themselves" in the viewers doc: `patchFetch` for `fetch` libraries (Zarr, OME-TIFF), an internet account for JBrowse 2, a function-valued track URL for igv.js, a fetch override for `@gmod` readers.
 3. **What state should survive sessions?** Persist it through `toolState` / `sendStateUpdate`, not the URL or local storage.
 

@@ -27,8 +27,8 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 ## User permissions
 
-- [ ] Every action handles a 403 with a message saying who can fix it; any role checks live in one place, not scattered through the UI
 - [ ] Every action handles a 403 with a message saying who can fix it, and the UI updates to match
+- [ ] Any role checks live in one place, not scattered through the UI
 - [ ] Walked through the app as a `COLLABORATOR`-only test user
 
 ## Rendering

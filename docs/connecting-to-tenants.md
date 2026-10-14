@@ -129,7 +129,7 @@ export function chooseTenant(t: Tenant) {
 }
 
 // main.tsx: render a picker until savedTenant() returns one, then
-// const auth = new AmplifyAuthProvider(tenant.clientId);
+// const auth = new CirroAuthProvider(tenant.clientId);
 // <AppConfigProvider apiBasePath={tenant.api} authProvider={auth}>…
 ```
 
