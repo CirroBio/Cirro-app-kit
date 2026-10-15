@@ -10,7 +10,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/authentication.md` before writing auth code; it
 ## Decide
 
 1. **Which provider.** The app template's `CirroAuthProvider(clientId)` (`src/auth.ts`, an `AmplifyAuthProvider` subclass): it supports the tenant's SSO, and requests only the `openid` scope, without which sign-in fails with `invalid_scope` (see the authentication doc). If the app wasn't started from the template, copy `src/auth.ts` and the provider setup from it.
-2. **Does the registration match the code?** App type matches the architecture; redirect URIs are bare origins for `AmplifyAuthProvider`; permissions cover what the code calls. If you can't see the registration, ask the user for its type, redirect URIs and permissions, or read it with `AppRegistrationsApi.getAppRegistration`.
+2. **Does the registration match the code?** App type matches the architecture; redirect URIs are bare origins for `AmplifyAuthProvider` (or the full URL for an app served under a path, with the redirect overridden to match); permissions cover what the code calls. If you can't see the registration, ask the user for its type, redirect URIs and permissions, or read it with `AppRegistrationsApi.getAppRegistration`.
 3. **Where does the client ID come from?** Never hard-coded. One tenant: build-time env (`VITE_CIRRO_CLIENT_ID`). Users in several tenants: a runtime `tenants.json` and a tenant picker, per "Serving more than one tenant" in `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`.
 
 ## Implement

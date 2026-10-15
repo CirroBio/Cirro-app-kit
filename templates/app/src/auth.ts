@@ -7,7 +7,8 @@ import type { LoginProvider } from "@cirrobio/api-client";
 // (invalid_scope) if the registration allows fewer. Public Apps on dev.cirro.bio allow only
 // openid, and the API accepts tokens issued with it (verified 2026-10-11).
 const SCOPES = ["openid"];
-// Cirro's emailed sign-in link can't return to an external app; see docs/authentication.md.
+// Cirro's emailed sign-in can't work for a registered app: its client doesn't allow Cognito's
+// custom-auth flow, and the link can't return to an external app; see docs/authentication.md.
 const EMAIL_LINK_PROVIDER = "COGNITO";
 
 export class CirroAuthProvider extends AmplifyAuthProvider {

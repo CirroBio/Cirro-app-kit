@@ -27,3 +27,4 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | What do sheet mappings to a target entity do once saved? | [Sheets](sheets.md#concepts) |
 | Will the sdk's `ApiError` carry the HTTP status code? | [Known issues](packages.md#known-issues) |
 | Does the magic-link handler's `CALLBACK_URLS` include registered Public App origins, so emailed sign-in links can return to an external app? | [Authentication](authentication.md#amplifyauthprovider) |
+| Can Public App registrations get `ALLOW_CUSTOM_AUTH` on their Cognito app client, so emailed sign-in can start? (Not enabled on dev.cirro.bio or demo.cirro.bio registrations, 2026-10-15; the portal's own client has it.) | [Authentication](authentication.md#amplifyauthprovider) |
