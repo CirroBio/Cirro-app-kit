@@ -2,6 +2,8 @@
 
 Documentation, project templates and tools for building browser apps, viewers and tools on the [Cirro](https://cirro.bio) platform: apps that sign users in with their Cirro account and work with their projects, datasets and files.
 
+The developer guide is also published as a website: **[Cirro App Kit docs](https://studious-bassoon-nkl4qqy.pages.github.io/)** (visible to anyone with access to this repo).
+
 ## Quick start
 
 New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getting started](docs/getting-started.md), which takes you from no account to a running app and viewer.
