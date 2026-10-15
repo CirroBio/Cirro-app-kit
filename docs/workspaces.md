@@ -62,7 +62,7 @@ async function openWorkspace(projectId: string, workspaceId: string) {
 A running workspace costs money until it stops. `autoStopTimeout` (hours) stops it automatically.
 
 - Always set `autoStopTimeout` on `createWorkspace`. A short value (1–2 hours) is right for app-launched workspaces.
-- While the user is actively using the embedded workspace, call `postponeAutoStop` periodically (for example every 15 minutes of activity) rather than setting a long timeout up front. Stop postponing when the tab is hidden or idle.
+- While the user is actively using the workspace, call `postponeAutoStop` periodically (for example every 15 minutes of activity) rather than setting a long timeout up front. Stop postponing when the tab is hidden or idle.
 - Show `autoStopTime` in the UI ("Stops automatically at 3:40 pm"), with a button to extend it and one to stop now (`stopWorkspace`).
 - When the user leaves the app, the workspace keeps running until auto-stop. Say so, rather than stopping it silently: they may have unsaved work in it.
 

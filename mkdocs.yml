@@ -1,5 +1,5 @@
 site_name: Cirro App Kit
-site_description: Building browser apps, viewers and tools on the Cirro platform
+site_description: Building browser apps on the Cirro platform
 site_url: https://studious-bassoon-nkl4qqy.pages.github.io/
 repo_url: https://github.com/CirroBio/Cirro-app-kit
 repo_name: CirroBio/Cirro-app-kit
@@ -15,7 +15,6 @@ watch:
   - CONTRIBUTING.md
   - reference
   - templates/app/README.md
-  - templates/viewer/README.md
 hooks:
   - site-hooks/links.py
 
@@ -75,7 +74,6 @@ nav:
       - Cirro in five minutes: docs/concepts.md
       - Getting started: docs/getting-started.md
       - App template: templates/app/README.md
-      - Viewer template: templates/viewer/README.md
       - Building on Cirro: docs/building-on-cirro.md
   - Registration and access:
       - App types and registration: docs/app-types-and-registration.md
@@ -88,8 +86,6 @@ nav:
       - Working with files: docs/files.md
       - Sheets: docs/sheets.md
       - Workspaces: docs/workspaces.md
-      - Viewers and tools: docs/viewers.md
-      - Apps without a build step: docs/no-build.md
   - Shipping:
       - Deployment: docs/deployment.md
       - Connecting to tenants: docs/connecting-to-tenants.md

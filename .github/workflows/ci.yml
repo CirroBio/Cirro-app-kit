@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: [app, viewer]
+        template: [app]
         packages: [pinned, latest]
     defaults:
       run:

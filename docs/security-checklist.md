@@ -23,7 +23,6 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 - [ ] Tokens come from the auth provider on each call (`tokenGetter`), not cached in app state
 - [ ] Tokens and AWS file credentials kept in memory or the auth library's storage; never written to `localStorage` by your code, logged, or put in URLs
 - [ ] Sign-out calls the provider's `signOut()` and clears cached file credentials
-- [ ] Any static-token provider is unreachable in production builds
 
 ## User permissions
 
@@ -43,10 +42,6 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 ## Deployment
 
 - [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, Cognito and S3 (see [deployment](deployment.md#content-security-policy))
-- [ ] Embedded viewers send `frame-ancestors` for the Cirro origin only
+- [ ] The host sends `frame-ancestors 'none'`, so other sites can't frame the app
 - [ ] Production `VITE_CIRRO_API` is the full tenant URL, unless deliberately proxied
 - [ ] Project bucket CORS allows the production origin, if the app reads files directly
-
-## Viewers
-
-- [ ] Aware of the `event.origin` gap in `react-tool`'s embedded message handler ([known issues](packages.md#known-issues))

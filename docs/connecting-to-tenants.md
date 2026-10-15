@@ -57,7 +57,7 @@ Contact that tenant's Cirro admins. If you don't know who they are, the tenant's
 A complete request is quicker to approve. Include:
 
 - **App:** name, one-paragraph description, who publishes and maintains it, and a contact email. If you developed against a registration in this tenant, include its client ID so it can be updated and approved rather than recreated.
-- **Where it runs:** the production URL and any other origins that need to sign in (these become redirect URIs). Note whether it also runs embedded in Cirro.
+- **Where it runs:** the production URL and any other origins that need to sign in (these become redirect URIs).
 - **App type:** Public App (browser-only; the only type this kit covers). See [app types](app-types-and-registration.md).
 - **Permissions:** your `cirro-permissions.json`, with required and optional permissions and their reasons. Say whether grants can be scoped to specific projects.
 - **Data handling:** whether the app sends any Cirro data, or data derived from it, anywhere other than the user's browser and Cirro (your own backend, analytics, third-party APIs). If not, say so.
@@ -139,10 +139,6 @@ export function chooseTenant(t: Tenant) {
 - If the saved tenant is no longer in the file, clear the choice and show the picker.
 
 Register every origin the app is served from in every tenant that uses it.
-
-## Embedded viewers
-
-Viewers that run inside the Cirro UI are connected differently from standalone apps: they're added to a tenant as tools, rather than signing users in through a registration. Ask support@cirro.bio how to make an embedded viewer available in a tenant. If the same viewer also runs standalone, it needs a regular connection request for that use.
 
 ## Planning ahead
 

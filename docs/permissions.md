@@ -13,11 +13,11 @@ An action succeeds only when both layers allow it. The app's registration sets a
 
 Admins can only grant least privilege if the app tells them what that is. Every app should ship a **permission manifest**: a short, checked-in statement of the permissions it uses, which features need each one, and which are optional.
 
-This kit uses a `cirro-permissions.json` file at the root of the app (both templates include one):
+This kit uses a `cirro-permissions.json` file at the root of the app (the app template includes one):
 
 ```json
 {
-  "app": "variant-viewer",
+  "app": "variant-review",
   "scope": "project",
   "required": [
     { "permission": "VIEW_PROJECT", "reason": "List the projects the user can open" },

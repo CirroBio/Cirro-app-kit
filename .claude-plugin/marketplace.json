@@ -4,7 +4,7 @@
     "name": "Sam Minot"
   },
   "metadata": {
-    "description": "Docs, templates and Claude skills for building browser apps, viewers and tools on the Cirro platform.",
+    "description": "Docs, a template and Claude skills for building browser apps that sign users in to Cirro with OAuth.",
     "version": "0.1.0"
   },
   "plugins": [

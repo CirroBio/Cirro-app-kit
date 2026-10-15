@@ -58,7 +58,7 @@ Reading part of a large file (a `.zarr.zip`, `.h5ad`, BAM) by range from a signe
 - On 401 or 403, the URL has expired. Re-sign once, shared by all in-flight reads, and retry.
 - Coalesce nearby ranges. Reading a whole array from a `.zarr.zip` is one request per chunk, often thousands; Chrome fails them with `ERR_INSUFFICIENT_RESOURCES`. Merging ranges that sit close together in the file and capping concurrency fixes it: Spatial Data Studio went from ~8,000 requests to 82.
 
-For libraries that fetch by path or with range requests (Zarr, OME-TIFF, genome tracks), signing each URL yourself is impractical. [Viewers](viewers.md#libraries-that-fetch-files-themselves) covers the approaches: `patchFetch` for libraries that use `fetch`, an internet account for JBrowse 2, a function-valued URL for igv.js, and a fetch override for `@gmod` readers. Outside `ViewerProvider`, give the library a custom fetch or URL resolver that calls `getSignedUrlFromProjectPath` per request.
+For a library that fetches files by path itself, give it a fetch function or URL resolver that calls `getSignedUrlFromProjectPath` per request, rather than signing URLs up front.
 
 ## Uploading
 

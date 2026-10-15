@@ -33,9 +33,9 @@ RULES = [
     ("MEDIUM", "eval", re.compile(r"\beval\(|new Function\("),
      "Dynamic code execution"),
     ("LOW", "default-api-base", re.compile(r"new DataService\(\s*\{\s*tokenGetter[^}]*\}\s*\)"),
-     "DataService without basePath defaults to /api; fine embedded or behind a proxy, wrong for standalone"),
+     "DataService without basePath defaults to /api; fine behind a dev proxy, wrong for a deployed app"),
     ("LOW", "amplify-no-client-id", re.compile(r"new AmplifyAuthProvider\(\s*\)"),
-     "AmplifyAuthProvider without a client ID uses Cirro's UI client; standalone apps should pass their registered client ID"),
+     "AmplifyAuthProvider without a client ID uses Cirro's UI client; apps should pass their registered client ID"),
     ("LOW", "stored-signed-url", re.compile(r"(useState|set[A-Z]\w*)\([^)]*getSignedUrl", re.I),
      "Signed URLs stored in state expire (5 min default); store the file and sign on use"),
 ]
