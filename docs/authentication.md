@@ -33,26 +33,14 @@ Steps 1 to 6 happen once per session. Steps 7 to 10 repeat for each API call and
 
 ## The interfaces
 
-- **`AuthenticationProvider`** (`@cirrobio/sdk`): `configure(systemInfo)`, `getAccessToken()`, `getCurrentUser()`, `forceRefresh()`. Enough for `DataService` and anything non-React.
-- **`InteractiveAuthenticationProvider`** (`@cirrobio/react-core`) adds `loginSSO(providerId)`, `loginEmail`, `finishLoginEmail`, `signOut()`, `getLoginProviders()` and `registerAuthEventHandler()`. Required by `AppConfigProvider`, `react-auth`'s login UI, and `ViewerProvider`.
-
-## Choosing a provider
-
-| Situation | Use |
-| --- | --- |
-| Viewer or tool built on `@cirrobio/react-tool` | `new CirroAuthProvider(clientId)` passed to `ViewerProvider` |
-| React app using Cirro's login UI | `AppConfigProvider` + `AuthenticationContextProvider` + `LoginWrapper` with `CirroAuthProvider(clientId)` |
-| Non-Amplify stack, or you prefer a standard OIDC library | [Custom provider over oidc-client-ts](#public-app-over-oidc-client-ts) |
-| No bundler, no React, or no dependencies allowed | Call Cognito and the API with `fetch`: [apps without a build step](no-build.md) |
-| Local development without a login loop | [Static token](#static-token-development-only); never ship it |
-
-Prefer `AmplifyAuthProvider` with the React packages, through the templates' `CirroAuthProvider` subclass (copy `src/auth.ts` from either template; used unmodified, `AmplifyAuthProvider` fails sign-in with `invalid_scope`, as explained below): it supports the tenant's SSO providers and can request Cirro's emailed sign-in links, which a generic OIDC library can't (redeeming the link needs a route in your app; see below).
+- **`AuthenticationProvider`** (`@cirrobio/sdk`): `configure(systemInfo)`, `getAccessToken()`, `getCurrentUser()`, `forceRefresh()`. What `DataService` asks for tokens.
+- **`InteractiveAuthenticationProvider`** (`@cirrobio/react-core`) adds `loginSSO(providerId)`, `loginEmail`, `finishLoginEmail`, `signOut()`, `getLoginProviders()` and `registerAuthEventHandler()`. Required by `AppConfigProvider` and `react-auth`'s login UI.
 
 ## AmplifyAuthProvider
 
-Create the provider once, at module scope or with `useMemo`; a new instance per render re-runs configuration.
+Sign in with `react-auth`'s `AmplifyAuthProvider`, through the app template's `CirroAuthProvider` subclass (`src/auth.ts`). It supports the tenant's SSO providers. Used unmodified, `AmplifyAuthProvider` fails sign-in with `invalid_scope`, as explained below.
 
-In a React app without `ViewerProvider` (this is what the [app template](../templates/app) does):
+Create the provider once, at module scope or with `useMemo`; a new instance per render re-runs configuration. This is what the [app template](../templates/app) does:
 
 ```tsx
 import { AppConfigProvider } from "@cirrobio/react-core";
@@ -70,13 +58,23 @@ const auth = new CirroAuthProvider(import.meta.env.VITE_CIRRO_CLIENT_ID);
 </AppConfigProvider>
 ```
 
-`useAuthenticator()` returns `{ authStatus, authInfo, userInfo, refresh }`. `authInfo` holds the signed-in user's `username`. `userInfo` is only populated with `fetchUserInfo`, which calls `getUser` and is refused for most app registrations; see [permissions](permissions.md#checking-before-offering-an-action). For viewers, see [viewers](viewers.md).
+`useAuthenticator()` returns `{ authStatus, authInfo, userInfo, refresh }`. `authInfo` holds the signed-in user's `username`. `userInfo` is only populated with `fetchUserInfo`, which calls `getUser` and is refused for most app registrations; see [permissions](permissions.md#checking-before-offering-an-action).
 
 What to know about it:
 
-- It redirects back to `window.location.origin`, so register bare origins, not paths.
+- It redirects back to `window.location.origin`, so register bare origins, not paths. An app served under a path (a GitHub Pages project site such as `https://<org>.github.io/<repo>/`) must override `redirectSignIn`/`redirectSignOut` with the full path and register that exact URL; the origin root isn't the app there.
 - Emailed sign-in links are half-handled, and probably can't work for external apps. `loginEmail` (what `LoginWrapper`'s email option calls) asks Cirro to email a link to `window.location.origin + "/magic-link"`, but nothing in `react-auth` 0.0.8 calls `finishLoginEmail`. The link is `<redirectUri>#<base64url(JSON {username, userCode, iat, exp})>.<signature>`: the whole fragment is the `challenge`, and `username` is in its first segment (Cirro-backend `CustomAuthHandler/magic_link.py`). The backend only accepts a `redirectUri` from its deploy-time `CALLBACK_URLS` setting (`auth_config.py`), which most likely lists the Cirro portal and not registered app origins; that is [not yet confirmed](open-questions.md). Offer SSO only, and filter the `COGNITO` provider out of the login options, unless a sent link has been redeemed end to end on your tenant.
-- It requests the scopes `openid`, `email`, `phone`, `profile` and `aws.cognito.signin.user.admin` (hard-coded in `react-auth` 0.0.8), and Cognito rejects the whole sign-in if the registration disallows any one of them: the app comes back with `?error=invalid_request&error_description=invalid_scope`. Public Apps on dev.cirro.bio allow only `openid` (2026-10-10), and `AppRegistrationInput` has no scopes field. The API accepts tokens issued with `openid` alone (verified 2026-10-11), and `getCurrentUser` needs only claims those tokens carry. Both templates therefore use `CirroAuthProvider` (`src/auth.ts`), which re-runs `Amplify.configure` with `scopes: ["openid"]` after the provider's own `configure()` and hides the emailed-link option.
+- Emailed sign-in also can't start for a registered app today, before any link is sent. `requestSignInLink` runs Cognito's custom-auth flow (`CUSTOM_WITHOUT_SRP`) with the app's own client ID, and the Cognito app clients created for Public App registrations don't allow it: `InitiateAuth` with `AuthFlow: CUSTOM_AUTH` answers `InvalidParameterException: CUSTOM_AUTH is not enabled for the client.` (dev.cirro.bio and demo.cirro.bio registrations, 2026-10-15). The Cirro portal's own client (`uiAppId` in `/info/system`) does allow it, which is why the portal offers email sign-in. You can check a registration without sending anything by starting the flow for an address with no account:
+
+  ```bash
+  curl -s -X POST https://cognito-idp.<region>.amazonaws.com/ \
+    -H 'Content-Type: application/x-amz-json-1.1' \
+    -H 'X-Amz-Target: AWSCognitoIdentityProviderService.InitiateAuth' \
+    -d '{"AuthFlow":"CUSTOM_AUTH","ClientId":"<client id>","AuthParameters":{"USERNAME":"no-such-user@example.invalid"}}'
+  ```
+
+  A `CUSTOM_CHALLENGE` answer means custom auth is enabled; the `InvalidParameterException` above means it isn't. For email sign-in to work in an app, all of these have to change: the registration's client must allow `ALLOW_CUSTOM_AUTH` (a Cirro platform change); the magic-link handler's `CALLBACK_URLS` must accept the app's redirect URI; the link must return inside the app (`react-auth` defaults to `origin + "/magic-link"`, outside an app served under a path, so pass the registered redirect URI as `redirectUri`); and the app must redeem the link by calling `finishLoginEmail({ username, challenge })` with the fragment, which `react-auth` 0.0.8 never does.
+- It requests the scopes `openid`, `email`, `phone`, `profile` and `aws.cognito.signin.user.admin` (hard-coded in `react-auth` 0.0.8), and Cognito rejects the whole sign-in if the registration disallows any one of them: the app comes back with `?error=invalid_request&error_description=invalid_scope`. Public Apps on dev.cirro.bio allow only `openid` (2026-10-10), and `AppRegistrationInput` has no scopes field. The API accepts tokens issued with `openid` alone (verified 2026-10-11), and `getCurrentUser` needs only claims those tokens carry. The app template therefore uses `CirroAuthProvider` (`src/auth.ts`), which re-runs `Amplify.configure` with `scopes: ["openid"]` after the provider's own `configure()` and hides the emailed-link option.
 - `react-auth` needs MUI 7 and Emotion as peers, and has [known issues](packages.md#known-issues) with workarounds. Mount `AuthenticationContextProvider` only after the tenant config has loaded; see the app template's `ConfigGate`.
 
 ## Checking it works
@@ -87,87 +85,3 @@ What to know about it:
 4. Leave the tab past the access-token lifetime and confirm calls still succeed.
 
 If something fails, check [troubleshooting](troubleshooting.md) before changing code; most failures are registration mismatches.
-
-## Public App over oidc-client-ts
-
-Standard OIDC code flow with PKCE against the tenant's Cognito user pool. Supports the tenant's SSO providers through Cognito's `identity_provider` parameter. It does not support Cirro's emailed sign-in link, which is a custom Cognito flow; if users rely on it, use `AmplifyAuthProvider` instead.
-
-```typescript
-import { UserManager, WebStorageStateStore, InMemoryWebStorage } from "oidc-client-ts";
-import { CurrentUser } from "@cirrobio/sdk";
-import type { SystemInfoResponse, LoginProvider } from "@cirrobio/api-client";
-import type { InteractiveAuthenticationProvider, AuthEventHandlerOptions } from "@cirrobio/react-core";
-
-export class OidcCirroAuthProvider implements InteractiveAuthenticationProvider {
-  private manager!: UserManager;
-  private loginProviders: LoginProvider[] = [];
-  private ready!: Promise<void>;
-
-  constructor(private readonly clientId: string, private readonly redirectPath = "/") {}
-
-  configure(config: SystemInfoResponse): void {
-    this.loginProviders = config.tenantInfo.loginProviders;
-    this.manager = new UserManager({
-      authority: `https://cognito-idp.${config.region}.amazonaws.com/${config.auth.userPoolId}`,
-      client_id: this.clientId,
-      redirect_uri: window.location.origin + this.redirectPath,
-      post_logout_redirect_uri: window.location.origin,
-      response_type: "code",                     // PKCE is automatic for code flow
-      scope: "openid email profile",             // must be allowed on the registration
-      automaticSilentRenew: true,                // uses the refresh token
-      userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }), // tokens in memory only
-    });
-    // Finish a redirect if we just came back from the login page
-    const params = new URLSearchParams(window.location.search);
-    this.ready = params.has("code") && params.has("state")
-      ? this.manager.signinRedirectCallback().then(() => {
-          window.history.replaceState({}, "", window.location.pathname);
-        })
-      : Promise.resolve();
-  }
-
-  async getAccessToken(): Promise<string> {
-    await this.ready;
-    let user = await this.manager.getUser();
-    if (!user || user.expired) user = await this.manager.signinSilent().catch(() => null);
-    if (!user) throw new Error("Not signed in");
-    return user.access_token;
-  }
-
-  async getCurrentUser(): Promise<CurrentUser> {
-    await this.ready;
-    const user = await this.manager.getUser();
-    if (!user) throw new Error("Not signed in");
-    return CurrentUser.fromCognitoUser(user.profile as Record<string, any>);
-  }
-
-  async forceRefresh(): Promise<void> { await this.manager.signinSilent(); }
-
-  async loginSSO(providerId: string): Promise<void> {
-    await this.manager.signinRedirect({ extraQueryParams: { identity_provider: providerId } });
-  }
-  async loginEmail(): Promise<void> { throw new Error("Emailed sign-in links need AmplifyAuthProvider"); }
-  async finishLoginEmail(): Promise<void> { throw new Error("Emailed sign-in links need AmplifyAuthProvider"); }
-  async signOut(): Promise<void> { await this.manager.removeUser(); await this.manager.signoutRedirect(); }
-  getLoginProviders(): LoginProvider[] { return this.loginProviders; }
-
-  registerAuthEventHandler(options?: AuthEventHandlerOptions): void {
-    if (options?.onSignIn) this.manager.events.addUserLoaded(options.onSignIn);
-    if (options?.onSignOut) this.manager.events.addUserSignedOut(options.onSignOut);
-  }
-}
-```
-
-Notes:
-- With in-memory storage, a page reload loses the session and triggers a silent sign-in or a redirect. That's the safer trade; switch to `sessionStorage` only if you accept the XSS exposure.
-- Cognito's sign-out endpoint expects `logout_uri` and `client_id`; if `signoutRedirect()` errors, redirect to `https://<auth.endpoint>/logout?client_id=...&logout_uri=...` manually.
-- If `react-auth`'s `LoginOptions` is used, it will show an email option that this provider can't serve. Use your own login button that calls `loginSSO` instead.
-
-## Static token (development only)
-
-```typescript
-import { StaticInteractiveAuthTokenProvider } from "@cirrobio/react-auth";
-const auth = new StaticInteractiveAuthTokenProvider(import.meta.env.VITE_DEV_CIRRO_TOKEN);
-```
-
-Guard it so it cannot reach production, for example `import.meta.env.DEV ? static : amplify`, and keep the token out of committed `.env` files.

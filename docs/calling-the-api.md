@@ -9,7 +9,7 @@ export const data = new DataService({
   basePath: import.meta.env.VITE_CIRRO_API,          // see "Base path" below
   tokenGetter: () => authProvider.getAccessToken(),
 });
-export const files = new FileService(data.file);     // for file access; see files.md
+export const files = new FileService(data.file);     // for file access; see "Working with files"
 
 try {
   const projects = await data.projects.getProjects();
@@ -21,11 +21,11 @@ try {
 
 The token getter runs before every request, so token renewal stays inside your auth provider. Don't cache token strings yourself.
 
-Inside a `ViewerProvider` tool, use the `dataService` from `useViewerServices()` instead of building your own. In a React app using `AppConfigProvider`, use `useAppConfig().dataService`.
+In a React app using `AppConfigProvider`, as the app template does, use `useAppConfig().dataService` instead of building your own.
 
 ## Base path
 
-`basePath` defaults to `/api`, which only works when the app is served from the Cirro origin, embedded in the Cirro UI, or behind a dev proxy (both templates include one). A standalone app must set the tenant's API URL, `https://<tenant>/api`. That form answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so a standalone app needs no proxy. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12.
+`basePath` defaults to `/api`, which only works when the app is served from the Cirro origin or behind a dev proxy (the app template includes one). A deployed app must set the tenant's API URL, `https://<tenant>/api`. That form answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so a deployed app needs no proxy. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12.
 
 ## Resources
 
@@ -68,7 +68,7 @@ try {
   await execution.runAnalysis({ projectId, runAnalysisRequest });
 } catch (e) {
   if (e instanceof ResponseError && e.response.status === 403) {
-    // refused by the user's role or the app's registration; see permissions.md
+    // refused by the user's role or the app's registration; see "Permissions"
   }
   throw e;
 }
@@ -89,5 +89,3 @@ const projects = await new ProjectsApi(config).getProjects();
 ```
 
 You lose the sdk's error mapping and file utilities.
-
-Calling the API with plain `fetch` (see [apps without a build step](no-build.md)), two things differ from the generated client. Some calls succeed with an empty body, such as posting a message to a discussion (`POST /discussions/{id}/messages`), so read the body as text and parse it only when there is one. And a 403's body can carry an empty `message`, so name the refused action yourself.

@@ -1,6 +1,6 @@
 ---
 name: cirro-app-review
-description: Review a Cirro frontend app, viewer or tool for security and configuration problems before it is deployed or shared. Use this whenever someone asks to review, audit, security-check or "get ready to ship" an app that signs in with Cirro or calls the Cirro API, before a first production deploy, before requesting admin approval for a Cirro OAuth app, or after changing auth, permissions or file-access code.
+description: Review a Cirro frontend app for security and configuration problems before it is deployed or shared. Use this whenever someone asks to review, audit, security-check or "get ready to ship" an app that signs in with Cirro or calls the Cirro API, before a first production deploy, before requesting admin approval for a Cirro OAuth app, or after changing auth, permissions or file-access code.
 ---
 
 # Reviewing a Cirro app before deployment

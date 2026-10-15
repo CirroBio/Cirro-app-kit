@@ -1,6 +1,6 @@
 # App template
 
-A React + Vite starter for a standalone Cirro app (portal, dashboard, workflow tool). It signs in with Cirro's login UI, shows which tenant you're in, lists your projects, and lists a project's datasets with their IDs.
+A React + Vite starter for a Cirro app (portal, dashboard, workflow tool). It signs in with Cirro's login UI, shows which tenant you're in, lists your projects, and lists a project's datasets with their IDs.
 
 ```bash
 cp .env.example .env      # set VITE_CIRRO_CLIENT_ID and CIRRO_PROXY_TARGET
