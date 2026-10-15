@@ -22,7 +22,7 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 - [ ] No client secret or app credentials of any kind anywhere in the bundle or repo
 - [ ] Tokens come from the sign-in library on each call (`tokenGetter`), not cached in app state
 - [ ] Tokens and AWS file credentials kept in memory or the sign-in library's storage; never written to `localStorage` by your code, logged, or put in URLs
-- [ ] Sign-out removes the user from the sign-in library, ends the Cognito session, and clears cached file credentials
+- [ ] Sign-out revokes the refresh token, removes the user from the sign-in library, and clears cached file credentials
 
 ## User permissions
 
@@ -41,7 +41,7 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 ## Deployment
 
-- [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, Cognito and S3 (see [deployment](deployment.md#content-security-policy))
+- [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, its token server and S3 (see [deployment](deployment.md#content-security-policy))
 - [ ] The host sends `frame-ancestors 'none'`, so other sites can't frame the app
 - [ ] Production `VITE_CIRRO_URL` is the tenant's web address, and its client ID is that tenant's
 - [ ] Project bucket CORS allows the production origin, if the app reads files directly

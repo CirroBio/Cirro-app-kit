@@ -11,7 +11,7 @@ const root = ReactDOM.createRoot(document.getElementById("root")!);
 const style = { padding: 24, fontFamily: "system-ui, sans-serif" };
 
 async function start() {
-  // Public, and needed before sign-in: the tenant's name, user pool and Cognito domain.
+  // Public: the tenant's name, shown so users can see where they're signing in.
   const res = await fetch(`${config.url}/api/info/system`);
   if (!res.ok) throw new Error(`Could not reach Cirro: ${config.url}/api/info/system answered HTTP ${res.status}`);
   const system: SystemInfoResponse = await res.json();
@@ -23,7 +23,7 @@ async function start() {
     throw new Error(`Sign-in failed: ${returned.get("error_description") ?? returned.get("error")}`);
   }
 
-  const signIn = createSignIn(config.url, config.clientId, system);
+  const signIn = await createSignIn(config.url, config.clientId);
   const user = await currentUser(signIn);
   if (!user) {
     root.render(
@@ -50,7 +50,7 @@ async function start() {
         dataService={dataService}
         tenantName={system.tenantInfo.name}
         username={String(user.profile["cognito:username"] ?? user.profile.sub)}
-        onSignOut={() => signOut(signIn, system.auth.endpoint, config.clientId)}
+        onSignOut={() => signOut(signIn)}
       />
     </React.StrictMode>
   );

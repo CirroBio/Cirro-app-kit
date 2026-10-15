@@ -9,7 +9,7 @@ That constraint is the point, not a limitation. It lets a community of developer
 ```mermaid
 flowchart LR
   app["Your app<br/>(browser, tokens in memory)"]
-  authorize["Cirro authorize page<br/>(consent, then Cognito)"]
+  authorize["Cirro authorize page<br/>(consent and sign-in)"]
   api["Cirro API"]
   s3["Project S3 bucket"]
   app -- "sign in: code + PKCE" --> authorize

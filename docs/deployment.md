@@ -23,7 +23,7 @@ Start from this and tighten it to the hosts you actually see in the network tab:
 ```
 default-src 'self';
 script-src 'self';
-connect-src 'self' https://<cirro tenant> https://<cognito domain> https://*.s3.amazonaws.com https://*.s3.<region>.amazonaws.com https://*.s3.dualstack.<region>.amazonaws.com;
+connect-src 'self' https://<cirro tenant> https://<token server> https://*.s3.amazonaws.com https://*.s3.<region>.amazonaws.com https://*.s3.dualstack.<region>.amazonaws.com;
 img-src 'self' data: blob: https://*.s3.amazonaws.com;
 style-src 'self';
 frame-ancestors 'none';
@@ -31,7 +31,7 @@ frame-ancestors 'none';
 
 Apps that read files with WebAssembly (h5wasm, DuckDB-WASM, Pyodide) need `'wasm-unsafe-eval'` in `script-src`, and `worker-src 'self' blob:` when the reader runs in a worker. Range reads from the browser need the project bucket's CORS to allow the `Range` request header.
 
-The Cirro tenant serves the API; the Cognito domain issues and renews tokens (no browser request goes to Cirro's authorize page, which is a navigation). The SDK's S3 client uses dual-stack endpoints, hence the `s3.dualstack` host. The region and Cognito domain come from the tenant's `/info/system` response (`region`, `auth.endpoint`).
+The Cirro tenant serves the API and the OAuth metadata document; the token server is the host of `token_endpoint` and `revocation_endpoint` in that document (Cirro's authorize page is a navigation, not a request). The SDK's S3 client uses dual-stack endpoints, hence the `s3.dualstack` host; the region is in the tenant's `/api/info/system` response.
 
 ## Before the first production deploy
 

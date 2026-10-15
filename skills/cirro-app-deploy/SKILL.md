@@ -23,7 +23,7 @@ Ask only for what the conversation and repo haven't answered:
 
 ## 3. Host config
 
-Apply what the deployment doc lists: HTTPS on a registered origin, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Fill the region and Cognito domain from the tenant's `/info/system` (`region`, `auth.endpoint`). Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
+Apply what the deployment doc lists: HTTPS on a registered origin, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Take the token server from `token_endpoint` in the tenant's `/.well-known/oauth-authorization-server`, and the region from `/api/info/system`. Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
 
 ## 4. Pre-flight
 
