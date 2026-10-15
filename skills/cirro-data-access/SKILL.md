@@ -32,12 +32,14 @@ Method and field names come from a generated client and are easy to guess wrong.
 ## Provenance and cost
 
 - When code creates a dataset, workspace or pipeline run, also add a provenance note, and tag every taggable entity with `cirro-app: <APP_ID>`, following "Provenance by default" and "Tag everything the app creates" in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`. For long-running work, use `${CLAUDE_PLUGIN_ROOT}/docs/workspaces.md`.
-- Before code that spends money (pipeline runs, workspaces), add a cost estimate and an explicit confirmation step. Treat governance actions (roles, shares) per the trust-boundaries table in the same doc.
+- Before code that spends money (pipeline runs, workspaces; see cirro-compute), add a cost estimate and an explicit confirmation step. Treat governance actions (roles, shares) per the trust-boundaries table in the same doc.
 
 ## Errors to explain, not retry
 
 A CORS failure on file reads while API calls succeed is a bucket CORS setting (admin task). A 403 is a missing permission on the registration or the user's project role. Explain these to the user instead of changing code.
 
-## Structured data
+## Hand-offs
 
-For records the app creates or curates, or tables people will query, use Sheets rather than an external database or CSVs in datasets. Look sheets up by `namespaceName` + `tableName`, give the app its own namespace, prefer `querySheetData` with a structured filter over raw SQL built from user input, and ingest files for bulk loads. Read `${CLAUDE_PLUGIN_ROOT}/docs/sheets.md` before writing Sheets code.
+- Records the app creates or curates, or tables people will query: use cirro-sheets rather than an external database or CSVs in datasets.
+- Running pipelines or starting workspaces: use cirro-compute.
+- Deciding which permissions to declare, or handling 403s across the app: use cirro-permissions.

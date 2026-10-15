@@ -33,6 +33,6 @@ For each item in the security checklist, record a status and one line of evidenc
 4. **Confirmed fine:** one line per checklist area.
 5. **Needs a person:** things only an admin or the user can confirm (registration contents, bucket CORS, approval).
 
-If the verdict is ready, offer to draft the tenant connection request ("What to include" in `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`), using the manifest and this review.
+If the verdict is ready, offer to continue with cirro-app-deploy, which drafts the tenant connection request using the manifest and this review.
 
 Offer to apply code fixes. Don't change registrations or deploy without the user's go-ahead.

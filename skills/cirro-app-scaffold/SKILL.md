@@ -35,7 +35,7 @@ Then:
 
 ## 3. Permissions and registration
 
-Update the template's `cirro-permissions.json` for what the app will do: required permissions with a reason each, optional ones tied to a feature. Follow `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md`; aim for the smallest required set, project-scoped.
+Update the template's `cirro-permissions.json` for what the app will do: required permissions with a reason each, optional ones tied to a feature. Follow `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` (cirro-permissions has the steps); aim for the smallest required set, project-scoped.
 
 Standalone apps need a registration before sign-in works. Walk the user through `${CLAUDE_PLUGIN_ROOT}/docs/app-types-and-registration.md`. Embedded-only viewers can skip it. If the user wants registration scripted, show them the `AppRegistrationInput` and get a yes before running it.
 
@@ -49,8 +49,8 @@ Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first de
 
 ## Connection request
 
-A deployed app only works for users once a tenant connects it. When the app is ready, draft the connection request from "What to include" in `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md` (using the manifest, origins and scan result) for the user to send: to support@cirro.bio for the public tenant, or to their tenant's admins.
+A deployed app only works for users once a tenant connects it. When the app is ready to ship, use cirro-app-deploy: it covers production config, hosting and the connection request for each tenant.
 
 ## Hand-off
 
-Tell the user briefly what was created, which registration details are still needed, and which parts depend on items in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md`. For feature work, use cirro-data-access or cirro-viewer-tool; run cirro-app-review before the first production deploy.
+Tell the user briefly what was created, which registration details are still needed, and which parts depend on items in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md`. For feature work, use cirro-data-access, cirro-viewer-tool, cirro-sheets or cirro-compute; run cirro-app-review before the first production deploy, and cirro-app-deploy to ship.
