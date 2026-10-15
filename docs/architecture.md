@@ -9,12 +9,12 @@ That constraint is the point, not a limitation. It lets a community of developer
 ```mermaid
 flowchart LR
   app["Your app<br/>(browser, tokens in memory)"]
-  login["Cirro login<br/>(Cognito)"]
+  authorize["Cirro authorize page<br/>(consent, then Cognito)"]
   api["Cirro API"]
   s3["Project S3 bucket"]
-  app -- "sign in: code + PKCE" --> login
+  app -- "sign in: code + PKCE" --> authorize
   app -- "API calls: bearer token" --> api
   app -- "file reads: signed URLs" --> s3
 ```
 
-The app signs the user in with the authorization code flow and PKCE (no client secret — see [authentication](authentication.md)), calls the Cirro API with the resulting bearer token, and reads files with short-lived signed URLs. Every call is made as the signed-in user. The app is registered as a **Public App**; because the code is shipped to the browser, it holds no secret, and its only security concern is keeping the token safe from XSS on your own page.
+The app signs the user in through Cirro's authorize page with the authorization code flow and PKCE (no client secret — see [authentication](authentication.md)), calls the Cirro API with the resulting bearer token, and reads files with short-lived signed URLs. Every call is made as the signed-in user. The app is registered as a **Public App**; because the code is shipped to the browser, it holds no secret, and its only security concern is keeping the token safe from XSS on your own page.

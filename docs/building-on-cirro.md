@@ -111,19 +111,18 @@ Anything an app creates should explain itself to someone who never used the app.
 
 Notes are discussions of type `NOTES` attached to an entity (`DATASET`, `SAMPLE`, `WORKSPACE`, `PROJECT`, and others):
 
-```typescript
-import { FeedApi, EntityType, DiscussionType } from "@cirrobio/api-client";
-import { generateApiConfig } from "@cirrobio/sdk";
+Notes go through `data.feed`, from [the release after 0.13.38](packages.md#coming-in-the-next-release):
 
-const feed = new FeedApi(generateApiConfig({ basePath, tokenGetter }));
+```typescript
+import { EntityType, DiscussionType } from "@cirrobio/api-client";
 
 export async function addProvenanceNote(projectId: string, entity: { type: EntityType; id: string }, body: string) {
-  const note = await feed.createDiscussion({ discussionInput: {
+  const note = await data.feed.createDiscussion({ discussionInput: {
     name: `Created by ${APP_NAME}`,
     description: `${APP_NAME} ${APP_VERSION}`,
     entity, type: DiscussionType.Notes, projectId,
   }});
-  await feed.postMessage({ discussionId: note.id, messageInput: { message: body } });
+  await data.feed.postMessage({ discussionId: note.id, messageInput: { message: body } });
 }
 ```
 

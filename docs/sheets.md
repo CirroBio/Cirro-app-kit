@@ -32,15 +32,14 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 
 ## Using sheets from an app
 
-`SheetsApi` isn't on `DataService`; construct it directly (see [calling the API](calling-the-api.md#resources)):
+Sheets are `data.sheets` on the app's `DataService`, from [the release after 0.13.38](packages.md#coming-in-the-next-release); 0.13.38 doesn't have the getter yet.
 
 ```typescript
 import {
-  SheetsApi, ColumnDataType, SemanticColumnType, SheetCreationMode, SqlSortOrder, FilterOperator,
+  ColumnDataType, SemanticColumnType, SheetCreationMode, SqlSortOrder, FilterOperator,
 } from "@cirrobio/api-client";
-import { generateApiConfig } from "@cirrobio/sdk";
 
-const sheets = new SheetsApi(generateApiConfig({ basePath, tokenGetter }));
+const sheets = data.sheets;   // data: the app's DataService
 ```
 
 ### Find or create the app's table

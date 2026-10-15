@@ -19,7 +19,7 @@ Open each finding in the code, confirm it, and drop false positives with a one-l
 
 For each item in the security checklist, record a status and one line of evidence. Where it helps:
 
-- Compare registered permissions with what the code calls: `grep -rn "dataService\.\|data\.\w\+\." src`, against the registration (ask the user, or `AppRegistrationsApi.getAppRegistration`).
+- Compare registered permissions with what the code calls: `grep -rn "dataService\.\|data\.\w\+\." src`, against the registration (ask the user, or `data.appRegistrations.getAppRegistration` (the next sdk release; see "Coming in the next release" in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md`)).
 - Compare `cirro-permissions.json` with the API calls in the code: flag permissions used but not declared, and declared but never used.
 - Check that features behind optional permissions degrade when those permissions are missing, and that actions handle 403.
 - List third-party scripts from `index.html` and runtime imports.

@@ -25,7 +25,7 @@ For development you want a registration that only you can sign in to until it's 
 The admin who creates the registration fills in these fields, which map to the API's `AppRegistrationInput` model:
 
 - **name, description, logoUrl, appUrl, publisher.** Shown to users and admins on approval and discovery screens.
-- **redirectUris.** Every origin the app runs on, exactly: scheme, host and port. If you use `AmplifyAuthProvider` (see [authentication](authentication.md)), it redirects to the bare origin, so register `http://localhost:5173` and `https://app.example.org`, not a `/callback` path. Remove preview or staging URLs you don't control.
+- **redirectUris.** Every origin the app runs on, exactly: scheme, host and port. The app template returns to the bare origin (see [authentication](authentication.md#the-templates-sign-in)), so register `http://localhost:5173` and `https://app.example.org`, not a `/callback` path, exactly as the app sends them. Remove preview or staging URLs you don't control.
 - **globalPermissions** and **projectPermissions** (`{ projectId, permissions: [...] }`). Cirro permission names such as `VIEW_PROJECT`, `VIEW_DATASET` and `CREATE_DATASET`. Register only what the app calls; apps that read files most likely also need `GENERATE_DOWNLOAD_TOKEN`. The full list is the `Permission` enum in `@cirrobio/api-client`. Take these from the app's [permission manifest](permissions.md#layer-1-declare-what-the-app-needs). Prefer `projectPermissions`: a project admin can only grant those, and most front-end apps need nothing wider. `globalPermissions` are a tenant-admin, whole-institution concern.
 - **allowedIps.** Leave empty for browser apps; users connect from anywhere.
 - **discoveryEnabled.** Whether other users can find the app.
@@ -40,13 +40,12 @@ Registration happens separately in each Cirro tenant, and each tenant gives the 
 
 ## Scripted registration
 
-For automated setups, `AppRegistrationsApi` can create registrations. It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
+For automated setups, `data.appRegistrations` can create registrations ([the release after 0.13.38](packages.md#coming-in-the-next-release)). It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
 
 ```typescript
-import { AppRegistrationsApi, AppClientType, PrincipalType } from "@cirrobio/api-client";
-import { generateApiConfig } from "@cirrobio/sdk";
+import { AppClientType, PrincipalType } from "@cirrobio/api-client";
 
-const apps = new AppRegistrationsApi(generateApiConfig({ basePath: API, tokenGetter }));
+const apps = data.appRegistrations;   // data: a DataService
 const templates = await apps.listAppRegistrationTemplates();   // check for a matching template first
 const created = await apps.createAppRegistration({ appRegistrationInput: {
   name, description, appUrl,

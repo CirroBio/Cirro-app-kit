@@ -9,7 +9,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` first: it explains the two laye
 
 ## 1. Build or update the manifest
 
-1. List the Cirro calls the code makes: `grep -rn "dataService\.\|data\.\w\+\.\|new \w\+Api(" src`.
+1. List the Cirro calls the code makes: `grep -rn "dataService\.\|data\.\w\+\." src`.
 2. Map each to a permission with the capability map (and the doc for Sheets, workspaces or files where it has its own table).
 3. Sort them: **required** only if the app can't do its core job without it; everything else is **optional**, tied to one named feature.
 4. Write each `reason`/`feature` for an admin reviewing it: what the user sees, not "API access".
@@ -23,7 +23,7 @@ Then compare the manifest with the code both ways: permissions used but not decl
 By default the app can't read the user's role (`getUser` and `getProjectUsers` are refused for typical registrations), so:
 
 - Show actions as available and let the server decide. Don't set `fetchUserInfo` on `AuthenticationContextProvider`.
-- Catch errors on every action. Where the app must react to a refusal, call through a raw API class and check `ResponseError` status 403 ("Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`); `DataService` errors carry the permission name in `message` but no status.
+- Catch errors on every action. Recognise a refusal from the `ApiError`: its message starts "Not allowed to" and names the permission, and the next sdk release adds `errorCode` ("Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`).
 - After a 403, disable that action for that project for the session, with a message covering both layers: a project owner can change the role, or a Cirro admin can grant the app the permission.
 - Check every permission a multi-step flow needs at its start.
 - If an optional permission wasn't granted, hide the feature everywhere and say "not enabled for this app" once in settings or help.

@@ -33,9 +33,7 @@ RULES = [
     ("MEDIUM", "eval", re.compile(r"\beval\(|new Function\("),
      "Dynamic code execution"),
     ("LOW", "default-api-base", re.compile(r"new DataService\(\s*\{\s*tokenGetter[^}]*\}\s*\)"),
-     "DataService without basePath defaults to /api; fine behind a dev proxy, wrong for a deployed app"),
-    ("LOW", "amplify-no-client-id", re.compile(r"new AmplifyAuthProvider\(\s*\)"),
-     "AmplifyAuthProvider without a client ID uses Cirro's UI client; apps should pass their registered client ID"),
+     "DataService without basePath defaults to /api, which only works on the Cirro origin; set the tenant API URL"),
     ("LOW", "stored-signed-url", re.compile(r"(useState|set[A-Z]\w*)\([^)]*getSignedUrl", re.I),
      "Signed URLs stored in state expire (5 min default); store the file and sign on use"),
 ]
@@ -89,9 +87,6 @@ def scan_package(findings):
         if name.startswith("@cirrobio/") and not re.fullmatch(r"\d+\.\d+\.\d+", ver):
             findings.append(("MEDIUM", "package.json", "unpinned-cirro", f"{name}: {ver}",
                              "Cirro packages are pre-1.0; pin exact versions"))
-    if "@cirrobio/react-auth" in deps and "@aws-amplify/auth" not in deps:
-        findings.append(("LOW", "package.json", "amplify-auth-missing", "",
-                         "react-auth 0.0.8 imports @aws-amplify/auth without declaring it; builds may fail to resolve it"))
 
 
 def scan_manifest(findings):

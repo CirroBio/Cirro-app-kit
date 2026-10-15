@@ -1,31 +1,70 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { AppConfigProvider } from "@cirrobio/react-core";
-import { AuthenticationContextProvider, LoginWrapper } from "@cirrobio/react-auth";
-import { CirroAuthProvider } from "./auth";
+import { DataService } from "@cirrobio/sdk";
+import type { SystemInfoResponse } from "@cirrobio/api-client";
 import { config, configProblems } from "./config";
 import { ConfigError } from "./ConfigError";
-import { ConfigGate } from "./ConfigGate";
+import { REDIRECT_URI, createSignIn, currentUser, signOut } from "./auth";
 import { App } from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
+const style = { padding: 24, fontFamily: "system-ui, sans-serif" };
+
+async function start() {
+  // Public, and needed before sign-in: the tenant's name, user pool and Cognito domain.
+  const res = await fetch(`${config.url}/api/info/system`);
+  if (!res.ok) throw new Error(`Could not reach Cirro: ${config.url}/api/info/system answered HTTP ${res.status}`);
+  const system: SystemInfoResponse = await res.json();
+
+  // A failed return from sign-in, usually a registration that doesn't match. Show it rather
+  // than offering to sign in again, which would fail the same way.
+  const returned = new URLSearchParams(window.location.search);
+  if (returned.has("error")) {
+    throw new Error(`Sign-in failed: ${returned.get("error_description") ?? returned.get("error")}`);
+  }
+
+  const signIn = createSignIn(config.url, config.clientId, system);
+  const user = await currentUser(signIn);
+  if (!user) {
+    root.render(
+      <main style={style}>
+        <h1>Cirro app</h1>
+        <p>Sign in with your {system.tenantInfo.name} account to continue.</p>
+        <button onClick={() => signIn.signinRedirect()}>Sign in with Cirro</button>
+      </main>
+    );
+    return;
+  }
+
+  const dataService = new DataService({
+    basePath: `${config.url}/api`,
+    tokenGetter: async () => {
+      const current = await signIn.getUser();
+      if (!current) throw new Error("Signed out");
+      return current.access_token;
+    },
+  });
+  root.render(
+    <React.StrictMode>
+      <App
+        dataService={dataService}
+        tenantName={system.tenantInfo.name}
+        username={String(user.profile["cognito:username"] ?? user.profile.sub)}
+        onSignOut={() => signOut(signIn, system.auth.endpoint, config.clientId)}
+      />
+    </React.StrictMode>
+  );
+}
 
 if (configProblems.length) {
   root.render(<ConfigError problems={configProblems} />);
 } else {
-  // Created once, at module scope, with the registered Public App's client ID.
-  const auth = new CirroAuthProvider(config.clientId);
-  root.render(
-    <React.StrictMode>
-      <AppConfigProvider apiBasePath={config.api} authProvider={auth}>
-        <ConfigGate>
-          <AuthenticationContextProvider>
-            <LoginWrapper>
-              <App />
-            </LoginWrapper>
-          </AuthenticationContextProvider>
-        </ConfigGate>
-      </AppConfigProvider>
-    </React.StrictMode>
-  );
+  start().catch((e) => {
+    root.render(
+      <main style={style} role="alert">
+        <p>{e instanceof Error ? e.message : String(e)}</p>
+        <button onClick={() => window.location.assign(REDIRECT_URI)}>Try again</button>
+      </main>
+    );
+  });
 }

@@ -34,7 +34,7 @@ for f in sorted(glob.glob(os.path.join(apis, "*Api.d.ts"))):
         reqs[m.group(1)] = [l.strip().rstrip(";") for l in m.group(2).strip().split("\n") if l.strip()]
     methods = re.findall(r"^\s+(\w+)\((?:requestParameters\??: (\w+), )?initOverrides[^)]*\): Promise<(.+?)>;", src, re.M)
     methods = [m for m in methods if not m[0].endswith(("Raw", "RequestOpts"))]
-    where = f"`data.{getters[cls]}`" if cls in getters else f"not on DataService; `new {cls}(config)`"
+    where = f"`data.{getters[cls]}`" if cls in getters else "not on DataService in this version"
     print(f"## {cls} ({where})\n")
     for name, req, ret in methods:
         params = "{ " + ", ".join(reqs.get(req, [])) + " }" if req else ""

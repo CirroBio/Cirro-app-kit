@@ -7,7 +7,7 @@ Facts about Cirro (permission names, redirect rules, package APIs, known issues)
 ## When the Cirro packages publish a new version
 
 1. Bump the `@cirrobio/*` pins in the app template (exact versions).
-2. In the template: `npm install && npm run build`. If the [known-issue](docs/packages.md#known-issues) workarounds are no longer needed, remove them and update `docs/packages.md`.
+2. In the template: `npm install && npm run build`. Check whether the release adds anything listed under [coming in the next release](docs/packages.md#coming-in-the-next-release), and if so update that section and the docs that point to it.
 3. Regenerate the API reference: `python3 tools/api_surface.py templates/app/node_modules > reference/api-surface.md`, then restore the explanatory header.
 4. Update the version table in `docs/packages.md` and "Verified against" in `README.md`.
 5. Skim `git diff reference/` for renamed or removed methods and fix any docs that use them.

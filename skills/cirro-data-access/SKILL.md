@@ -18,7 +18,7 @@ Method and field names come from a generated client and are easy to guess wrong.
 
 ## Decisions
 
-- **Where the DataService comes from.** Under `AppConfigProvider` (the app template): `useAppConfig().dataService`. Otherwise one module-level instance.
+- **Where the DataService comes from.** One instance, created at start-up with the tenant's API URL and the sign-in's token getter, as the app template's `src/main.tsx` does; pass it to components. Call every API through it; don't construct API classes. For Sheets, notes, dashboards and app registrations, use `data.sheets`, `data.feed`, `data.dashboards` and `data.appRegistrations` (the next sdk release; see "Coming in the next release" in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md`); on 0.13.38, tell the user these need that release.
 - **Base path.** If the project has no API URL configured, ask which tenant they target rather than guessing; the deployed form is `https://<tenant>/api` (`${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md#base-path`), never `https://api.<tenant>`, which browsers can't read.
 - **Files.** Pick the access context by what is being read (`datasetDownload` handles shared datasets); store `FileSystemObject`s and sign at the moment of use; keep credentials in memory.
 - **Uploads.** Create the dataset with `uploadDataset`, then upload under the returned path, as in the files doc. Ask which data type (process) the user is uploading if it isn't clear.

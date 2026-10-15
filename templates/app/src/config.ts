@@ -1,16 +1,15 @@
 // Reads build-time config and reports problems before anything tries to sign in.
-// A missing client ID otherwise falls back to Cirro's own UI client, which fails
-// later with a confusing redirect_mismatch or invalid_client error.
 
 export const config = {
-  api: (import.meta.env.VITE_CIRRO_API ?? "").trim(),
+  // The tenant's web address. Cirro's sign-in page is at /authorize under it, and the API at /api.
+  url: (import.meta.env.VITE_CIRRO_URL ?? "").trim().replace(/\/+$/, ""),
   clientId: (import.meta.env.VITE_CIRRO_CLIENT_ID ?? "").trim(),
 };
 
 export const configProblems: string[] = [];
-if (!config.api) {
+if (!/^https:\/\/[^/]+$/.test(config.url) || config.url.includes("your-tenant.example")) {
   configProblems.push(
-    "VITE_CIRRO_API is not set. Use /api in development (with CIRRO_PROXY_TARGET), or your tenant's API URL in production."
+    "VITE_CIRRO_URL is not set to your Cirro tenant's web address, such as https://app.cirro.bio."
   );
 }
 if (!config.clientId) {

@@ -11,8 +11,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "strictFunctionTypes": false
+    "noEmit": true
   },
   "include": [
     "src"
