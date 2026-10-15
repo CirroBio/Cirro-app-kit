@@ -33,7 +33,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 - [Connecting to tenants](docs/connecting-to-tenants.md): how a deployed app gets connected to and approved in Cirro tenants, including the public tenant; serving several tenants
 - [Permissions](docs/permissions.md): the app's permission manifest, checking user roles, and degrading gracefully when users can't do everything
 - [App types and registration](docs/app-types-and-registration.md): the front-end-only Public App model, who registers an app, redirect URIs, permissions, approval
-- [Architecture](docs/architecture.md): the front-end-only model, and why back-end apps are out of scope
+- [Architecture](docs/architecture.md): the front-end-only model: a client ID, no secret, and users who sign in as themselves
 - [Cirro TypeScript packages](docs/packages.md): which `@cirrobio` package does what, and known issues
 - [Authentication](docs/authentication.md): the sign-in flow and the template's auth provider
 - [Calling the API](docs/calling-the-api.md): `DataService`, pagination, errors

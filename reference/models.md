@@ -19,4 +19,4 @@ Field lists from the generated type declarations. `?` marks optional fields. Nes
 ## Enums worth knowing
 
 - **ProjectAccessType** (file credentials): `PROJECT_DOWNLOAD`, `SHARED_DATASET_DOWNLOAD`, `DATASET_UPLOAD`, `SAMPLESHEET_UPLOAD`, `REFERENCE_UPLOAD`, `SHEET_UPLOAD`, `READ_SCRATCH`. Only the two download types are cached by `FileService`; upload credentials are requested fresh each time.
-- **AppType** (OAuth app registrations): `PUBLIC_APP` (front-end apps that act as the signed-in user — the only type this kit covers), `TRADITIONAL` and `MACHINE_TO_MACHINE` (back-end apps that hold their own credentials; out of scope here, see [architecture](../docs/architecture.md#beyond-this-kit-apps-with-a-back-end)).
+- **AppType** (OAuth app registrations): `PUBLIC_APP` (front-end apps that act as the signed-in user — the only type this kit covers), `TRADITIONAL` and `MACHINE_TO_MACHINE` (registrations with a client secret; out of scope here).

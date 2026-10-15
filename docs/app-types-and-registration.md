@@ -6,7 +6,7 @@ Before writing login code, register your app with Cirro. Registration fixes the 
 
 This kit is for **front-end-only apps**: all the code runs in the browser, with no backend of your own. For those, the only integration that makes sense is one where the **user logs in with their own Cirro credentials and acts within their own permission scope**. The app is registered as a **Public App**, holds no secret, and carries no access of its own: every call is made as the signed-in user, further limited by the permissions on the registration. A 403 is simply that user's own permissions talking.
 
-Cirro also has app types that carry their own credentials and act as themselves rather than as a user — for backends, scripts, instruments and scheduled jobs. Those are out of scope here, because a credential shipped to a browser is readable by anyone who opens dev tools. If you need one, that's a backend concern, not a front-end one.
+Registrations that come with a client secret are out of scope for this kit: the apps it covers have only a client ID, and every user signs in with their own identity.
 
 ## Who registers the app
 

@@ -16,7 +16,7 @@ Ask only for what the conversation hasn't answered:
 1. Do they have a Cirro account and a client ID yet? If not, start with `${CLAUDE_PLUGIN_ROOT}/docs/getting-started.md` steps 1 and 2, and draft the registration request for them.
 2. Which Cirro tenant(s): the public Cirro tenant, an institution's tenant, or several? See `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`.
 3. Production origin(s)?
-4. Does the idea actually need a back-end (its own credentials, a permission scope distinct from the user's, or non-browser/scheduled access)? If so, it's out of scope for this kit — explain why (see `${CLAUDE_PLUGIN_ROOT}/docs/architecture.md#beyond-this-kit-apps-with-a-back-end`) and point them to the Cirro docs rather than scaffolding here.
+4. Would the app need a client secret, for example to act as itself rather than as the signed-in user, or to run with no user present? That's out of scope for this kit: say so, and don't scaffold it here.
 
 ## 2. Copy the template
 
