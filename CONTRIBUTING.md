@@ -26,3 +26,14 @@ Move the answer from `docs/open-questions.md` into the doc it affects, and remov
 ## The docs site
 
 Every push to `main` publishes `README.md`, `docs/`, `reference/`, the template READMEs and this file to a private GitHub Pages site, visible only to people with access to this repo. The pages are the Markdown as written; `site-hooks/links.py` sends links to code (templates, tools) to GitHub, so write relative links that work on GitHub and the site follows.
+
+## Working on the Claude plugin
+
+`.claude-plugin/marketplace.json` makes this repo a marketplace whose one plugin is the repo itself (`plugin.json`, skills in `skills/`). To work on it, add your clone as a local marketplace once:
+
+```text
+/plugin marketplace add /path/to/Cirro-app-kit
+/plugin install cirro-app-kit@cirro-app-kit
+```
+
+Claude Code then loads the skills from your clone, so edits apply to the next session that uses a skill; there's nothing to reinstall. Before opening a PR, run `claude plugin validate .`. Bump `version` in `plugin.json` when skills change, so installs from GitHub pick up the update.

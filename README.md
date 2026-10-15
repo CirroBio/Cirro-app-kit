@@ -55,7 +55,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), including how to update the kit when the
 
 ## Using with Claude
 
-The repo is also a Claude Code plugin. Its skills hold the workflow steps for an agent (which questions to ask, which path to choose, when to verify against installed versions) and read the facts from `docs/`, so the guide stays the single source of truth. Install it from your plugin marketplace, or point a marketplace entry at this repo.
+The repo is also a Claude Code plugin and a marketplace that lists it. Its skills hold the workflow steps for an agent (which questions to ask, which path to choose, when to verify against installed versions) and read the facts from `docs/`, so the guide stays the single source of truth. Install it in Claude Code (you need access to this repo):
+
+```text
+/plugin marketplace add CirroBio/Cirro-app-kit
+/plugin install cirro-app-kit@cirro-app-kit
+```
+
+Then describe what you want to build ("start a Cirro dashboard that lists my datasets"); the matching skill loads by itself, or call one by name, such as `/cirro-app-kit:cirro-app-scaffold`. To work on the skills, see [CONTRIBUTING.md](CONTRIBUTING.md#working-on-the-claude-plugin).
 
 | Skill | Use it to |
 | --- | --- |
@@ -63,4 +70,8 @@ The repo is also a Claude Code plugin. Its skills hold the workflow steps for an
 | `cirro-auth-wiring` | Add or debug Cirro sign-in |
 | `cirro-data-access` | Call the API and read or upload files |
 | `cirro-viewer-tool` | Build or convert a viewer |
+| `cirro-permissions` | Write the permission manifest and handle 403s |
+| `cirro-sheets` | Use Sheets as the app's database |
+| `cirro-compute` | Run pipelines and launch workspaces from the app |
 | `cirro-app-review` | Review an app before deploying |
+| `cirro-app-deploy` | Deploy, and connect the app to tenants |
