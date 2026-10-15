@@ -11,10 +11,21 @@ const SCOPES = ["openid"];
 // custom-auth flow, and the link can't return to an external app; see docs/authentication.md.
 const EMAIL_LINK_PROVIDER = "COGNITO";
 
+// Sign-in returns here, and the registration must list it exactly. An app served under a path
+// (e.g. https://<org>.github.io/<repo>/) uses origin + import.meta.env.BASE_URL instead.
+const REDIRECT_URI = window.location.origin;
+
+// Configures Amplify itself instead of calling super.configure(). react-auth's configure sets
+// window.location.origin and its own scopes, and Amplify finishes a returning sign-in with the
+// first configuration it sees; where that differs from what the sign-in started with (an app
+// under a path), the token request fails and the one-provider login dialog redirects again,
+// in a loop.
 export class CirroAuthProvider extends AmplifyAuthProvider {
+  private providers: LoginProvider[] = [];
+
   configure(config: AppConfig): void {
-    super.configure(config);
-    // As react-auth's configureAmplify, with SCOPES.
+    this.providers = config.tenantInfo.loginProviders;
+    // As react-auth's configureAmplify, with SCOPES and REDIRECT_URI.
     Amplify.configure({
       Auth: {
         Cognito: {
@@ -24,8 +35,8 @@ export class CirroAuthProvider extends AmplifyAuthProvider {
             oauth: {
               domain: config.auth.endpoint,
               scopes: SCOPES,
-              redirectSignIn: [window.location.origin],
-              redirectSignOut: [window.location.origin],
+              redirectSignIn: [REDIRECT_URI],
+              redirectSignOut: [REDIRECT_URI],
               responseType: "code",
             },
           },
@@ -36,6 +47,6 @@ export class CirroAuthProvider extends AmplifyAuthProvider {
   }
 
   getLoginProviders(): LoginProvider[] {
-    return super.getLoginProviders().filter((p) => p.id !== EMAIL_LINK_PROVIDER);
+    return this.providers.filter((p) => p.id !== EMAIL_LINK_PROVIDER);
   }
 }
