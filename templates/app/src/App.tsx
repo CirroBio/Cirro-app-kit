@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { useAppConfig } from "@cirrobio/react-core";
-import { useAuthenticator } from "@cirrobio/react-auth";
+import type { DataService } from "@cirrobio/sdk";
 import type { Dataset, Project } from "@cirrobio/api-client";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-export function App() {
-  const { appConfig, dataService, authProvider } = useAppConfig();
-  const { authInfo } = useAuthenticator();
+type AppProps = {
+  dataService: DataService;
+  tenantName: string;
+  username: string;
+  onSignOut: () => void;
+};
+
+export function App({ dataService, tenantName, username, onSignOut }: AppProps) {
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [selected, setSelected] = useState<Project | null>(null);
   const [error, setError] = useState("");
@@ -24,8 +28,8 @@ export function App() {
         <h1>Cirro app</h1>
         <span>
           {/* Always show which tenant the user is signed in to */}
-          {appConfig?.tenantInfo?.name} · {authInfo?.username}{" "}
-          <button onClick={() => authProvider.signOut()}>Sign out</button>
+          {tenantName} · {username}{" "}
+          <button onClick={onSignOut}>Sign out</button>
         </span>
       </header>
 
@@ -43,14 +47,13 @@ export function App() {
             </li>
           ))}
         </ul>
-        {selected && <Datasets project={selected} />}
+        {selected && <Datasets dataService={dataService} project={selected} />}
       </div>
     </main>
   );
 }
 
-function Datasets({ project }: { project: Project }) {
-  const { dataService } = useAppConfig();
+function Datasets({ dataService, project }: { dataService: DataService; project: Project }) {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);

@@ -22,8 +22,8 @@ Ask only for what the conversation hasn't answered:
 
 Start from `${CLAUDE_PLUGIN_ROOT}/templates/app/` (React, Vite, Cirro's login UI). Then:
 
-1. Check for newer versions: `npm view @cirrobio/sdk version` (and `api-client`, `react-core`, `react-auth`). If newer than the template's pins, bump them and re-check the workarounds in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md#known-issues`.
-2. `npm install`, copy `.env.example` to `.env`, fill in values.
+1. Check for newer versions: `npm view @cirrobio/sdk version` (and `@cirrobio/api-client`). If newer than the template's pins, bump them, and check whether the release adds what "Coming in the next release" in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md` lists.
+2. `npm install`, copy `.env.example` to `.env`, and set `VITE_CIRRO_URL` and `VITE_CIRRO_CLIENT_ID`.
 3. `npm run build` must pass before continuing.
 
 ## 3. Permissions and registration
@@ -34,7 +34,7 @@ The app needs a registration before sign-in works. Walk the user through `${CLAU
 
 ## 4. First run
 
-`npm run dev` with the template's dev proxy, sign in, confirm projects load. On failure, use `${CLAUDE_PLUGIN_ROOT}/docs/troubleshooting.md` before changing code.
+`npm run dev`, open `http://localhost:5173`, sign in through Cirro's authorize page, confirm projects load. On failure, use `${CLAUDE_PLUGIN_ROOT}/docs/troubleshooting.md` before changing code.
 
 ## 5. Deployment config
 

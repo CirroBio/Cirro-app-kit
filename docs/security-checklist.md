@@ -8,7 +8,7 @@ In a browser app, any script running on your page can use the signed-in user's C
 python3 tools/scan.py path/to/your-app
 ```
 
-It flags likely problems: secrets in code or env files, tokens in web storage or logs, raw HTML rendering, unpinned Cirro packages, a missing client ID, and the default API base. Treat each finding as a lead, not a verdict; confirm it in the code. It exits non-zero on any high-severity finding, so it can run in CI.
+It flags likely problems: secrets in code or env files, tokens in web storage or logs, raw HTML rendering, unpinned Cirro packages, and the default API base. Treat each finding as a lead, not a verdict; confirm it in the code. It exits non-zero on any high-severity finding, so it can run in CI.
 
 ## Registration
 
@@ -20,9 +20,9 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 ## Tokens and credentials
 
 - [ ] No client secret or app credentials of any kind anywhere in the bundle or repo
-- [ ] Tokens come from the auth provider on each call (`tokenGetter`), not cached in app state
-- [ ] Tokens and AWS file credentials kept in memory or the auth library's storage; never written to `localStorage` by your code, logged, or put in URLs
-- [ ] Sign-out calls the provider's `signOut()` and clears cached file credentials
+- [ ] Tokens come from the sign-in library on each call (`tokenGetter`), not cached in app state
+- [ ] Tokens and AWS file credentials kept in memory or the sign-in library's storage; never written to `localStorage` by your code, logged, or put in URLs
+- [ ] Sign-out revokes the refresh token, removes the user from the sign-in library, and clears cached file credentials
 
 ## User permissions
 
@@ -41,7 +41,7 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 ## Deployment
 
-- [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, Cognito and S3 (see [deployment](deployment.md#content-security-policy))
+- [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, its token server and S3 (see [deployment](deployment.md#content-security-policy))
 - [ ] The host sends `frame-ancestors 'none'`, so other sites can't frame the app
-- [ ] Production `VITE_CIRRO_API` is the full tenant URL, unless deliberately proxied
+- [ ] Production `VITE_CIRRO_URL` is the tenant's web address, and its client ID is that tenant's
 - [ ] Project bucket CORS allows the production origin, if the app reads files directly

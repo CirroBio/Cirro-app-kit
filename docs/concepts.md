@@ -41,7 +41,7 @@ flowchart TD
 
 ## How an app works with Cirro
 
-1. The user opens the app and signs in with their Cirro account for one tenant.
+1. The user opens the app and is sent to Cirro's authorize page, which shows what the app is asking for; they sign in there with their Cirro account for one tenant.
 2. The app gets a token that acts as that user, limited to the permissions the tenant granted the app.
 3. The app calls the tenant's API with that token: listing projects, reading datasets, running pipelines, writing sheets.
 4. To read or write files, it asks the API for short-lived credentials and talks to storage directly.

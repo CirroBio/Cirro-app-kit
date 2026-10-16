@@ -72,7 +72,7 @@ Each tenant has its own API URL and issues your app its own client ID. Users of 
 | Approach | How | Good for |
 | --- | --- | --- |
 | **Runtime tenant registry** (recommended) | Serve a `tenants.json` next to the app listing each tenant's API URL and client ID; the app fetches it at startup and shows a tenant picker | Any number of tenants; adding or removing one is a file edit, with no rebuild |
-| **One build per tenant** | Build with that tenant's `VITE_CIRRO_API` and `VITE_CIRRO_CLIENT_ID`, and deploy each to its own URL (for example `tenant-a.myapp.org`) | One tenant, or tenants that want the app on their own domain |
+| **One build per tenant** | Build with that tenant's `VITE_CIRRO_URL` and `VITE_CIRRO_CLIENT_ID`, and deploy each to its own URL (for example `tenant-a.myapp.org`) | One tenant, or tenants that want the app on their own domain |
 
 ### The tenant registry
 
@@ -84,9 +84,8 @@ Each tenant has its own API URL and issues your app its own client ID. Users of 
     {
       "id": "dev",
       "name": "Cirro (dev)",
-      "api": "https://dev.cirro.bio/api",
+      "url": "https://dev.cirro.bio",
       "clientId": "1a2b3c4d5e6f7g8h9i0j",
-      "portal": "https://dev.cirro.bio",
       "addedAt": "2026-10-10",
       "contact": "admins@example.org"
     }
@@ -95,9 +94,8 @@ Each tenant has its own API URL and issues your app its own client ID. Users of 
 ```
 
 - `id`: a short slug, stable for the life of the entry; the app remembers the user's choice by it.
-- `api`: the tenant's API base URL (`/api` in development, through the dev proxy).
+- `url`: the tenant's web address. The app calls the API at `url` + `/api` and signs users in at `url` + `/authorize`, and it's also where links that open an item in Cirro go. Paths under it (from the Cirro portal's router): `/project/{projectId}`, `/project/{projectId}/dataset/{datasetId}`, `/project/{projectId}/dataset/{datasetId}/pipeline/{processId}` (Cirro's own form for running a pipeline on that dataset), `/project/{projectId}/workspace/{workspaceId}`, `/project/{projectId}/sheets`.
 - `clientId`: the client ID the tenant's admins issued **for this app**. Client IDs of Public Apps are not secrets, so the file can be public and committed.
-- `portal` (optional): the tenant's web address, for links that open an item in Cirro. `/info/system` doesn't report it, and `api` is a proxy path in development. Paths under it (from the Cirro portal's router): `/project/{projectId}`, `/project/{projectId}/dataset/{datasetId}`, `/project/{projectId}/dataset/{datasetId}/pipeline/{processId}` (Cirro's own form for running a pipeline on that dataset), `/project/{projectId}/workspace/{workspaceId}`, `/project/{projectId}/sheets`.
 - `name`, `addedAt`, `contact`: shown in the picker, or kept for whoever maintains the file.
 
 Adding a tenant: the tenant's admins register the app with your production origin as a redirect URI and send you the client ID; you add an entry. Removing one: delete the entry. Users who chose it see the picker on their next visit.
@@ -106,10 +104,10 @@ Each app has its own registry, because each app has its own registration in each
 
 ### Choosing the tenant at startup
 
-Pick the tenant before anything calls Cirro, and create the auth provider for it:
+Pick the tenant before anything calls Cirro, and create the sign-in for it:
 
 ```typescript
-type Tenant = { id: string; name: string; api: string; clientId: string };
+type Tenant = { id: string; name: string; url: string; clientId: string };
 const TENANT_KEY = "cirro-tenant";   // the tenant's id is not sensitive
 
 export async function loadTenants(): Promise<Tenant[]> {
@@ -125,12 +123,12 @@ export const savedTenant = (tenants: Tenant[]) =>
 
 export function chooseTenant(t: Tenant) {
   localStorage.setItem(TENANT_KEY, t.id);
-  window.location.reload();          // providers are created once, for one tenant
+  window.location.reload();          // sign-in and DataService are created once, for one tenant
 }
 
-// main.tsx: render a picker until savedTenant() returns one, then
-// const auth = new CirroAuthProvider(tenant.clientId);
-// <AppConfigProvider apiBasePath={tenant.api} authProvider={auth}>…
+// main.tsx: render a picker until savedTenant() returns one, then start as the template does
+// with tenant.url and tenant.clientId in place of config.url and config.clientId:
+// fetch `${tenant.url}/api/info/system`, createSignIn(tenant.url, tenant.clientId, system), …
 ```
 
 - With a single entry, skip the picker.

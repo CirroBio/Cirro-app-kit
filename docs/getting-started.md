@@ -52,25 +52,24 @@ cp .env.example .env
 Edit `.env`:
 
 ```bash
-VITE_CIRRO_API=/api
-CIRRO_PROXY_TARGET=https://<the tenant's web address>
+VITE_CIRRO_URL=https://<the tenant's web address>
 VITE_CIRRO_CLIENT_ID=<your client ID>
 ```
 
-In development, the template sends API calls through a local proxy to the tenant, so development and production differ only in `VITE_CIRRO_API`. (The tenant API also accepts direct cross-origin calls; see [calling the API](calling-the-api.md#base-path).) Then:
+The app calls the tenant's API at `VITE_CIRRO_URL` + `/api`, and signs you in through Cirro's authorize page at `VITE_CIRRO_URL` + `/authorize`. Then:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Use exactly that address: `127.0.0.1` or another port won't match the registered redirect URI. Sign in with your Cirro account, and you should see:
+Open `http://localhost:5173`. Use exactly that address: `127.0.0.1` or another port won't match the registered redirect URI. Click **Sign in with Cirro**. Cirro's authorize page names your app and lists the permissions it asks for; sign in there (if you aren't signed in to Cirro yet, Cirro asks you to first). Back in the app, you should see:
 
 - the tenant's name and your name in the header,
 - your projects,
 - the selected project's datasets, with their IDs.
 
-If the page says **App not configured**, it lists what's missing in `.env`. If sign-in fails, check the first rows of [troubleshooting](troubleshooting.md): `redirect_mismatch` and `invalid_client` are nearly always the address or the client ID.
+If the page says **App not configured**, it lists what's missing in `.env`. If sign-in fails, check the first rows of [troubleshooting](troubleshooting.md): an error on the authorize page or `redirect_mismatch` is nearly always the client ID or the address.
 
 ## 4. Decide what to build
 

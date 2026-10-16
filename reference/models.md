@@ -1,4 +1,4 @@
-# Common Cirro response models (@cirrobio/api-client 0.13.37)
+# Common Cirro response models (@cirrobio/api-client 0.13.38)
 
 Field lists from the generated type declarations. `?` marks optional fields. Nested object fields shown as `{` are maps; open the .d.ts in `node_modules/@cirrobio/api-client/dist/models/` for their full shape.
 

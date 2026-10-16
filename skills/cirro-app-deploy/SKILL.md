@@ -17,13 +17,13 @@ Ask only for what the conversation and repo haven't answered:
 
 ## 2. Build config
 
-- One tenant: set `VITE_CIRRO_API` to the full tenant API URL (`https://<tenant>/api`, never `https://api.<tenant>`) and `VITE_CIRRO_CLIENT_ID` to that tenant's client ID for this app. `/api` only works if the host proxies it.
-- Several tenants: add `public/tenants.json` and the startup picker from the tenants doc, creating the auth provider (`CirroAuthProvider` from the template's `src/auth.ts`) for the chosen tenant. Client IDs of Public Apps aren't secrets, so the file can be committed.
+- One tenant: set `VITE_CIRRO_URL` to the tenant's web address (`https://<tenant>`; the app adds `/api` and `/authorize`) and `VITE_CIRRO_CLIENT_ID` to that tenant's client ID for this app.
+- Several tenants: add `public/tenants.json` and the startup picker from the tenants doc, creating the sign-in (`createSignIn` from the template's `src/auth.ts`) and `DataService` for the chosen tenant. Client IDs of Public Apps aren't secrets, so the file can be committed.
 - `npm run build` must pass.
 
 ## 3. Host config
 
-Apply what the deployment doc lists: HTTPS on a registered origin, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Fill the region and Cognito domain from the tenant's `/info/system` (`region`, `auth.endpoint`). Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
+Apply what the deployment doc lists: HTTPS on a registered origin, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Take the token server from `token_endpoint` in the tenant's `/.well-known/oauth-authorization-server`, and the region from `/api/info/system`. Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
 
 ## 4. Pre-flight
 
