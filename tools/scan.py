@@ -32,8 +32,6 @@ RULES = [
      "SQL built by string interpolation (Sheets queryData); use querySheetData filters or an allow-list"),
     ("MEDIUM", "eval", re.compile(r"\beval\(|new Function\("),
      "Dynamic code execution"),
-    ("LOW", "default-api-base", re.compile(r"new DataService\(\s*\{\s*tokenGetter[^}]*\}\s*\)"),
-     "DataService without basePath defaults to /api, which only works on the Cirro origin; set the tenant API URL"),
     ("LOW", "stored-signed-url", re.compile(r"(useState|set[A-Z]\w*)\([^)]*getSignedUrl", re.I),
      "Signed URLs stored in state expire (5 min default); store the file and sign on use"),
 ]
@@ -51,29 +49,41 @@ def scan_code(findings):
         if not path.endswith(CODE_EXT):
             continue
         try:
-            lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
+            text = open(path, encoding="utf-8", errors="ignore").read()
         except OSError:
             continue
+        rel, lines = os.path.relpath(path, ROOT), text.splitlines()
         for i, line in enumerate(lines, 1):
             for sev, rule, rx, why in RULES:
                 if rx.search(line):
-                    findings.append((sev, f"{os.path.relpath(path, ROOT)}:{i}", rule, line.strip()[:120], why))
+                    findings.append((sev, f"{rel}:{i}", rule, line.strip()[:120], why))
+        # The DataService config object usually spans lines, so check the whole call up to its matching ")".
+        for m in re.finditer(r"new DataService\(", text):
+            depth, end = 1, m.end()
+            while depth and end < len(text):
+                depth += {"(": 1, ")": -1}.get(text[end], 0)
+                end += 1
+            if "basePath" not in text[m.end():end]:
+                i = text.count("\n", 0, m.start()) + 1
+                findings.append(("LOW", f"{rel}:{i}", "default-api-base", lines[i - 1].strip()[:120],
+                                 "DataService without basePath defaults to /api, which only works on the Cirro origin; set the tenant API URL"))
 
 
 def scan_env(findings):
+    env_files = []
     for path in walk(ROOT):
         name = os.path.basename(path)
         if not name.startswith(".env") or name.endswith(".example"):
             continue
         rel = os.path.relpath(path, ROOT)
+        env_files.append(rel)
         text = open(path, encoding="utf-8", errors="ignore").read()
         if re.search(r"SECRET|TOKEN", text):
             findings.append(("HIGH", rel, "secret-in-env",
                              "env file mentions SECRET/TOKEN", "VITE_* variables are bundled into the client; secrets must not be here"))
-        gi = os.path.join(ROOT, ".gitignore")
-        if not (os.path.exists(gi) and re.search(r"^\.env", open(gi).read(), re.M)):
-            findings.append(("MEDIUM", rel, "env-not-ignored", ".env files not in .gitignore", "Risk of committing tenant config or dev tokens"))
-            break
+    gi = os.path.join(ROOT, ".gitignore")
+    if env_files and not (os.path.exists(gi) and re.search(r"^\.env", open(gi).read(), re.M)):
+        findings.append(("MEDIUM", env_files[0], "env-not-ignored", ".env files not in .gitignore", "Risk of committing tenant config or dev tokens"))
 
 
 def scan_package(findings):

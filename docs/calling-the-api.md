@@ -7,7 +7,7 @@ import { DataService, FileService, ApiError } from "@cirrobio/sdk";
 
 export const data = new DataService({
   basePath: `${import.meta.env.VITE_CIRRO_URL}/api`,   // see "Base path" below
-  tokenGetter: async () => (await signIn.getUser())!.access_token,  // signIn: the template's oidc-client-ts UserManager
+  tokenGetter: async () => (await userManager.getUser())!.access_token,  // userManager: the template's oidc-client-ts UserManager
 });
 export const files = new FileService(data.file);       // for file access; see "Working with files"
 
@@ -19,7 +19,7 @@ try {
 }
 ```
 
-The token getter runs before every request, so token renewal stays inside the sign-in library. Don't cache token strings yourself. The app template creates its `DataService` this way in `src/main.tsx` and passes it to its components.
+The token getter runs before every request, so token renewal stays inside the sign-in library. Don't cache token strings yourself. The app template creates its `DataService` this way in `src/main.tsx`, with a token getter that also renews an expired token first (`activeUser` in `src/auth.ts`), and passes it to its components.
 
 ## Base path
 

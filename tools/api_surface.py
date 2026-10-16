@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print the Cirro API surface for the installed @cirrobio/api-client.
 
-Usage: python3 api_surface.py <node_modules dir> [path to @cirrobio/sdk data.service source or d.ts]
+Usage: python3 api_surface.py <node_modules dir>
 
 Reads dist/apis/*Api.d.ts and lists every public method with its request fields
 and return type, plus the DataService getter that exposes each API class.
@@ -32,8 +32,9 @@ for f in sorted(glob.glob(os.path.join(apis, "*Api.d.ts"))):
     reqs = {}
     for m in re.finditer(r"export interface (\w+Request) \{(.*?)\n\}", src, re.S):
         reqs[m.group(1)] = [l.strip().rstrip(";") for l in m.group(2).strip().split("\n") if l.strip()]
-    methods = re.findall(r"^\s+(\w+)\((?:requestParameters\??: (\w+), )?initOverrides[^)]*\): Promise<(.+?)>;", src, re.M)
-    methods = [m for m in methods if not m[0].endswith(("Raw", "RequestOpts"))]
+    # Object return types span several lines and contain their own `>;`, so match braces explicitly
+    methods = re.findall(r"^\s+(\w+)\((?:requestParameters\??: (\w+), )?initOverrides[^)]*\): Promise<(\{[\s\S]*?\}|.+?)>;", src, re.M)
+    methods = [(n, r, " ".join(t.split())) for n, r, t in methods if not n.endswith(("Raw", "RequestOpts"))]
     where = f"`data.{getters[cls]}`" if cls in getters else "not on DataService in this version"
     print(f"## {cls} ({where})\n")
     for name, req, ret in methods:

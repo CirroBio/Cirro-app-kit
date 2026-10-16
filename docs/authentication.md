@@ -37,7 +37,7 @@ The [app template](../templates/app) implements the flow with [oidc-client-ts](h
 import { UserManager } from "oidc-client-ts";
 
 const res = await fetch(`${cirroUrl}/.well-known/oauth-authorization-server`);
-const signIn = new UserManager({
+const userManager = new UserManager({
   authority: cirroUrl,
   metadata: await res.json(),     // authorize, token and revocation endpoints
   client_id: clientId,
@@ -49,14 +49,14 @@ const signIn = new UserManager({
 });
 ```
 
-`src/main.tsx` finishes a returning sign-in (`signinRedirectCallback()` when the URL has `code` and `state`), shows a **Sign in with Cirro** button otherwise (`signinRedirect()`), and gives `DataService` a token getter that reads the current access token from the library. The username is the ID token's `cognito:username` claim.
+`src/main.tsx` finishes a returning sign-in (`signinRedirectCallback()` when the URL has `code` and `state`), shows a **Sign in with Cirro** button otherwise (`signinRedirect()`), and gives `DataService` a token getter that reads the current access token from the library, renewing it with the refresh token first if it has expired (a tab that slept past automatic renewal). A user whose token can't be renewed is treated as signed out. The username is the ID token's `cognito:username` claim.
 
 What to know about it:
 
 - **The redirect URI must match the registration exactly.** The template returns to `window.location.origin`, or to the origin plus Vite's `base` for an app served under a path (a GitHub Pages project site such as `https://<org>.github.io/<repo>/`). Register that exact URL, trailing slash included: Cognito's authorize step treats `https://host/app` and `https://host/app/` alike, but the end of a SAML sign-in (a Microsoft or other SAML identity provider) compares exactly and fails with `Invalid SAML response received: RedirectUri is not registered with the client` (demo.cirro.bio, 2026-10-15).
 - **Show a failed return.** A page load with `?error=` is a failed sign-in, usually a registration mismatch. The template shows the error instead of offering to sign in again, so a broken registration can't loop.
 - **Tokens live in the library's session storage** (oidc-client-ts's default), so a reload keeps the user signed in without another trip through the consent screen. Your own code never stores them.
-- **Signing out** revokes the refresh token at the `revocation_endpoint` (the token server revokes refresh tokens only) and removes the user from the library. That ends the app's session; the user stays signed in to Cirro itself, so signing in again goes straight through.
+- **Signing out** revokes the refresh token at the `revocation_endpoint` (the token server revokes refresh tokens only) and removes the user from the library, which it does even when revocation fails; the app then shows the revocation error instead of reloading. That ends the app's session; the user stays signed in to Cirro itself, so signing in again goes straight through.
 
 ## Checking it works
 
