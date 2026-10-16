@@ -25,6 +25,8 @@ The token getter runs before every request, so token renewal stays inside the si
 
 Use the tenant's web address followed by `/api`: `https://<tenant>/api`. It answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so the app calls it directly from `localhost` and in production alike. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12. `basePath` defaults to `/api`, which only works on the Cirro origin itself, so always set it.
 
+Exception, 2026-10-15: the preflight for `/api/projects/<id>/sheets` and its sub-routes returns 401 on dev.cirro.bio and demo.cirro.bio, so browsers can't call the sheets API from another origin, while `/projects` and `/projects/<id>/datasets` pass. A same-origin dev proxy hides this; test sheet calls from the deployed origin, and have the app degrade when they fail with a network error.
+
 ## Resources
 
 `DataService` has one getter per area of the API. The ones an app uses: `projects`, `datasets`, `file`, `processes`, `execution`, `metadata`, `references`, `sharing`, `workspaces` and `system`. Not yet on it, and coming in the release after 0.13.38 ([packages](packages.md#coming-in-the-next-release)): `sheets`, `feed` (notes and discussions), `dashboards` and `appRegistrations`.
