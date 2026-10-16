@@ -40,7 +40,7 @@ Registration happens separately in each Cirro tenant, and each tenant gives the 
 
 ## Scripted registration
 
-For automated setups, `data.appRegistrations` can create registrations ([the release after 0.13.38](packages.md#coming-in-the-next-release)). It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
+For automated setups, `data.appRegistrations` can create registrations. It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
 
 ```typescript
 import { AppClientType, PrincipalType } from "@cirrobio/api-client";

@@ -26,7 +26,7 @@ Read "Capability map" and "An app that ships its own pipeline" in the building-o
 - Before submitting, show an estimate from recent completed runs' `calculateCost` (load it in the background; it can take ~20 s). `calculatePipelineCost` returned no estimate on dev.cirro.bio, so don't rely on it.
 - Submit with `runAnalysis`, setting `tags` to `cirro-app: <APP_ID>` in the request, then add a provenance note to the output dataset ("Provenance by default" in the same doc).
 - Track status from Cirro, not app state, so the app can be closed and reopened: `getTasksForExecution` for progress and duration (tasks' `requestedAt`/`stoppedAt`), `getExecutionLogs` on failure. Offer `stopAnalysis` with a confirmation.
-- Detect a refused launch from the `ApiError` (message "Not allowed to …", or `errorCode` 403 from the next sdk release), as in "Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`.
+- Detect a refused launch from the `ApiError` (`errorCode` 403; its message names the permission), as in "Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`.
 
 ## 3. Workspaces
 

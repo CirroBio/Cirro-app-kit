@@ -25,11 +25,13 @@ The token getter runs before every request, so token renewal stays inside the si
 
 Use the tenant's web address followed by `/api`: `https://<tenant>/api`. It answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so the app calls it directly from `localhost` and in production alike. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12. `basePath` defaults to `/api`, which only works on the Cirro origin itself, so always set it.
 
+Exception, 2026-10-15: the preflight for `/api/projects/<id>/sheets` and its sub-routes returns 401 on dev.cirro.bio and demo.cirro.bio, so browsers can't call the sheets API from another origin, while `/projects` and `/projects/<id>/datasets` pass. A same-origin dev proxy hides this; test sheet calls from the deployed origin, and have the app degrade when they fail with a network error.
+
 ## Resources
 
-`DataService` has one getter per area of the API. The ones an app uses: `projects`, `datasets`, `file`, `processes`, `execution`, `metadata`, `references`, `sharing`, `workspaces` and `system`. Not yet on it, and coming in the release after 0.13.38 ([packages](packages.md#coming-in-the-next-release)): `sheets`, `feed` (notes and discussions), `dashboards` and `appRegistrations`.
+`DataService` has one getter per area of the API. The ones an app uses: `projects`, `datasets`, `file`, `processes`, `execution`, `metadata`, `references`, `sharing`, `workspaces`, `sheets`, `feed` (notes and discussions), `dashboards`, `appRegistrations` and `system`.
 
-Every method takes a single object argument. Method and field names come from a generated client; look them up in the [API reference](../reference/api-surface.md) and [common models](../reference/models.md) rather than guessing. The reference is a snapshot of 0.13.38; to regenerate it for the version you have installed:
+Every method takes a single object argument. Method and field names come from a generated client; look them up in the [API reference](../reference/api-surface.md) and [common models](../reference/models.md) rather than guessing. The reference is a snapshot of 0.13.39; to regenerate it for the version you have installed:
 
 ```bash
 python3 tools/api_surface.py node_modules > api-surface.md
@@ -45,13 +47,7 @@ The exception is a list the user searches or filters, which needs every item. `g
 
 The sdk turns any non-2xx response into an `ApiError`, with the server's `message` and a list of field `errors`. Show `message` to users and log `errors`.
 
-A refused permission says so in the message, which names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio). That's enough to explain a refusal to the user, and to recognise one:
-
-```typescript
-const refused = (e: unknown) => e instanceof ApiError && e.message.startsWith("Not allowed to");
-```
-
-The release after 0.13.38 adds the HTTP status to `ApiError` as `errorCode` ([packages](packages.md#coming-in-the-next-release)); check `e.errorCode === 403` once you're on it.
+`errorCode` is the HTTP status, so a refusal is `e instanceof ApiError && e.errorCode === 403`. Its message names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio), which is what to show the user.
 
 - **401:** no valid session. Check the sign-in.
 - **403:** the user or the registered app lacks a permission. Check the registration and the user's project role.

@@ -32,7 +32,7 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 
 ## Using sheets from an app
 
-Sheets are `data.sheets` on the app's `DataService`, from [the release after 0.13.38](packages.md#coming-in-the-next-release); 0.13.38 doesn't have the getter yet.
+Sheets are `data.sheets` on the app's `DataService`. **Browsers can't call them from another origin yet:** the API's CORS preflight for `/projects/<id>/sheets` and its sub-routes answers 401 (dev.cirro.bio and demo.cirro.bio, 2026-10-15; still so on dev.cirro.bio, 2026-10-16), so these calls fail with a network error from a deployed app or `localhost`. Until Cirro fixes it, gate sheet features on a first call succeeding; see [open questions](open-questions.md).
 
 ```typescript
 import {

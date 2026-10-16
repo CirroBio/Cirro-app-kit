@@ -111,7 +111,7 @@ Anything an app creates should explain itself to someone who never used the app.
 
 Notes are discussions of type `NOTES` attached to an entity (`DATASET`, `SAMPLE`, `WORKSPACE`, `PROJECT`, and others):
 
-Notes go through `data.feed`, from [the release after 0.13.38](packages.md#coming-in-the-next-release):
+Notes go through `data.feed`:
 
 ```typescript
 import { EntityType, DiscussionType } from "@cirrobio/api-client";
