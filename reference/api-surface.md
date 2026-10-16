@@ -70,6 +70,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 
 - `calculateCost({ projectId: string, datasetId: string })` → `CostResponse`
 - `getExecutionLogs({ datasetId: string, projectId: string, forceLive?: boolean })` → `GetExecutionLogsResponse`
+- `getProjectSummary({ projectId: string, numberOfDays?: number })` → `{ [key: string]: Array<Task>; }`
 - `getTask({ datasetId: string, projectId: string, taskId: string, forceLive?: boolean })` → `Task`
 - `getTaskFiles({ datasetId: string, projectId: string, taskId: string })` → `GetTaskFilesResponse`
 - `getTaskLineage({ datasetId: string, projectId: string, taskId: string })` → `GetTaskLineageResponse`

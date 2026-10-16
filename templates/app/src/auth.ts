@@ -32,21 +32,34 @@ export async function createSignIn(cirroUrl: string, clientId: string): Promise<
 }
 
 // Finishes a sign-in redirect if this page load is one, then returns the signed-in user, if any.
-export async function currentUser(signIn: UserManager): Promise<User | null> {
+export async function currentUser(userManager: UserManager): Promise<User | null> {
   const params = new URLSearchParams(window.location.search);
   if (params.has("code") && params.has("state")) {
-    const user = await signIn.signinRedirectCallback();
+    const user = await userManager.signinRedirectCallback();
     window.history.replaceState({}, "", window.location.pathname);
     return user;
   }
-  const user = await signIn.getUser();
-  return user && !user.expired ? user : null;
+  return activeUser(userManager);
+}
+
+// The stored user, renewed with the refresh token if its access token has expired (a tab that
+// slept past automatic renewal); null when renewal fails, which means the user is signed out.
+export async function activeUser(userManager: UserManager): Promise<User | null> {
+  const user = await userManager.getUser();
+  if (!user?.expired) return user;
+  return userManager.signinSilent().catch(() => null);
 }
 
 // Ends the app's session: revokes the refresh token (the only kind the token server revokes)
 // and forgets the user. The user stays signed in to Cirro itself.
-export async function signOut(signIn: UserManager) {
-  await signIn.revokeTokens(["refresh_token"]);
-  await signIn.removeUser();
+export async function signOut(userManager: UserManager) {
+  try {
+    await userManager.revokeTokens(["refresh_token"]);
+  } catch (e) {
+    throw new Error(`Signed out of this app, but the refresh token was not revoked: ${e instanceof Error ? e.message : e}`);
+  } finally {
+    // Forget the user even when revocation fails, so a failed sign-out can't leave them signed in.
+    await userManager.removeUser();
+  }
   window.location.assign(REDIRECT_URI);
 }

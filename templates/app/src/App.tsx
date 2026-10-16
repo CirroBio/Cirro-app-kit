@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DataService } from "@cirrobio/sdk";
 import type { Dataset, Project } from "@cirrobio/api-client";
 
@@ -47,7 +47,7 @@ export function App({ dataService, tenantName, username, onSignOut }: AppProps) 
             </li>
           ))}
         </ul>
-        {selected && <Datasets dataService={dataService} project={selected} />}
+        {selected && <Datasets key={selected.id} dataService={dataService} project={selected} />}
       </div>
     </main>
   );
@@ -58,19 +58,27 @@ function Datasets({ dataService, project }: { dataService: DataService; project:
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Cleared on unmount so a response that arrives late can't update a list that's gone.
+  const active = useRef(true);
 
   const load = (token?: string) => {
     setLoading(true);
     dataService.datasets.getDatasets({ projectId: project.id, limit: 50, nextToken: token })
       .then((page) => {
+        if (!active.current) return;
         setDatasets((prev) => (token ? [...prev, ...page.data] : page.data));
         setNextToken(page.nextToken || undefined);
       })
-      .catch((e) => setError(errorText(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => active.current && setError(errorText(e)))
+      .finally(() => active.current && setLoading(false));
   };
 
-  useEffect(() => { setDatasets([]); setError(""); load(); }, [project.id]);
+  // App keys this component by project, so a new project gets a fresh instance and state.
+  useEffect(() => {
+    active.current = true;
+    load();
+    return () => { active.current = false; };
+  }, []);
 
   return (
     <section>
