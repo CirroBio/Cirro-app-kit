@@ -22,7 +22,7 @@ sequenceDiagram
   App->>API: 8. API calls with Authorization: Bearer
 ```
 
-- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. It's served as `text/json`, which some OAuth libraries refuse, so fetch it yourself and pass the result to the library, as the template does. The tenant's display name comes from `/api/info/system` (`tenantInfo.name`), also public.
+- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. It's served as `text/json`, which some OAuth libraries refuse, so fetch it yourself and pass the result to the library, as the template does. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
 - **Step 3 is Cirro's consent screen.** It shows the registration's name, logo, publisher and requested permissions, and an "Official" badge for apps Cirro publishes, and lists the tenant's sign-in providers. The user must be signed in to Cirro to see it; a signed-out user is taken to Cirro's sign-in first.
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
 - **Only `openid`.** Public Apps allow the `openid` scope and no other; asking for more fails with `invalid_scope` (dev.cirro.bio, 2026-10-10). The API accepts tokens issued with `openid` alone (verified 2026-10-11).

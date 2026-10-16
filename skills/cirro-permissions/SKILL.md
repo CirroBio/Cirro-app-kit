@@ -23,7 +23,7 @@ Then compare the manifest with the code both ways: permissions used but not decl
 By default the app can't read the user's role (`getUser` and `getProjectUsers` are refused for typical registrations), so:
 
 - Show actions as available and let the server decide. Don't set `fetchUserInfo` on `AuthenticationContextProvider`.
-- Catch errors on every action. Recognise a refusal from the `ApiError`: its message starts "Not allowed to" and names the permission, and the next sdk release adds `errorCode` ("Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`).
+- Catch errors on every action. Recognise a refusal from the `ApiError`: `errorCode` is 403, and the message names the permission ("Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`).
 - After a 403, disable that action for that project for the session, with a message covering both layers: a project owner can change the role, or a Cirro admin can grant the app the permission.
 - Check every permission a multi-step flow needs at its start.
 - If an optional permission wasn't granted, hide the feature everywhere and say "not enabled for this app" once in settings or help.

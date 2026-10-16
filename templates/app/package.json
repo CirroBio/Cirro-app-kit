@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cirrobio/api-client": "0.13.38",
-    "@cirrobio/sdk": "0.13.38",
+    "@cirrobio/api-client": "0.13.39",
+    "@cirrobio/sdk": "0.13.39",
     "oidc-client-ts": "3.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

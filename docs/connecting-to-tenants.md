@@ -128,7 +128,7 @@ export function chooseTenant(t: Tenant) {
 
 // main.tsx: render a picker until savedTenant() returns one, then start as the template does
 // with tenant.url and tenant.clientId in place of config.url and config.clientId:
-// fetch `${tenant.url}/api/info/system`, createSignIn(tenant.url, tenant.clientId, system), …
+// await createSignIn(tenant.url, tenant.clientId), then a DataService on `${tenant.url}/api`, …
 ```
 
 - With a single entry, skip the picker.

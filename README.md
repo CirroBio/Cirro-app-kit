@@ -47,7 +47,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 
 ## Verified against
 
-`@cirrobio/api-client` and `@cirrobio/sdk` 0.13.38, with `oidc-client-ts` 3.5.0 for sign-in. The app template was clean-installed and built on 2026-10-15. CI rebuilds it on every push and weekly against the latest published packages.
+`@cirrobio/api-client` and `@cirrobio/sdk` 0.13.39, with `oidc-client-ts` 3.5.0 for sign-in. The app template was clean-installed and built on 2026-10-16. CI rebuilds it on every push and weekly against the latest published packages.
 
 ## Contributing
 

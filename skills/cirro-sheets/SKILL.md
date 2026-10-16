@@ -24,7 +24,7 @@ Propose, and get agreement on, before writing code:
 
 ## 3. Write the code
 
-- Call Sheets as `data.sheets` on the app's `DataService` (the next sdk release; see "Coming in the next release" in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md`). On 0.13.38 the getter doesn't exist yet: tell the user, rather than constructing `SheetsApi` yourself.
+- Call Sheets as `data.sheets` on the app's `DataService`, never by constructing `SheetsApi`. Tell the user that browsers can't call the Sheets routes from another origin until Cirro fixes their CORS preflight (see the Sheets doc), and make sheet features degrade when a call fails with a network error.
 - Write a find-or-create function like the doc's `ensureReviewSheet`, run once per project.
 - Read with `querySheetData` and a structured `filter`. Use `queryData` (raw SQL) only for aggregates; never interpolate user input into SQL, and validate any user-chosen column or value against an allow-list.
 - Update with partial `updateSheetData` keyed by `_row_id`; re-read before acting on a row, since people edit sheets in the Cirro UI too.

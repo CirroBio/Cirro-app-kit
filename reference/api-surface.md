@@ -1,10 +1,10 @@
-# Cirro API surface (@cirrobio/api-client 0.13.38)
+# Cirro API surface (@cirrobio/api-client 0.13.39)
 
 Generated from the package type declarations. Regenerate for the installed version with `python3 tools/api_surface.py <node_modules path>` before trusting a method name.
 
 `data.X` means the getter on `new DataService(...)`. Methods take one object argument with the fields shown (`?` = optional) and return a Promise of the type shown.
 
-## AppRegistrationsApi (not on DataService in this version)
+## AppRegistrationsApi (`data.appRegistrations`)
 
 - `approveApp({ id: string })` → `void`
 - `archiveAppRegistration({ id: string })` → `void`
@@ -39,7 +39,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 - `updateAgent({ agentId: string, agentInput: AgentInput })` → `void`
 - `updateComputeEnvironment({ projectId: string, computeEnvironmentId: string, computeEnvironmentConfigurationInput: ComputeEnvironmentConfigurationInput })` → `void`
 
-## DashboardsApi (not on DataService in this version)
+## DashboardsApi (`data.dashboards`)
 
 - `createDashboard({ projectId: string, dashboardInput: DashboardInput })` → `CreateResponse`
 - `createDashboardTemplate({ dashboardInput: DashboardInput })` → `CreateResponse`
@@ -78,7 +78,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 - `runAnalysis({ projectId: string, runAnalysisRequest: RunAnalysisRequest })` → `CreateResponse`
 - `stopAnalysis({ datasetId: string, projectId: string })` → `StopExecutionResponse`
 
-## FeedApi (not on DataService in this version)
+## FeedApi (`data.feed`)
 
 - `createDiscussion({ discussionInput: DiscussionInput })` → `Discussion`
 - `deleteDiscussion({ discussionId: string })` → `void`
@@ -128,7 +128,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 - `updateProjectSchema({ projectId: string, formSchema: FormSchema })` → `void`
 - `updateSample({ projectId: string, sampleId: string, sampleRequest: SampleRequest })` → `Sample`
 
-## MetricsApi (not on DataService in this version)
+## MetricsApi (`data.metrics`)
 
 - `getAllMetrics()` → `Array<ProjectMetrics>`
 - `getMetricsSummary()` → `TenantMetrics`
@@ -187,7 +187,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 - `getReferencesForProject({ projectId: string })` → `Array<Reference>`
 - `refreshProjectReferences({ projectId: string })` → `void`
 
-## SharedFilesystemsApi (not on DataService in this version)
+## SharedFilesystemsApi (`data.sharedFilesystems`)
 
 - `createSharedFilesystem({ projectId: string, sharedFilesystemInput: SharedFilesystemInput })` → `CreateResponse`
 - `deleteSharedFilesystem({ projectId: string, filesystemId: string })` → `void`
@@ -209,7 +209,7 @@ Generated from the package type declarations. Regenerate for the installed versi
 - `unsubscribeShare({ projectId: string, shareId: string })` → `void`
 - `updateShare({ projectId: string, shareId: string, shareInput: ShareInput })` → `void`
 
-## SheetsApi (not on DataService in this version)
+## SheetsApi (`data.sheets`)
 
 - `createSheet({ projectId: string, sheetInput: SheetInput })` → `CreateResponse`
 - `deleteSheet({ projectId: string, sheetId: string })` → `void`

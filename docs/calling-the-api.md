@@ -29,9 +29,9 @@ Exception, 2026-10-15: the preflight for `/api/projects/<id>/sheets` and its sub
 
 ## Resources
 
-`DataService` has one getter per area of the API. The ones an app uses: `projects`, `datasets`, `file`, `processes`, `execution`, `metadata`, `references`, `sharing`, `workspaces` and `system`. Not yet on it, and coming in the release after 0.13.38 ([packages](packages.md#coming-in-the-next-release)): `sheets`, `feed` (notes and discussions), `dashboards` and `appRegistrations`.
+`DataService` has one getter per area of the API. The ones an app uses: `projects`, `datasets`, `file`, `processes`, `execution`, `metadata`, `references`, `sharing`, `workspaces`, `sheets`, `feed` (notes and discussions), `dashboards`, `appRegistrations` and `system`.
 
-Every method takes a single object argument. Method and field names come from a generated client; look them up in the [API reference](../reference/api-surface.md) and [common models](../reference/models.md) rather than guessing. The reference is a snapshot of 0.13.38; to regenerate it for the version you have installed:
+Every method takes a single object argument. Method and field names come from a generated client; look them up in the [API reference](../reference/api-surface.md) and [common models](../reference/models.md) rather than guessing. The reference is a snapshot of 0.13.39; to regenerate it for the version you have installed:
 
 ```bash
 python3 tools/api_surface.py node_modules > api-surface.md
@@ -47,13 +47,7 @@ The exception is a list the user searches or filters, which needs every item. `g
 
 The sdk turns any non-2xx response into an `ApiError`, with the server's `message` and a list of field `errors`. Show `message` to users and log `errors`.
 
-A refused permission says so in the message, which names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio). That's enough to explain a refusal to the user, and to recognise one:
-
-```typescript
-const refused = (e: unknown) => e instanceof ApiError && e.message.startsWith("Not allowed to");
-```
-
-The release after 0.13.38 adds the HTTP status to `ApiError` as `errorCode` ([packages](packages.md#coming-in-the-next-release)); check `e.errorCode === 403` once you're on it.
+`errorCode` is the HTTP status, so a refusal is `e instanceof ApiError && e.errorCode === 403`. Its message names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio), which is what to show the user.
 
 - **401:** no valid session. Check the sign-in.
 - **403:** the user or the registered app lacks a permission. Check the registration and the user's project role.

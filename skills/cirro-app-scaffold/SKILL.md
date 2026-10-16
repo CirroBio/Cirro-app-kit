@@ -22,7 +22,7 @@ Ask only for what the conversation hasn't answered:
 
 Start from `${CLAUDE_PLUGIN_ROOT}/templates/app/` (React, Vite, Cirro's login UI). Then:
 
-1. Check for newer versions: `npm view @cirrobio/sdk version` (and `@cirrobio/api-client`). If newer than the template's pins, bump them, and check whether the release adds what "Coming in the next release" in `${CLAUDE_PLUGIN_ROOT}/docs/packages.md` lists.
+1. Check for newer versions: `npm view @cirrobio/sdk version` (and `@cirrobio/api-client`). If newer than the template's pins, bump them and read the release notes for anything that replaces hand-written code.
 2. `npm install`, copy `.env.example` to `.env`, and set `VITE_CIRRO_URL` and `VITE_CIRRO_CLIENT_ID`.
 3. `npm run build` must pass before continuing.
 

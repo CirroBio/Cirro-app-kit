@@ -87,7 +87,7 @@ Then combine it with what the app was granted: a feature behind an optional perm
 
 Client-side checks are for a better experience, not for security, and they can be wrong: roles change mid-session, mappings drift, and governance requirements (such as data use agreements) can block access regardless of role. So:
 
-- **Treat a 403 as authoritative.** Catch errors on every action, and when it's a permission failure (the error's message starts "Not allowed to", and the next sdk release adds the status; see [calling the API](calling-the-api.md#errors)), update the UI to match rather than retrying.
+- **Treat a 403 as authoritative.** Catch errors on every action, and when it's a permission failure (`errorCode` 403 on the `ApiError`; see [calling the API](calling-the-api.md#errors)), update the UI to match rather than retrying.
 - **Explain who can fix it.** A 403 can come from either layer, and the response may not say which. A good message covers both: "You don't have permission to run pipelines in this project. A project owner can change your role, or a Cirro admin can grant this app access."
 - **Remember refusals.** After a 403, disable that action for that project for the rest of the session, with the explanation, so the user doesn't hit it again.
 
