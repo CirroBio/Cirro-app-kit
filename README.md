@@ -1,8 +1,13 @@
-# cirro-app-kit
+# Cirro App Kit
 
 Documentation, a project template and tools for building browser apps on the [Cirro](https://cirro.bio) platform: apps that sign users in with their Cirro account over OAuth and work with their projects, datasets and files.
 
+<!-- repo-only -->
 The developer guide is also published as a website: **[Cirro App Kit docs](https://studious-bassoon-nkl4qqy.pages.github.io/)** (visible to anyone with access to this repo).
+<!-- /repo-only -->
+<!-- site-only
+The template and tools live in the [CirroBio/Cirro-app-kit](https://github.com/CirroBio/Cirro-app-kit) repository; [getting started](docs/getting-started.md) shows how to clone it.
+-->
 
 ## Quick start
 
@@ -14,6 +19,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 4. **Before deploying,** run `python3 tools/scan.py <your app>` and work through the [security checklist](docs/security-checklist.md).
 5. **Connect to tenants.** A deployed app works for users once each tenant approves it; see [connecting to tenants](docs/connecting-to-tenants.md).
 
+<!-- repo-only -->
 ## What's here
 
 | Path | Contents |
@@ -44,6 +50,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 - [Security checklist](docs/security-checklist.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Open questions](docs/open-questions.md): platform behavior not yet confirmed for external apps
+<!-- /repo-only -->
 
 ## Verified against
 
@@ -51,18 +58,18 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), including how to update the kit when the Cirro packages publish a new version.
+See [contributing](CONTRIBUTING.md), including how to update the kit when the Cirro packages publish a new version.
 
 ## Using with Claude
 
-The repo is also a Claude Code plugin and a marketplace that lists it. Its skills hold the workflow steps for an agent (which questions to ask, which path to choose, when to verify against installed versions) and read the facts from `docs/`, so the guide stays the single source of truth. Install it in Claude Code (you need access to this repo):
+The kit is also a Claude Code plugin, and its repository is a marketplace that lists it. Its skills hold the workflow steps for an agent (which questions to ask, which path to choose, when to verify against installed versions) and read their facts from this guide, so the guide stays the single source of truth. Install it in Claude Code (you need access to the CirroBio/Cirro-app-kit repository):
 
 ```text
 /plugin marketplace add CirroBio/Cirro-app-kit
 /plugin install cirro-app-kit@cirro-app-kit
 ```
 
-Then describe what you want to build ("start a Cirro dashboard that lists my datasets"); the matching skill loads by itself, or call one by name, such as `/cirro-app-kit:cirro-app-scaffold`. To work on the skills, see [CONTRIBUTING.md](CONTRIBUTING.md#working-on-the-claude-plugin).
+Then describe what you want to build ("start a Cirro dashboard that lists my datasets"); the matching skill loads by itself, or call one by name, such as `/cirro-app-kit:cirro-app-scaffold`. To work on the skills, see [contributing](CONTRIBUTING.md#working-on-the-claude-plugin).
 
 | Skill | Use it to |
 | --- | --- |

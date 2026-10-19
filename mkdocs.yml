@@ -6,9 +6,9 @@ repo_name: CirroBio/Cirro-app-kit
 edit_uri: edit/main/
 
 # The site mirrors the repo layout so the Markdown's relative links work both
-# on GitHub and here: site-hooks/links.py replaces the docs_dir file list with
-# the repo paths in SITE_PATHS, and points links to code (templates, tools) at
-# GitHub.
+# on GitHub and here: site-hooks/pages.py replaces the docs_dir file list with
+# the repo paths in SITE_PATHS, points links to code (templates, tools) at
+# GitHub, and handles the README's repo-only and site-only blocks.
 docs_dir: docs
 watch:
   - README.md
@@ -16,7 +16,7 @@ watch:
   - reference
   - templates/app/README.md
 hooks:
-  - site-hooks/links.py
+  - site-hooks/pages.py
 
 theme:
   name: material

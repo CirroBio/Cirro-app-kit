@@ -16,6 +16,11 @@ SITE_PATHS = [
 # Ranked below the guide so searches for terms like "client ID" land on prose.
 REFERENCE_SEARCH_BOOST = 0.5
 LINK = re.compile(r"\]\(([^)#\s]+)(#[^)\s]*)?\)")
+# The same Markdown is the repo's README on GitHub and a page here. Text that only makes sense
+# in one place is marked: repo-only blocks are dropped from the site, and site-only blocks sit
+# in an HTML comment (hidden on GitHub) that the site unwraps.
+REPO_ONLY = re.compile(r"<!-- repo-only -->.*?<!-- /repo-only -->\n?", re.S)
+SITE_ONLY = re.compile(r"<!-- site-only\n(.*?)\n-->", re.S)
 
 
 def on_files(files, config):
@@ -37,6 +42,7 @@ def on_files(files, config):
 
 
 def on_page_markdown(markdown, page, config, files):
+    markdown = SITE_ONLY.sub(r"\1", REPO_ONLY.sub("", markdown))
     if page.file.src_uri.startswith("reference/"):
         page.meta.setdefault("search", {"boost": REFERENCE_SEARCH_BOOST})
     page_dir = posixpath.dirname(page.file.src_uri)
