@@ -5,7 +5,7 @@ description: Launch and track Cirro pipeline runs and interactive workspaces fro
 
 # Pipelines and workspaces from an app
 
-Both spend the user's project money, so every launch needs a cost note and an explicit confirmation (the trust-boundaries table in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`). Read the docs named below before writing code; look up methods in `${CLAUDE_PLUGIN_ROOT}/reference/api-surface.md` (`ExecutionApi`, `ProcessesApi`, `WorkspacesApi`), checking the installed version first as cirro-data-access describes.
+Both spend the user's project money, so every launch needs an explicit confirmation (the trust-boundaries table in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`). Read the docs named below before writing code; look up methods in `${CLAUDE_PLUGIN_ROOT}/reference/api-surface.md` (`ExecutionApi`, `ProcessesApi`, `WorkspacesApi`), checking the installed version first as cirro-data-access describes.
 
 ## 1. Which kind of compute
 
@@ -23,7 +23,6 @@ Read "Capability map" and "An app that ships its own pipeline" in the building-o
 
 - Which pipeline: an existing Cirro process (find its ID with `ProcessesApi`), or one shipped in the app's repo. Registering a pipeline (`createCustomProcess`, `syncCustomProcess`) is a one-time maintainer step, not something the app does per user; pin it to the same release tag as the frontend.
 - Build the form from `getProcessParameters` rather than duplicating the parameter schema.
-- Before submitting, show an estimate from recent completed runs' `calculateCost` (load it in the background; it can take ~20 s). `calculatePipelineCost` returned no estimate on dev.cirro.bio, so don't rely on it.
 - Submit with `runAnalysis`, setting `tags` to `cirro-app: <APP_ID>` in the request, then add a provenance note to the output dataset ("Provenance by default" in the same doc).
 - Track status from Cirro, not app state, so the app can be closed and reopened: `getTasksForExecution` for progress and duration (tasks' `requestedAt`/`stoppedAt`), `getExecutionLogs` on failure. Offer `stopAnalysis` with a confirmation.
 - Detect a refused launch from the `ApiError` (`errorCode` 403; its message names the permission), as in "Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`.
