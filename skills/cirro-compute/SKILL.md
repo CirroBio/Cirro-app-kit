@@ -34,7 +34,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/workspaces.md` in full; most of its rules exist
 - Reuse before creating: list workspaces, find the app's by name prefix (`my-app / purpose`; workspaces have no tags) and offer to restart a stopped (`COMPLETED`) one.
 - `createWorkspace` starts it by itself; don't call `startWorkspace` after it. Always set `autoStopTimeout` (1-2 hours) and mount only the datasets in use. Pick the environment from `getWorkspaceEnvironments`.
 - Say up front that booting takes minutes, then show elapsed time and status while polling every 10-15 s, without blocking the rest of the UI.
-- At the per-user limit, list the user's workspaces and offer reuse or deletion of one they pick, with a warning that unsaved files are lost.
+- At the project's per-user limit (set by the project admin, so don't hard-code a number), list the user's workspaces and offer reuse or deletion of one they pick, with a warning that unsaved files are lost.
 - Open it in a new tab: open the tab synchronously in the click handler, then call `connectWorkspace` on every click and set the tab's location (the URL is single-use and expires in about 5 minutes). It can't be iframed.
 - While the user is active, `postponeAutoStop` periodically; show the auto-stop time with extend and stop buttons.
 - Decide with the user how results come back (saved dataset, a sheet, a known path) and tell the end user.

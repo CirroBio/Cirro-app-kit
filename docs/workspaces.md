@@ -36,7 +36,7 @@ Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyt
 
 ## The per-user limit
 
-Cirro limits how many workspaces one user can have in a project (5 on dev.cirro.bio). Stopped workspaces count toward it. At the limit, `createWorkspace` is refused with a message saying so ("5 out of 5"). So:
+A project can limit how many workspaces one user may have in it; the project admin sets the number. Stopped workspaces count toward it. At the limit, `createWorkspace` is refused with a message saying so (for example "5 out of 5"). So:
 
 - Reuse first, as above. An app should rarely need more than one workspace per purpose.
 - At the limit, don't just show the error. List the user's workspaces in the project, with their names, status and last start, and offer to reuse one or delete one the user picks. Deleting needs the user's explicit confirmation, because files inside a workspace that weren't saved to the project are lost with it.
