@@ -5,6 +5,7 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 
 | Question | Affects |
 | --- | --- |
+| Will the dynamic client registration endpoint (`/api/auth/register`) answer browsers? Today its CORS preflight returns 404 and its responses carry no `Access-Control-Allow-Origin` (app, demo and dev.cirro.bio, 2026-10-19), so a browser app can't read the client ID it returns | [Serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant) |
 | Do project buckets allow CORS from a registered app's production origin on every tenant, or does each origin need an admin change? (On dev.cirro.bio a project bucket answers preflights for any origin, `https://example.org` included, with `Access-Control-Allow-Origin: *` for GET and PUT with `Range`, 2026-10-12; other tenants not checked.) | [Files](files.md) |
 | Which permissions do file reads need, and is `GENERATE_DOWNLOAD_TOKEN` among them? | Registration guidance |
 | Refresh-token lifetime and rotation for Public Apps (access tokens last 15 minutes: `expires_in` 900 on dev.cirro.bio, 2026-10-12) | Session behavior |
