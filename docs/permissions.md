@@ -46,9 +46,9 @@ Users sign in as themselves, so the app inherits their access, no more. The same
 
 ### Checking before offering an action
 
-Cirro doesn't expose a "can this user do X" endpoint. The user's **role in each project** is in their user record, but reading it usually isn't possible for an app: `getUser`, even on the signed-in user, and `getProjectUsers` both returned 403 "Not allowed to MANAGE_MEMBERS" for a project-scoped Public App on dev.cirro.bio (2026-10-11). `MANAGE_MEMBERS` is a governance permission; don't request it just to read roles.
+An app usually can't find out in advance what the user is allowed to do: the user's **role in each project** is in their user record, which a typical app registration can't read.
 
-So by default **the role is unknown**. Show actions as available, and let the server decide (next section). Don't call `getUser` up front to find out: it fails.
+So by default **the role is unknown**. Show actions as available, and let the server decide (next section).
 
 If a registration does let the app read the user record, here is how to read the role:
 
