@@ -13,4 +13,4 @@ npm run dev
 - `src/config.ts` checks `.env`; `src/auth.ts` sets up sign-in through Cirro's authorize page with oidc-client-ts; `src/main.tsx` loads the tenant's config, finishes or starts sign-in, and creates the `DataService`; `src/App.tsx` is where your app starts. See [authentication](../../docs/authentication.md).
 - The app can't read the user's project role under a typical registration, so it offers actions and lets a 403 from the server decide; see [permissions](../../docs/permissions.md#checking-before-offering-an-action).
 
-`cirro-permissions.json` lists the permissions the template uses. Update it whenever you add API calls, and give it to the admin who registers the app; see [permissions](../../docs/permissions.md).
+`cirro-permissions.json` lists the permissions the template uses. Update it whenever you add API calls, and give it to the tenant admin who approves the app; see [permissions](../../docs/permissions.md).

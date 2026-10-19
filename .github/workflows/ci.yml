@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Use latest published @cirrobio packages
         if: matrix.packages == 'latest'
         run: npm pkg get dependencies | node -e 'const d=JSON.parse(require("fs").readFileSync(0));for (const k of Object.keys(d)) if (k.startsWith("@cirrobio/")) console.log(k)' | xargs -I{} npm pkg set "dependencies.{}=latest"

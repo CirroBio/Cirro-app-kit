@@ -13,7 +13,7 @@ If the app's purpose is still open (what it creates, whether it needs compute, a
 
 Ask only for what the conversation hasn't answered:
 
-1. Do they have a Cirro account and a client ID yet? If not, start with `${CLAUDE_PLUGIN_ROOT}/docs/getting-started.md` steps 1 and 2, and draft the registration request for them.
+1. Do they have a Cirro account and a client ID yet? If not, start with `${CLAUDE_PLUGIN_ROOT}/docs/getting-started.md` steps 1 and 2: with the App Developer role they create a development registration themselves, pointing to `http://localhost:5173` and working only for them; otherwise draft the request to a tenant admin for them. Project admins can't register apps.
 2. Which Cirro tenant(s): the public Cirro tenant, an institution's tenant, or several? See `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`.
 3. Production origin(s)?
 4. Would the app need a client secret, for example to act as itself rather than as the signed-in user, or to run with no user present? That's out of scope for this kit: say so, and don't scaffold it here.
@@ -30,7 +30,7 @@ Start from `${CLAUDE_PLUGIN_ROOT}/templates/app/` (React, Vite, Cirro's login UI
 
 Update the template's `cirro-permissions.json` for what the app will do: required permissions with a reason each, optional ones tied to a feature. Follow `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` (cirro-permissions has the steps); aim for the smallest required set, project-scoped.
 
-The app needs a registration before sign-in works. Walk the user through `${CLAUDE_PLUGIN_ROOT}/docs/app-types-and-registration.md`. If the user wants registration scripted, show them the `AppRegistrationInput` and get a yes before running it.
+The app needs a registration before sign-in works. Walk the user through `${CLAUDE_PLUGIN_ROOT}/docs/app-types-and-registration.md`.
 
 ## 4. First run
 

@@ -10,23 +10,22 @@ Registrations that come with a client secret are out of scope for this kit: the 
 
 ## Who registers the app
 
-An app is registered by an admin, and there are three paths depending on who the app is for:
+Apps are registered in each tenant, by people with one of two roles:
 
-- **A project admin** registers an app scoped to a single project, granting it permissions within that project. Because the developer often owns or administers the project themselves, this is usually self-serve — no waiting on anyone else.
-- **A tenant admin** registers an app at the tenant level, able to grant permissions across the tenant, for an app that serves a whole institution.
-- **On the public tenant (app.cirro.bio),** the central Cirro support team registers the app.
+- **Tenant admins** create registrations and approve them. Approval is what lets anyone other than the registration's creator sign in.
+- **App Developers** create development registrations. The App Developer role, which a tenant admin assigns, lets you register an app yourself that points to `localhost` (for example `http://localhost:5173`) and works for you alone. That's how you build and test the app before asking a tenant admin to approve it, with its production address, for other users.
 
-Pick the narrowest path that fits: an app for one project goes to that project's admin; something for the whole institution goes to a tenant admin; something on the public tenant goes through Cirro support.
+Project admins can't register apps. On the public tenant (app.cirro.bio), the Cirro support team acts as tenant admin and registers apps there.
 
-For development you want a registration that only you can sign in to until it's approved. [Getting started](getting-started.md#2-get-a-development-registration) walks through obtaining one. To ship, the same registration is updated with the production address and approved; see [connecting to tenants](connecting-to-tenants.md).
+For development you want a registration that points to `localhost` and only you can sign in to: create it yourself if you have the App Developer role, or ask a tenant admin. [Getting started](getting-started.md#2-get-a-development-registration) walks through obtaining one. To ship, the same registration is updated with the production address and approved; see [connecting to tenants](connecting-to-tenants.md).
 
 ## Registration fields
 
-The admin who creates the registration fills in these fields, which map to the API's `AppRegistrationInput` model:
+Whoever creates the registration (a tenant admin, or you with the App Developer role) fills in these fields, which map to the API's `AppRegistrationInput` model:
 
 - **name, description, logoUrl, appUrl, publisher.** Shown to users and admins on approval and discovery screens.
 - **redirectUris.** Every origin the app runs on, exactly: scheme, host and port. The app template returns to the bare origin (see [authentication](authentication.md#the-templates-sign-in)), so register `http://localhost:5173` and `https://app.example.org`, not a `/callback` path, exactly as the app sends them. Remove preview or staging URLs you don't control.
-- **globalPermissions** and **projectPermissions** (`{ projectId, permissions: [...] }`). Cirro permission names such as `VIEW_PROJECT`, `VIEW_DATASET` and `CREATE_DATASET`. Register only what the app calls; apps that read files most likely also need `GENERATE_DOWNLOAD_TOKEN`. The full list is the `Permission` enum in `@cirrobio/api-client`. Take these from the app's [permission manifest](permissions.md#layer-1-declare-what-the-app-needs). Prefer `projectPermissions`: a project admin can only grant those, and most front-end apps need nothing wider. `globalPermissions` are a tenant-admin, whole-institution concern.
+- **globalPermissions** and **projectPermissions** (`{ projectId, permissions: [...] }`). Cirro permission names such as `VIEW_PROJECT`, `VIEW_DATASET` and `CREATE_DATASET`. Register only what the app calls; apps that read files most likely also need `GENERATE_DOWNLOAD_TOKEN`. The full list is the `Permission` enum in `@cirrobio/api-client`. Take these from the app's [permission manifest](permissions.md#layer-1-declare-what-the-app-needs). Prefer `projectPermissions` for specific projects: most front-end apps need nothing wider, and a narrow grant is quicker to approve. `globalPermissions` reach the whole tenant.
 - **allowedIps.** Leave empty for browser apps; users connect from anywhere.
 - **discoveryEnabled.** Whether other users can find the app.
 
@@ -37,24 +36,3 @@ Registrations that require admin consent (`requiresAdminConsent`) must be approv
 ## Tenants
 
 Registration happens separately in each Cirro tenant, and each tenant gives the app its own client ID and API URL. How to request a connection to the public Cirro tenant or an institution's tenant, what tenant admins review, and how one app can serve several tenants are covered in [connecting to tenants](connecting-to-tenants.md).
-
-## Scripted registration
-
-For automated setups, `data.appRegistrations` can create registrations. It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
-
-```typescript
-import { AppClientType, PrincipalType } from "@cirrobio/api-client";
-
-const apps = data.appRegistrations;   // data: a DataService
-const templates = await apps.listAppRegistrationTemplates();   // check for a matching template first
-const created = await apps.createAppRegistration({ appRegistrationInput: {
-  name, description, appUrl,
-  clientType: AppClientType.PublicClient,
-  principalType: PrincipalType.Delegated,   // confirm against what the UI sets for Public Apps
-  redirectUris: ["http://localhost:5173", "https://app.example.org"],
-  allowedIps: [],
-  globalPermissions: [],
-  projectPermissions: [{ projectId, permissions: ["VIEW_PROJECT", "VIEW_DATASET"] }],
-}});
-// created.clientId is your client ID; public clients ignore created.clientSecret
-```

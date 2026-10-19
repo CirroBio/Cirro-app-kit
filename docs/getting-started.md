@@ -12,15 +12,15 @@ Have a project with some data in it to develop against, and make it a test proje
 
 ## 2. Get a development registration
 
-Your app needs a **client ID** before anyone, including you, can sign in to it. The client ID comes from an app registration, created by an admin. Which admin depends on who the app is for (see [app types and registration](app-types-and-registration.md#who-registers-the-app)):
+Your app needs a **client ID** before anyone, including you, can sign in to it. The client ID comes from an app registration in your tenant (see [app types and registration](app-types-and-registration.md#who-registers-the-app)):
 
-- **An app for one project** is registered by a **project admin**. If you own or administer your test project, that's you — create the registration yourself in the Cirro web interface, scoped to that project, and you won't wait on anyone.
-- **A tenant-wide app** is registered by a **tenant admin**.
-- **On the public tenant (app.cirro.bio),** the Cirro support team registers it.
+- **If you have the App Developer role,** create a development registration yourself in the Cirro web interface, pointing to `http://localhost:5173`. It works for you alone, which is what you want while developing; a tenant admin approves it for other users when the app is ready to share.
+- **Otherwise, ask a tenant admin** to create one for you, or to give you the App Developer role. Project admins can't register apps.
+- **On the public tenant (app.cirro.bio),** the Cirro support team registers apps.
 
 If you're creating it yourself, the fields are in [app types and registration](app-types-and-registration.md#registration-fields); register it as a **Public App** with redirect URI `http://localhost:5173` and project permissions `VIEW_PROJECT` and `VIEW_DATASET`, which cover the app template.
 
-If you need an admin to do it, send them:
+If you need a tenant admin to do it, send them:
 
 ```text
 Subject: Development app registration
@@ -41,7 +41,7 @@ Until a registration is approved, only the person who created it can sign in to 
 
 ## 3. Run the app template
 
-You need Node.js 20 or later.
+You need Node.js 22.12 or later with a recent npm. Vite 8 also runs on Node 20.19, but the npm bundled with Node 20 (10.8) fails to install the template with `Cannot read properties of null (reading 'edgesOut')`; npm 10.9.8 works. Check with `node --version` and `npm --version`.
 
 ```bash
 git clone https://github.com/CirroBio/Cirro-app-kit.git
