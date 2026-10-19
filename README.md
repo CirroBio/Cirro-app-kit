@@ -13,7 +13,7 @@ The template and tools live in the [CirroBio/Cirro-app-kit](https://github.com/C
 
 New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getting started](docs/getting-started.md), which takes you from no account to a running app.
 
-1. **Start from your Cirro account and get a development registration.** Use the account you already have on a tenant; create a registration yourself if your account allows it, or ask your tenant's Cirro admins (support@cirro.bio for the public tenant). You'll get a client ID.
+1. **Start from your Cirro account and get a development registration.** Use the account you already have on a tenant; create a development registration yourself if you have the App Developer role, or ask a tenant admin (support@cirro.bio for the public tenant). You'll get a client ID.
 2. **Run the app template.** [`templates/app`](templates/app) is a React starter for portals, dashboards and workflow tools. Set two values in `.env`, then `npm install && npm run dev`.
 3. **Decide what to build.** Cirro gives an app storage, pipelines, workspaces, sharing and a database, not just an API; see [building on Cirro](docs/building-on-cirro.md). List the permissions you use in `cirro-permissions.json` ([permissions](docs/permissions.md)).
 4. **Before deploying,** run `python3 tools/scan.py <your app>` and work through the [security checklist](docs/security-checklist.md).
@@ -54,7 +54,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 
 ## Verified against
 
-`@cirrobio/api-client` and `@cirrobio/sdk` 0.13.39, with `oidc-client-ts` 3.5.0 for sign-in. The app template was clean-installed and built on 2026-10-16. CI rebuilds it on every push and weekly against the latest published packages.
+`@cirrobio/api-client` and `@cirrobio/sdk` 0.13.39, with `oidc-client-ts` 3.5.0 for sign-in, React 19, Vite 8 and TypeScript 7. The app template was clean-installed and built on 2026-10-19. CI rebuilds it on every push and weekly against the latest published packages.
 
 ## Contributing
 
