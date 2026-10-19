@@ -46,4 +46,4 @@ A deployed app only works for users once a tenant connects it. When the app is r
 
 ## Hand-off
 
-Tell the user briefly what was created, which registration details are still needed, and which parts depend on items in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md`. For feature work, use cirro-data-access, cirro-sheets or cirro-compute; run cirro-app-review before the first production deploy, and cirro-app-deploy to ship.
+Tell the user briefly what was created, which registration details are still needed, and which parts are affected by `${CLAUDE_PLUGIN_ROOT}/docs/known-limitations.md`. For feature work, use cirro-data-access, cirro-sheets or cirro-compute; run cirro-app-review before the first production deploy, and cirro-app-deploy to ship.

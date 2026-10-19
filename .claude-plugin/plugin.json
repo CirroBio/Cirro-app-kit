@@ -1,6 +1,6 @@
 {
   "name": "cirro-app-kit",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Skills, docs and templates for web developers building browser apps that sign users in to Cirro with OAuth: scaffolding, sign-in, data access, permissions, Sheets, pipelines and workspaces, review and deployment.",
   "author": { "name": "Cirro Bio", "url": "https://cirro.bio" },
   "keywords": ["cirro", "oauth", "react"]

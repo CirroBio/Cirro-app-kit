@@ -49,7 +49,7 @@ New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getti
 - [Deployment](docs/deployment.md): build config, hosting, Content Security Policy
 - [Security checklist](docs/security-checklist.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [Open questions](docs/open-questions.md): platform behavior not yet confirmed for external apps
+- [Known limitations](docs/known-limitations.md): what Cirro doesn't support yet for apps, and what to do about each
 <!-- /repo-only -->
 
 ## Verified against

@@ -81,7 +81,7 @@ A `tenants.json` next to the app lists the tenants it offers. It's fetched at ru
 ```json
 {
   "tenants": [
-    { "id": "dev", "name": "Cirro (dev)", "url": "https://dev.cirro.bio" }
+    { "id": "example", "name": "Example Institute", "url": "https://cirro.example.org" }
   ]
 }
 ```

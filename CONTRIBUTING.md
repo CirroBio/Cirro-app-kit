@@ -12,9 +12,9 @@ Facts about Cirro (permission names, redirect rules, package APIs, known issues)
 4. Update the version table in `docs/packages.md` and "Verified against" in `README.md`.
 5. Skim `git diff reference/` for renamed or removed methods and fix any docs that use them.
 
-## When platform behavior is confirmed
+## When platform behavior changes
 
-Move the answer from `docs/open-questions.md` into the doc it affects, and remove any "not yet confirmed" caveats that referred to it.
+`docs/known-limitations.md` is for readers: each entry says what doesn't work yet and what to do instead. When Cirro fixes one, remove its entry and update the pages it links to. Questions for the platform team and bugs go to Cirro's issue tracker, not the docs.
 
 ## Checks before opening a PR
 

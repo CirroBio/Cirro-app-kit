@@ -23,7 +23,7 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 | --- | --- |
 | **Sheet** | A table (`sheetType: TABLE`) or a view (`VIEW`) in one project. Identified by an `id`, and also by `namespaceName` + `tableName`, which is how SQL refers to it. |
 | **Columns** | Each `ColumnDef` has a `name`, a `dataType` (`STRING`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `BOOLEAN`, `DATE`, `TIMESTAMP`), and optional `required`, `unique`, `allowedValues`, `description`, `displayName` and `hidden`. |
-| **Semantic types** | `semanticType` tells Cirro what a column means: `ENUM_SINGLE`/`ENUM_MULTI` (with `allowedValues`), `URL`, `CIRRO_FILE`, `CIRRO_FOLDER`, `CIRRO_DATASET` (links to Cirro objects), and `FOREIGN_KEY`. A `CIRRO_DATASET` value is a Cirro reference, not a bare ID: `cirro:<tenantId>:<projectId>:dataset:<datasetId>`, where `tenantId` is `tenantInfo.id` from `/info/system` (`portal-dev` on dev.cirro.bio). A bare dataset ID is refused with 400. |
+| **Semantic types** | `semanticType` tells Cirro what a column means: `ENUM_SINGLE`/`ENUM_MULTI` (with `allowedValues`), `URL`, `CIRRO_FILE`, `CIRRO_FOLDER`, `CIRRO_DATASET` (links to Cirro objects), and `FOREIGN_KEY`. A `CIRRO_DATASET` value is a Cirro reference, not a bare ID: `cirro:<tenantId>:<projectId>:dataset:<datasetId>`, where `tenantId` is `tenantInfo.id` from `/info/system` (for example `portal`). A bare dataset ID is refused with 400. |
 | **Relationships** | A column's `foreignKey: { sheetId, columnName }` points at a column in another sheet, so tables can reference each other. |
 | **`_row_id`** | Every row has one. It's the first column of every data response and the key for updates and deletes. |
 | **Views** | A `STRUCTURED` view names sheets, joins (`INNER`, `LEFT`, `RIGHT`, `FULL`), columns and a filter; a `RAW` view is a SQL query. Views are materialized: `refreshView` rebuilds one from its source tables. |
@@ -113,7 +113,7 @@ Prefer `querySheetData` with a structured `filter` for anything built from user 
 
 ### Bulk loads
 
-For more than a few hundred rows, write a file and ingest it rather than inserting in a loop. Ingest runs as a job: start it with `triggerIngest` (a `fileDef` with the file's type and storage URI, `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule), then poll `getJobs` and show `errorMessage` if it fails. Getting the file into place needs file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD`, see [working with files](files.md)); the details of the upload location are an [open question](open-questions.md).
+For more than a few hundred rows, write a file and ingest it rather than inserting in a loop. Ingest runs as a job: start it with `triggerIngest` (a `fileDef` with the file's type and storage URI, `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule), then poll `getJobs` and show `errorMessage` if it fails. Getting the file into place needs file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD`, see [working with files](files.md)).
 
 ### Changing the schema
 

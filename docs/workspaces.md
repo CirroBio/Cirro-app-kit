@@ -23,11 +23,11 @@ sequenceDiagram
   end
 ```
 
-`createWorkspace` starts the workspace by itself. Calling `startWorkspace` straight after fails with "Workspace is already changing state"; call it only to restart a stopped workspace you're reusing. `Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `COMPLETED`, which is what a stopped, restartable workspace reports (on dev.cirro.bio, stopping took about 5.5 minutes). `FAILED` means it couldn't start; `getWorkspaceLogs` has the detail. `statusMessage` can carry internal identifiers such as an ECS task ARN, so log it rather than showing it to users.
+`createWorkspace` starts the workspace by itself. Calling `startWorkspace` straight after fails with "Workspace is already changing state"; call it only to restart a stopped workspace you're reusing. `Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `COMPLETED`, which is what a stopped, restartable workspace reports (stopping can take several minutes). `FAILED` means it couldn't start; `getWorkspaceLogs` has the detail. `statusMessage` can carry internal identifiers such as an ECS task ARN, so log it rather than showing it to users.
 
 ## Booting takes minutes; say so
 
-Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyter-minimal` took 3 min 52 s and `cirro-jupyter-r` about 5.5 min): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
+Starting a workspace usually takes a few minutes, and longer for larger images: the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
 
 - Before starting, say how long it will take ("Starting a workspace takes a few minutes").
 - While it boots, show the elapsed time and the status in plain words, and let the user keep working elsewhere in the app. Don't block the whole UI.
@@ -43,7 +43,7 @@ A project can limit how many workspaces one user may have in it; the project adm
 
 ## Handing the user into the workspace
 
-Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. Embedding would need Cirro to allow app origins; see [open questions](open-questions.md).
+Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. See [known limitations](known-limitations.md#workspaces-open-in-a-new-tab).
 
 ```ts
 async function openWorkspace(projectId: string, workspaceId: string) {
