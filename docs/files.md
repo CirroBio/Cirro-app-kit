@@ -47,7 +47,7 @@ Signing options: `download` (sets a Content-Disposition filename), `filename`, `
 File credentials:
 
 - `FileService` caches project read credentials per instance, so create one per app (as `DataService` is), not one per component.
-- `/projects/{id}/s3-token` can answer 429 when several requests arrive at once. This was seen on dev.cirro.bio with several apps signed in as one user. Retry 429s with backoff.
+- `/projects/{id}/s3-token` can answer 429 when several requests arrive at once. Retry 429s with backoff.
 
 `FileSystemObject`s from `ManifestParser` carry `path`, which is the file's **folder**, and `relativePath`, which is the file's path within the dataset. Match files on `relativePath`; matching on `path` silently finds nothing.
 
@@ -87,7 +87,7 @@ for (const file of fileList) {
 }
 ```
 
-`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). `uploadPath` is the dataset's own data folder (`datasets/<datasetId>/data`); join a name to it with one `/` whether or not it ends in one. An uploaded file appears in the manifest as `data/<name>`, and names may contain folders: `fcs/A1.fcs` becomes `data/fcs/A1.fcs`. The dataset turns `COMPLETED` by itself once every expected file has arrived (dev.cirro.bio, 2026-10-12).
+`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). `uploadPath` is the dataset's own data folder (`datasets/<datasetId>/data`); join a name to it with one `/` whether or not it ends in one. An uploaded file appears in the manifest as `data/<name>`, and names may contain folders: `fcs/A1.fcs` becomes `data/fcs/A1.fcs`. The dataset turns `COMPLETED` by itself once every expected file has arrived.
 
 ## Pitfalls
 

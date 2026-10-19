@@ -1,4 +1,3 @@
-| Will the API answer the CORS preflight for `/projects/<id>/sheets` routes? It returns 401 there (dev and demo, 2026-10-15), so browser apps can't use sheets. Needs a backend fix. | [Calling the API](calling-the-api.md) |
 # Open questions
 
 Parts of this kit depend on platform behavior that hasn't been confirmed for external apps. Each item says where it matters. When the Cirro platform team confirms one, update the affected docs and remove it here.

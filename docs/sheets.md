@@ -15,7 +15,7 @@ For an app, that means a database you don't have to run. A browser-only app gets
 
 Don't use a sheet for secrets or tokens, per-user UI preferences (every project member with access can see the rows), large binary data (use datasets), or high-frequency writes such as telemetry.
 
-Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is `true` on dev.cirro.bio and `false` on the public tenant (app.cirro.bio, 2026-10-12). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
+Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is off on some tenants, including the public tenant (app.cirro.bio). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
 
 ## Concepts
 
@@ -32,7 +32,7 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 
 ## Using sheets from an app
 
-Sheets are `data.sheets` on the app's `DataService`. **Browsers can't call them from another origin yet:** the API's CORS preflight for `/projects/<id>/sheets` and its sub-routes answers 401 (dev.cirro.bio and demo.cirro.bio, 2026-10-15; still so on dev.cirro.bio, 2026-10-16), so these calls fail with a network error from a deployed app or `localhost`. Until Cirro fixes it, gate sheet features on a first call succeeding; see [open questions](open-questions.md).
+Sheets are `data.sheets` on the app's `DataService`.
 
 ```typescript
 import {
