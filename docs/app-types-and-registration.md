@@ -36,24 +36,3 @@ Registrations that require admin consent (`requiresAdminConsent`) must be approv
 ## Tenants
 
 Registration happens separately in each Cirro tenant, and each tenant gives the app its own client ID and API URL. How to request a connection to the public Cirro tenant or an institution's tenant, what tenant admins review, and how one app can serve several tenants are covered in [connecting to tenants](connecting-to-tenants.md).
-
-## Scripted registration
-
-For automated setups, `data.appRegistrations` can create registrations. It needs a token with `MANAGE_OWN_APP_REGISTRATIONS`.
-
-```typescript
-import { AppClientType, PrincipalType } from "@cirrobio/api-client";
-
-const apps = data.appRegistrations;   // data: a DataService
-const templates = await apps.listAppRegistrationTemplates();   // check for a matching template first
-const created = await apps.createAppRegistration({ appRegistrationInput: {
-  name, description, appUrl,
-  clientType: AppClientType.PublicClient,
-  principalType: PrincipalType.Delegated,   // confirm against what the UI sets for Public Apps
-  redirectUris: ["http://localhost:5173", "https://app.example.org"],
-  allowedIps: [],
-  globalPermissions: [],
-  projectPermissions: [{ projectId, permissions: ["VIEW_PROJECT", "VIEW_DATASET"] }],
-}});
-// created.clientId is your client ID; public clients ignore created.clientSecret
-```

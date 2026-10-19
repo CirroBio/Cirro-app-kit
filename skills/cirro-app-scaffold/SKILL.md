@@ -30,7 +30,7 @@ Start from `${CLAUDE_PLUGIN_ROOT}/templates/app/` (React, Vite, Cirro's login UI
 
 Update the template's `cirro-permissions.json` for what the app will do: required permissions with a reason each, optional ones tied to a feature. Follow `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` (cirro-permissions has the steps); aim for the smallest required set, project-scoped.
 
-The app needs a registration before sign-in works. Walk the user through `${CLAUDE_PLUGIN_ROOT}/docs/app-types-and-registration.md`. If the user wants registration scripted, show them the `AppRegistrationInput` and get a yes before running it.
+The app needs a registration before sign-in works. Walk the user through `${CLAUDE_PLUGIN_ROOT}/docs/app-types-and-registration.md`.
 
 ## 4. First run
 
