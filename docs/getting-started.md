@@ -14,7 +14,7 @@ Have a project with some data in it to develop against, and make it a test proje
 
 Your app needs a **client ID** before anyone, including you, can sign in to it. The client ID comes from an app registration in your tenant (see [app types and registration](app-types-and-registration.md#who-registers-the-app)):
 
-- **If you have the App Developer role,** create a development registration yourself in the Cirro web interface. Only you can sign in to it until a tenant admin approves it, which is what you want while developing.
+- **If you have the App Developer role,** create a development registration yourself in the Cirro web interface, pointing to `http://localhost:5173`. It works for you alone, which is what you want while developing; a tenant admin approves it for other users when the app is ready to share.
 - **Otherwise, ask a tenant admin** to create one for you, or to give you the App Developer role. Project admins can't register apps.
 - **On the public tenant (app.cirro.bio),** the Cirro support team registers apps.
 

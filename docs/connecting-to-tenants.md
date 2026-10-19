@@ -33,7 +33,7 @@ flowchart LR
   change -- "re-review if permissions change" --> review
 ```
 
-1. **Develop.** Build against a test project, using a development registration that only you can sign in to until it's approved (see [getting started](getting-started.md)). Keep the [permission manifest](permissions.md) current as you go.
+1. **Develop.** Build against a test project, running the app on `localhost` with a development registration that only you can sign in to; with the App Developer role you create it yourself (see [getting started](getting-started.md)). Keep the [permission manifest](permissions.md) current as you go.
 2. **Deploy.** Host the app at its production URL (see [deployment](deployment.md)). The URL is part of the registration, so settle it before requesting connections.
 3. **Request a connection** for each tenant whose users should use the app (see below).
 4. **Tenant review and approval.** The tenant registers the app (or approves your registration) with the permissions it accepts, scoped to the projects it chooses. Until approval, only the app's creator can sign in.

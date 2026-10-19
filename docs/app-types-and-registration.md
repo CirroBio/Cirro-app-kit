@@ -13,11 +13,11 @@ Registrations that come with a client secret are out of scope for this kit: the 
 Apps are registered in each tenant, by people with one of two roles:
 
 - **Tenant admins** create registrations and approve them. Approval is what lets anyone other than the registration's creator sign in.
-- **App Developers** create development registrations. The App Developer role, which a tenant admin assigns, lets you create a registration yourself; until a tenant admin approves it, only you can sign in to it.
+- **App Developers** create development registrations. The App Developer role, which a tenant admin assigns, lets you register an app yourself that points to `localhost` (for example `http://localhost:5173`) and works for you alone. That's how you build and test the app before asking a tenant admin to approve it, with its production address, for other users.
 
 Project admins can't register apps. On the public tenant (app.cirro.bio), the Cirro support team acts as tenant admin and registers apps there.
 
-For development you want a registration that only you can sign in to until it's approved: create it yourself if you have the App Developer role, or ask a tenant admin. [Getting started](getting-started.md#2-get-a-development-registration) walks through obtaining one. To ship, the same registration is updated with the production address and approved; see [connecting to tenants](connecting-to-tenants.md).
+For development you want a registration that points to `localhost` and only you can sign in to: create it yourself if you have the App Developer role, or ask a tenant admin. [Getting started](getting-started.md#2-get-a-development-registration) walks through obtaining one. To ship, the same registration is updated with the production address and approved; see [connecting to tenants](connecting-to-tenants.md).
 
 ## Registration fields
 
