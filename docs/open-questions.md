@@ -16,7 +16,6 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 | Can a delegated user token register custom pipelines, or is that limited to admins and maintainers? | [Apps that ship their own pipeline](building-on-cirro.md#an-app-that-ships-its-own-pipeline) |
 | Which OAuth scopes can a Public App registration allow, and who sets them? (On dev.cirro.bio: only `openid`, and the registration API has no scopes field.) | [Authentication](authentication.md#the-flow) |
 | Which registration permission lets an app read the signed-in user's own role? (`getUser` on self is refused with "Not allowed to MANAGE_MEMBERS" for a project-scoped app.) | [Permissions](permissions.md#checking-before-offering-an-action) |
-| Why does `calculatePipelineCost` return `totalCost: null` ("Cost not available") for every pipeline on dev.cirro.bio? | [Building on Cirro](building-on-cirro.md#capability-map) |
 | Can Cirro add registered app origins to workspace servers' `frame-ancestors`, so apps can embed workspaces? (Today: `'self'`, the portal and `http://localhost:8000` only.) | [Workspaces](workspaces.md#handing-the-user-into-the-workspace) |
 | What is Cirro's role-to-permission mapping (`OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR`)? Apps need it to gate features before calling | [Permissions](permissions.md#checking-before-offering-an-action) |
 | Is an app's effective access the intersection of its registered permissions and the user's role? | [Permissions](permissions.md) |
