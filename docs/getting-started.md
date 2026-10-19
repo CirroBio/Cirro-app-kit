@@ -41,7 +41,7 @@ Until a registration is approved, only the person who created it can sign in to 
 
 ## 3. Run the app template
 
-You need Node.js 20.19 or later, or 22.12 or later (Vite 8 requires one of these).
+You need Node.js 22.12 or later (Vite 8's minimum) and a recent npm: npm 10.8 fails to install the template with `Cannot read properties of null (reading 'edgesOut')`, and npm 10.9.8 works. Check with `node --version` and `npm --version`.
 
 ```bash
 git clone https://github.com/CirroBio/Cirro-app-kit.git
