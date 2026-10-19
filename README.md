@@ -3,7 +3,7 @@
 Documentation, a project template and tools for building browser apps on the [Cirro](https://cirro.bio) platform: apps that sign users in with their Cirro account over OAuth and work with their projects, datasets and files.
 
 <!-- repo-only -->
-The developer guide is also published as a website: **[Cirro App Kit docs](https://studious-bassoon-nkl4qqy.pages.github.io/)** (visible to anyone with access to this repo).
+The developer guide is also published as a website: **[Cirro App Kit docs](https://cirrobio.github.io/Cirro-app-kit/)**.
 <!-- /repo-only -->
 <!-- site-only
 The template and tools live in the [CirroBio/Cirro-app-kit](https://github.com/CirroBio/Cirro-app-kit) repository; [getting started](docs/getting-started.md) shows how to clone it.

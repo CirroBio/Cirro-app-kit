@@ -7,7 +7,7 @@
 | `VITE_CIRRO_URL` | The tenant's web address, such as `https://app.cirro.bio`. The app calls `/api` and `/authorize` under it |
 | `VITE_CIRRO_CLIENT_ID` | The registered app's client ID for that tenant |
 
-Build once per tenant; client IDs differ between tenants. An app serving several tenants instead ships a runtime `tenants.json` and builds once; see [serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant).
+These configure one tenant. An app serving several tenants builds once, lists the tenants in a runtime `tenants.json`, and asks each tenant for its client ID at runtime; see [serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant).
 
 ## Hosting
 
