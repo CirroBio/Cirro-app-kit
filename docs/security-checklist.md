@@ -21,7 +21,9 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 - [ ] No client secret or app credentials of any kind anywhere in the bundle or repo
 - [ ] Tokens come from the sign-in library on each call (`tokenGetter`), not cached in app state
-- [ ] Tokens and AWS file credentials kept in memory or the sign-in library's storage; never written to `localStorage` by your code, logged, or put in URLs
+- [ ] Tokens and AWS file credentials kept in memory or the sign-in library's storage; never written to storage by your own code, logged, or put in URLs
+- [ ] The sign-in library's user is in `sessionStorage` if the app shares its origin with other sites (for example a `github.io` Pages site); only an app on an origin of its own (its own domain or subdomain) keeps it in `localStorage`, which shares the login across tabs and keeps it after the browser closes
+- [ ] With the user in `localStorage`, the tenant's Cirro admins have shortened the refresh-token lifetime on the app's client (for example one day rather than Cognito's default 30), since the login now persists on disk; the registration has no field for it
 - [ ] Sign-out revokes the refresh token, removes the user from the sign-in library, and clears cached file credentials
 
 ## User permissions
