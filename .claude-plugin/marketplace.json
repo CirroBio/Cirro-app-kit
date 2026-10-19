@@ -1,7 +1,8 @@
 {
   "name": "cirro-app-kit",
   "owner": {
-    "name": "Sam Minot"
+    "name": "Cirro Bio",
+    "url": "https://cirro.bio"
   },
   "metadata": {
     "description": "Docs, a template and Claude skills for building browser apps that sign users in to Cirro with OAuth.",
