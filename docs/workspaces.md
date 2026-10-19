@@ -29,7 +29,7 @@ sequenceDiagram
 
 Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyter-minimal` took 3 min 52 s and `cirro-jupyter-r` about 5.5 min): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
 
-- Before starting, say how long it will take ("Starting a workspace takes a few minutes") and what it will cost if the compute choice affects that.
+- Before starting, say how long it will take ("Starting a workspace takes a few minutes").
 - While it boots, show the elapsed time and the status in plain words, and let the user keep working elsewhere in the app. Don't block the whole UI.
 - Reuse before creating. List the project's workspaces (`getWorkspaces`), and offer to start a stopped (`COMPLETED`) one the app created earlier for the same purpose instead of making a new one. Find them by name prefix and provenance note, since workspaces don't carry tags (see [Tagging what the app creates](building-on-cirro.md#tag-everything-the-app-creates)).
 - When it's ready, tell the user even if they've moved to another part of the app.

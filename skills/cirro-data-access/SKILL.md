@@ -29,10 +29,10 @@ Method and field names come from a generated client and are easy to guess wrong.
 - Handle a 403 on every action with a message saying who can fix it, and disable that action for the project afterwards. Gate on the user's role only if the registration can read it (usually it can't; see the permissions doc).
 - Check every permission a multi-step flow needs at the start of the flow.
 
-## Provenance and cost
+## Provenance and confirmation
 
 - When code creates a dataset, workspace or pipeline run, also add a provenance note, and tag every taggable entity with `cirro-app: <APP_ID>`, following "Provenance by default" and "Tag everything the app creates" in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`. For long-running work, use `${CLAUDE_PLUGIN_ROOT}/docs/workspaces.md`.
-- Before code that spends money (pipeline runs, workspaces; see cirro-compute), add a cost estimate and an explicit confirmation step. Treat governance actions (roles, shares) per the trust-boundaries table in the same doc.
+- Before code that spends money (pipeline runs, workspaces; see cirro-compute), add an explicit confirmation step. Treat governance actions (roles, shares) per the trust-boundaries table in the same doc.
 
 ## Errors to explain, not retry
 

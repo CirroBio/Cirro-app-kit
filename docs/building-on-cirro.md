@@ -32,8 +32,8 @@ Each row is something an app can use. Permission names are the likely ones for e
 | Capability | What it lets an app do | API | Likely permissions |
 | --- | --- | --- | --- |
 | **Dataset storage** | Read datasets and files; upload new datasets; update names, descriptions and tags | `DatasetsApi`, `FileApi`; see [files](files.md) | `VIEW_DATASET`, `CREATE_DATASET`, `EDIT_DATASET`, `GENERATE_DOWNLOAD_TOKEN` |
-| **Pipeline execution** | Run a pipeline on datasets, track tasks and logs, see what runs cost, stop runs; outputs become new datasets. `ProcessesApi.calculatePipelineCost` returned no estimate on dev.cirro.bio, so estimate from what recent completed runs cost (`ExecutionApi.calculateCost` per run, which can take ~20 s on older runs, so load it in the background). For a run's duration use its tasks' `requestedAt` and `stoppedAt`: a dataset's `updatedAt` moves whenever it is edited | `ExecutionApi` (`runAnalysis`, `getTasksForExecution`, `getExecutionLogs`, `calculateCost`, `stopAnalysis`) | `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` |
-| **Pipelines as app code** | Register a Nextflow or Cromwell pipeline from a GitHub repo, including the app's own repo, and keep it in sync | `ProcessesApi` (`createCustomProcess`, `syncCustomProcess`, `getProcessParameters`, `calculatePipelineCost`) | `CREATE_CUSTOM_PIPELINE`, `MANAGE_CUSTOM_PIPELINES` |
+| **Pipeline execution** | Run a pipeline on datasets, track tasks and logs, see what runs cost, stop runs; outputs become new datasets. `ExecutionApi.calculateCost` reports what a run cost; it can take ~20 s on older runs, so load it in the background. For a run's duration use its tasks' `requestedAt` and `stoppedAt`: a dataset's `updatedAt` moves whenever it is edited | `ExecutionApi` (`runAnalysis`, `getTasksForExecution`, `getExecutionLogs`, `calculateCost`, `stopAnalysis`) | `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` |
+| **Pipelines as app code** | Register a Nextflow or Cromwell pipeline from a GitHub repo, including the app's own repo, and keep it in sync | `ProcessesApi` (`createCustomProcess`, `syncCustomProcess`, `getProcessParameters`) | `CREATE_CUSTOM_PIPELINE`, `MANAGE_CUSTOM_PIPELINES` |
 | **Interactive workspaces** | Create a workspace with datasets mounted (it starts by itself), restart a stopped one, and get a connection URL to hand the user into it | `WorkspacesApi` (`createWorkspace`, `startWorkspace`, `connectWorkspace`, `stopWorkspace`) | `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` |
 | **Sharing between projects** | Publish datasets from one project and subscribe to them in another, without copying | `SharingApi` | `VIEW_PROJECT_SHARES`, `MANAGE_PROJECT_SHARES` |
 | **Sample metadata** | Read and update sample metadata and the project's metadata schema | `MetadataApi` | `VIEW_PROJECT_METADATA`, `EDIT_PROJECT_METADATA` |
@@ -76,7 +76,6 @@ What this buys you:
 
 - **One version for the whole app.** Pin the registered pipeline to the same release tag as the frontend, so the UI always calls a pipeline whose parameters it understands.
 - **The UI can be driven by the pipeline.** `getProcessParameters` returns the pipeline's parameter schema, so forms can be generated from it rather than duplicated.
-- **Costs are visible before they're incurred.** Show an estimate before submitting, from what recent completed runs cost (`calculateCost`); `calculatePipelineCost` returned no estimate on dev.cirro.bio (see the [capability map](#capability-map)).
 
 Registering the pipeline is a one-time admin step, done by the app's maintainers, not by the app at runtime for each user. Treat `createCustomProcess` as deployment tooling.
 
@@ -166,7 +165,7 @@ Being able to call an API doesn't mean an app should. Sort actions by how much t
 | --- | --- | --- |
 | Read | List datasets, read files, view metadata | Fine with minimal permissions |
 | Create | Upload datasets, add notes, create sheets | Fine; always leave a provenance note |
-| Spend | Run pipelines, start workspaces | Show a cost estimate and get explicit confirmation each time |
+| Spend | Run pipelines, start workspaces | Get explicit confirmation each time |
 | Change | Edit metadata, update dataset details, stop runs | Confirm, and say what will change |
 | Destroy | Delete datasets or workspaces | Confirm with the asset named; consider leaving deletion to the Cirro UI |
 | Govern | Set user roles, create or revoke shares | Generally leave to the Cirro UI. If an app must, register those permissions only for that app, scope them to specific projects, and confirm every change |
