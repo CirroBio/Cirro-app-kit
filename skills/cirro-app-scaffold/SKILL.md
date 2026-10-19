@@ -38,7 +38,7 @@ The app needs a registration before sign-in works. Walk the user through `${CLAU
 
 ## 5. Deployment config
 
-Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: production API URL, production origin in the registration, CSP. Tell the user that direct file reads need bucket CORS for the production origin, which is a Cirro admin request.
+Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: production API URL, production origin in the registration, CSP.
 
 ## Connection request
 

@@ -36,7 +36,7 @@ Method and field names come from a generated client and are easy to guess wrong.
 
 ## Errors to explain, not retry
 
-A CORS failure on file reads while API calls succeed is a bucket CORS setting (admin task). A 403 is a missing permission on the registration or the user's project role. Explain these to the user instead of changing code.
+A CORS failure on file reads while API calls succeed points at the request (a HEAD request, or a URL not signed for the file): project buckets accept signed GET and PUT from any origin. A 403 is a missing permission on the registration or the user's project role. Explain these to the user instead of changing code.
 
 ## Hand-offs
 

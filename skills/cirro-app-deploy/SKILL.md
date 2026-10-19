@@ -33,8 +33,6 @@ Run cirro-app-review (scanner plus security checklist). Don't request connection
 
 For each tenant, draft the request from "What to include" in the tenants doc, filled in from the repo: `cirro-permissions.json`, production origins, the dev registration's client ID if there is one, the scan result, what the app creates and whether data leaves the browser. Address it to support@cirro.bio for the public tenant, or to the tenant's admins (`tenantInfo.contactEmail` from `/info/system`). Give the draft to the user to send; never send it yourself.
 
-Also list the admin-side items only Cirro can do: project bucket CORS for the production origin if the app reads files directly (and the `Range` header for range reads).
-
 ## 6. After approval
 
 - Add each tenant's client ID to the build or `tenants.json`.

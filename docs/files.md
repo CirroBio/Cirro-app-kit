@@ -92,6 +92,6 @@ for (const file of fileList) {
 ## Pitfalls
 
 - **Expired URLs.** Store `FileSystemObject`s, sign at the moment of use. Raise `timeout` only for long streaming reads.
-- **CORS.** S3 enforces the bucket's CORS policy against the page origin. A CORS failure on file reads while API calls succeed means the origin isn't allowed on the bucket; it needs a Cirro admin to fix.
+- **CORS.** Project buckets accept GET and PUT, with the `Range` header, from any origin. A CORS error on a file read points at the request: a HEAD request, or a URL that isn't a signed URL for that file.
 - **Credential hygiene.** The credentials are real AWS keys. Keep them in memory; don't log request URLs that contain signatures.
 - **Wrong context type.** Using `projectDownload` for a dataset shared from another project fails with 403; use `datasetDownload(project, datasetDetail)`.

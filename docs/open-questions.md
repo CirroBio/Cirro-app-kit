@@ -4,7 +4,6 @@ Parts of this kit depend on platform behavior that hasn't been confirmed for ext
 
 | Question | Affects |
 | --- | --- |
-| Do project buckets allow CORS from a registered app's production origin on every tenant, or does each origin need an admin change? (On dev.cirro.bio a project bucket answers preflights for any origin, `https://example.org` included, with `Access-Control-Allow-Origin: *` for GET and PUT with `Range`, 2026-10-12; other tenants not checked.) | [Files](files.md) |
 | Which permissions do file reads need, and is `GENERATE_DOWNLOAD_TOKEN` among them? | Registration guidance |
 | Refresh-token lifetime and rotation for Public Apps (access tokens last 15 minutes: `expires_in` 900 on dev.cirro.bio, 2026-10-12) | Session behavior |
 | After a signed-out user signs in to Cirro from the authorize page, are they returned to the consent screen, or must they start the app's sign-in again? (Signed out, `/authorize` sends the user to Cirro's home page to sign in, dev.cirro.bio, 2026-10-15.) | [Authentication](authentication.md#the-flow) |

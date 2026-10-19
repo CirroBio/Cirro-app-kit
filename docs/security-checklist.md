@@ -46,4 +46,3 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 - [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, its token server and S3 (see [deployment](deployment.md#content-security-policy))
 - [ ] The host sends `frame-ancestors 'none'`, so other sites can't frame the app
 - [ ] Production `VITE_CIRRO_URL` is the tenant's web address, and its client ID is that tenant's
-- [ ] Project bucket CORS allows the production origin, if the app reads files directly

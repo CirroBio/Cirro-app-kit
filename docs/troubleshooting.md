@@ -15,6 +15,6 @@ Check the registration before changing code. Open it in the Cirro UI, or read it
 | 401 on API calls after login | Token not attached, or expired without renewal | Check the token getter returns the library's current access token; confirm silent renewal works past 15 minutes |
 | 403 on some endpoints only | Registered permissions or the user's project role don't cover them | Compare with `cirro-permissions.json`; add the permission to the registration (and re-approve if required), or check the user's role in that project. See [permissions](permissions.md) |
 | File reads 403 while API calls work | Wrong access context, or app lacks the download permission | Use `ProjectFileAccessContext.datasetDownload(project, datasetDetail)` for shared datasets; check permissions |
-| File reads fail with CORS while API calls work | Project bucket's CORS doesn't allow this origin | Admin task; not fixable in app code |
+| File reads fail with CORS while API calls work | The request isn't a signed GET or PUT: project buckets accept those from any origin, but not HEAD or an unsigned URL | Read with GET from a URL signed for the file; take its length from the manifest rather than a HEAD request |
 | Signed URLs work, then fail after a few minutes | Presigned URL expired (default 5 minutes) | Re-sign on use instead of storing URLs; raise `timeout` for long reads |
 | Page says **App not configured** | `.env` values missing | Follow the message; see [getting started](getting-started.md#3-run-the-app-template) |

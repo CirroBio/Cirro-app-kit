@@ -31,7 +31,7 @@ For each item in the security checklist, record a status and one line of evidenc
 2. **Blocking issues:** location, why it matters, fix.
 3. **Should fix:** same, briefer.
 4. **Confirmed fine:** one line per checklist area.
-5. **Needs a person:** things only an admin or the user can confirm (registration contents, bucket CORS, approval).
+5. **Needs a person:** things only an admin or the user can confirm (registration contents, approval).
 
 If the verdict is ready, offer to continue with cirro-app-deploy, which drafts the tenant connection request using the manifest and this review.
 

@@ -29,12 +29,11 @@ style-src 'self';
 frame-ancestors 'none';
 ```
 
-Apps that read files with WebAssembly (h5wasm, DuckDB-WASM, Pyodide) need `'wasm-unsafe-eval'` in `script-src`, and `worker-src 'self' blob:` when the reader runs in a worker. Range reads from the browser need the project bucket's CORS to allow the `Range` request header.
+Apps that read files with WebAssembly (h5wasm, DuckDB-WASM, Pyodide) need `'wasm-unsafe-eval'` in `script-src`, and `worker-src 'self' blob:` when the reader runs in a worker.
 
 The Cirro tenant serves the API and the OAuth metadata document; the token server is the host of `token_endpoint` and `revocation_endpoint` in that document (Cirro's authorize page is a navigation, not a request). The SDK's S3 client uses dual-stack endpoints, hence the `s3.dualstack` host; the region is in the tenant's `/api/info/system` response.
 
 ## Before the first production deploy
 
 - Connection requested and approved in each tenant the app serves, with the production origin in the redirect URIs. See [connecting to tenants](connecting-to-tenants.md).
-- Project bucket CORS allows the production origin (Cirro admin request) if the app reads files directly.
 - Run `python3 tools/scan.py <app dir>` and work through the [security checklist](security-checklist.md).
