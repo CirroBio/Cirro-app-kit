@@ -14,7 +14,7 @@ sequenceDiagram
   participant API as Cirro API
   App->>Cirro: 1. GET /.well-known/oauth-authorization-server (no token)
   App->>Cirro: 2. Redirect to /authorize with client ID + PKCE challenge
-  Note over Cirro: 3. Shows the app's name, publisher and permissions;<br/>the user picks how to sign in
+  Note over Cirro: 3. Shows the app's name, publisher and permissions,<br/>and the user picks how to sign in
   Cirro->>Login: 4. Hands off to the tenant's sign-in
   Login-->>App: 5. Redirect back to your redirect URI with a code
   App->>Login: 6. Exchange code + PKCE verifier at the token endpoint
@@ -25,7 +25,7 @@ sequenceDiagram
 - **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. It's served as `text/json`, which some OAuth libraries refuse, so fetch it yourself and pass the result to the library, as the template does. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
 - **Step 3 is Cirro's consent screen.** It shows the registration's name, logo, publisher and requested permissions, and an "Official" badge for apps Cirro publishes, and lists the tenant's sign-in providers. The user must be signed in to Cirro to see it; a signed-out user is taken to Cirro's sign-in first.
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
-- **Only `openid`.** Public Apps allow the `openid` scope and no other; asking for more fails with `invalid_scope` (dev.cirro.bio, 2026-10-10). The API accepts tokens issued with `openid` alone (verified 2026-10-11).
+- **Only `openid`.** Public Apps allow the `openid` scope and no other.
 - **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire (they last 15 minutes).
 - **No emailed sign-in links.** The authorize page offers the tenant's SSO providers only.
 
