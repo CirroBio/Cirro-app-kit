@@ -25,11 +25,13 @@ Move the answer from `docs/open-questions.md` into the doc it affects, and remov
 
 ## The docs site
 
-Every push to `main` publishes `README.md`, `docs/`, `reference/`, the app template's README and this file to a private GitHub Pages site, visible only to people with access to this repo. The pages are the Markdown as written; `site-hooks/links.py` sends links to code (templates, tools) to GitHub, so write relative links that work on GitHub and the site follows.
+Every push to `main` publishes `README.md`, `docs/`, `reference/`, the app template's README and `CONTRIBUTING.md` as the guide's website, a private GitHub Pages site visible only to people with access to the repository. The pages are the Markdown as written; `site-hooks/pages.py` sends links to code (templates, tools) to GitHub, so write relative links that work on GitHub and the site follows.
+
+`README.md` is both the repository's front page and the site's home page. Wrap text that only belongs on GitHub (repository layout, a pointer to the site) in `<!-- repo-only -->` and `<!-- /repo-only -->`, and put text that only belongs on the site in a `<!-- site-only` … `-->` comment, which GitHub hides and the site shows. Other pages should read the same in both places: say "the repository" and "this guide" rather than "this repo" or "this file".
 
 ## Working on the Claude plugin
 
-`.claude-plugin/marketplace.json` makes this repo a marketplace whose one plugin is the repo itself (`plugin.json`, skills in `skills/`). To work on it, add your clone as a local marketplace once:
+`.claude-plugin/marketplace.json` makes the repository a marketplace whose one plugin is the repository itself (`plugin.json`, skills in `skills/`). To work on it, add your clone as a local marketplace once:
 
 ```text
 /plugin marketplace add /path/to/Cirro-app-kit
