@@ -15,7 +15,7 @@ For an app, that means a database you don't have to run. A browser-only app gets
 
 Don't use a sheet for secrets or tokens, per-user UI preferences (every project member with access can see the rows), large binary data (use datasets), or high-frequency writes such as telemetry.
 
-Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is `true` on dev.cirro.bio and `false` on the public tenant (app.cirro.bio, 2026-10-12). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
+Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is off on some tenants, including the public tenant (app.cirro.bio). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
 
 ## Concepts
 
@@ -23,16 +23,16 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 | --- | --- |
 | **Sheet** | A table (`sheetType: TABLE`) or a view (`VIEW`) in one project. Identified by an `id`, and also by `namespaceName` + `tableName`, which is how SQL refers to it. |
 | **Columns** | Each `ColumnDef` has a `name`, a `dataType` (`STRING`, `INTEGER`, `BIGINT`, `FLOAT`, `DOUBLE`, `BOOLEAN`, `DATE`, `TIMESTAMP`), and optional `required`, `unique`, `allowedValues`, `description`, `displayName` and `hidden`. |
-| **Semantic types** | `semanticType` tells Cirro what a column means: `ENUM_SINGLE`/`ENUM_MULTI` (with `allowedValues`), `URL`, `CIRRO_FILE`, `CIRRO_FOLDER`, `CIRRO_DATASET` (links to Cirro objects), and `FOREIGN_KEY`. A `CIRRO_DATASET` value is a Cirro reference, not a bare ID: `cirro:<tenantId>:<projectId>:dataset:<datasetId>`, where `tenantId` is `tenantInfo.id` from `/info/system` (`portal-dev` on dev.cirro.bio). A bare dataset ID is refused with 400. |
+| **Semantic types** | `semanticType` tells Cirro what a column means: `ENUM_SINGLE`/`ENUM_MULTI` (with `allowedValues`), `URL`, `CIRRO_FILE`, `CIRRO_FOLDER`, `CIRRO_DATASET` (links to Cirro objects), and `FOREIGN_KEY`. A `CIRRO_DATASET` value is a Cirro reference, not a bare ID: `cirro:<tenantId>:<projectId>:dataset:<datasetId>`, where `tenantId` is `tenantInfo.id` from `/info/system` (for example `portal`). A bare dataset ID is refused with 400. |
 | **Relationships** | A column's `foreignKey: { sheetId, columnName }` points at a column in another sheet, so tables can reference each other. |
 | **`_row_id`** | Every row has one. It's the first column of every data response and the key for updates and deletes. |
 | **Views** | A `STRUCTURED` view names sheets, joins (`INNER`, `LEFT`, `RIGHT`, `FULL`), columns and a filter; a `RAW` view is a SQL query. Views are materialized: `refreshView` rebuilds one from its source tables. |
 | **Ingest** | `triggerIngest` loads a file into a sheet as an asynchronous job, mapping file columns to sheet columns, with `onConflict` set to `ERROR`, `SKIP` or `OVERWRITE` against a `conflictColumn`. `getJobs` reports progress and errors. |
-| **Mappings** | Saved column mappings (with optional value translations) from a sheet to a target Cirro entity, managed with `saveSheetMapping` and `getSheetMappings`. |
+| **Mappings** | Saved column mappings (with optional value translations) from a sheet to a pipeline's inputs, managed with `saveSheetMapping` and `getSheetMappings`. The Cirro web app's pipeline launch form uses them to offer and fill in sheets; nothing else applies them. |
 
 ## Using sheets from an app
 
-Sheets are `data.sheets` on the app's `DataService`. **Browsers can't call them from another origin yet:** the API's CORS preflight for `/projects/<id>/sheets` and its sub-routes answers 401 (dev.cirro.bio and demo.cirro.bio, 2026-10-15; still so on dev.cirro.bio, 2026-10-16), so these calls fail with a network error from a deployed app or `localhost`. Until Cirro fixes it, gate sheet features on a first call succeeding; see [open questions](open-questions.md).
+Sheets are `data.sheets` on the app's `DataService`.
 
 ```typescript
 import {
@@ -109,11 +109,17 @@ const summary = await sheets.queryData({ projectId, sheetQueryRequest: {
 } });
 ```
 
+Writes are checked against the column definitions: a missing `required` value, a duplicate in a `unique` column, a value outside `allowedValues`, or a malformed Cirro reference is refused with 400 and a message naming the column, and the whole insert or update is rolled back. Foreign keys aren't checked on writes, so check them in the app if they matter.
+
 Prefer `querySheetData` with a structured `filter` for anything built from user input. If you must use `queryData` with user input, validate it against an allow-list (column names, enum values) rather than interpolating it into the SQL string. Queries are read-only and stay inside the project, but a crafted query can still read any sheet in it the user can see, which may be more than your app means to show.
 
 ### Bulk loads
 
-For more than a few hundred rows, write a file and ingest it rather than inserting in a loop. Ingest runs as a job: start it with `triggerIngest` (a `fileDef` with the file's type and storage URI, `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule), then poll `getJobs` and show `errorMessage` if it fails. Getting the file into place needs file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD`, see [working with files](files.md)); the details of the upload location are an [open question](open-questions.md).
+For more than a few hundred rows, write a file and ingest it rather than inserting in a loop:
+
+1. Upload the file under the sheet's `stagingUploadPath` (from `getSheet`), with file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD` with the sheet's ID; see [working with files](files.md)). Parquet, CSV, JSON and XLSX are accepted; from an XLSX file only the first worksheet is read.
+2. Start the job with `triggerIngest`: a `fileDef` with the file's type and its `s3://` URI under the staging path, optional `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule (`ERROR`, `SKIP` or `OVERWRITE` against a `conflictColumn`). A request that's wrong (a path outside the staging folder, a missing required column) is refused straight away with 400.
+3. Poll `getJobs`. A job that fails reports `FAILED` with an `errorMessage`; show it. Each ingest runs as a single transaction, so a failed one leaves the sheet unchanged.
 
 ### Changing the schema
 
@@ -125,7 +131,7 @@ For more than a few hundred rows, write a file and ingest it rather than inserti
 - **Link, don't copy.** Store references to Cirro objects in `CIRRO_DATASET`, `CIRRO_FILE` and `CIRRO_FOLDER` columns rather than copying data or paths into the sheet.
 - **Leave provenance.** Tag sheets the app creates with the [app tag](building-on-cirro.md#tag-everything-the-app-creates) and attach a note, as for any other object the app creates (see [provenance by default](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates)). For row-level history, add `created_by` and `updated_at` columns and fill them in.
 - **Let pipelines and the app share tables.** A pipeline can write results into a sheet that the app then filters and annotates, and a view can join them with the app's own tables. Pin the schema to the same release as the pipeline (see [an app that ships its own pipeline](building-on-cirro.md#an-app-that-ships-its-own-pipeline)).
-- **Assume other writers.** People can edit sheets in the Cirro UI while your app is open. Re-read before acting on a row, write partial updates, and show what changed. Don't assume transactions or locking.
+- **Assume other writers.** People can edit sheets in the Cirro UI while your app is open. Rows have no version numbers, and when two writes to a sheet collide the later one fails with a 500; re-read before acting on a row, write partial updates, retry a failed write once after re-reading, and show what changed.
 - **Expect sheets you didn't make.** If the app reads sheets people created, read `columns` from `getSheet` and adapt rather than hard-coding a layout.
 
 ## Permissions
@@ -134,12 +140,12 @@ Declare what you need in the app's [permission manifest](permissions.md):
 
 | Permission | Lets the app |
 | --- | --- |
-| `VIEW_SHEET` | List sheets and read their definitions |
+| `VIEW_SHEET` | List sheets, read their definitions, mappings and ingest jobs |
 | `VIEW_SHEET_DATA` | Read rows (`getSheetData`, `querySheetData`) |
 | `SHEET_RAW_QUERY` | Run SQL with `queryData` |
-| `CREATE_SHEET` | Create tables and views |
-| `EDIT_SHEET` | Change schemas, views and mappings; refresh views; trigger ingest |
+| `CREATE_SHEET` | Create tables and views (plus `SHEET_RAW_QUERY` for a view defined by SQL) |
+| `EDIT_SHEET` | Change schemas, views and mappings; refresh views; trigger ingest and upload its files |
 | `EDIT_SHEET_DATA` | Insert, update and delete rows |
 | `DELETE_SHEET` | Delete sheets |
 
-An app that only reads should ask for the first two, plus `SHEET_RAW_QUERY` if it runs SQL. As with the rest of the platform, which roles can do these things is the user's project role, so a COLLABORATOR may be able to read a sheet but not write to it; handle the 403 and offer a read-only mode ([degrading gracefully](permissions.md#degrading-gracefully)). The exact permission behind each method is an assumption from the names; confirm it against the 403s you see.
+An app that only reads should ask for the first two, plus `SHEET_RAW_QUERY` if it runs SQL. As with the rest of the platform, which roles can do these things is the user's project role, so a COLLABORATOR may be able to read a sheet but not write to it; handle the 403 and offer a read-only mode ([degrading gracefully](permissions.md#degrading-gracefully)). Collaborators can read sheets and run SQL; contributors can also create sheets and edit them and their rows; deleting a sheet takes an admin.

@@ -20,6 +20,17 @@ new ProjectFileAccessContext(project, dataset, { accessType: ProjectAccessType.D
 
 `project` only needs `{ id }`. `dataset` must be a `DatasetDetail` (from `getDataset`), because the context reads `dataset.share`.
 
+Every access type needs `VIEW_PROJECT`, and each adds its own permission, in both the app's registration and the user's role:
+
+| Access type | Also needs |
+| --- | --- |
+| `PROJECT_DOWNLOAD` (the project's own files) | `GENERATE_DOWNLOAD_TOKEN` |
+| `SHARED_DATASET_DOWNLOAD` (a dataset shared from another project) | `VIEW_DATASET` |
+| `DATASET_UPLOAD` | `CREATE_DATASET` |
+| `SHEET_UPLOAD` | `EDIT_SHEET` |
+
+A refused request answers 401 (not 403) with "Not allowed to …" naming the permission.
+
 ## Listing a dataset's files
 
 ```typescript
@@ -47,7 +58,7 @@ Signing options: `download` (sets a Content-Disposition filename), `filename`, `
 File credentials:
 
 - `FileService` caches project read credentials per instance, so create one per app (as `DataService` is), not one per component.
-- `/projects/{id}/s3-token` can answer 429 when several requests arrive at once. This was seen on dev.cirro.bio with several apps signed in as one user. Retry 429s with backoff.
+- `/projects/{id}/s3-token` can answer 429 when several requests arrive at once. Retry 429s with backoff.
 
 `FileSystemObject`s from `ManifestParser` carry `path`, which is the file's **folder**, and `relativePath`, which is the file's path within the dataset. Match files on `relativePath`; matching on `path` silently finds nothing.
 
@@ -87,11 +98,11 @@ for (const file of fileList) {
 }
 ```
 
-`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). `uploadPath` is the dataset's own data folder (`datasets/<datasetId>/data`); join a name to it with one `/` whether or not it ends in one. An uploaded file appears in the manifest as `data/<name>`, and names may contain folders: `fcs/A1.fcs` becomes `data/fcs/A1.fcs`. The dataset turns `COMPLETED` by itself once every expected file has arrived (dev.cirro.bio, 2026-10-12).
+`processId` is the ingest process for the data type being uploaded; list options with `data.processes` (see the [API reference](../reference/api-surface.md)). `uploadFile` returns an AWS `Upload` (multipart, 4 parts in parallel). `uploadPath` is the dataset's own data folder (`datasets/<datasetId>/data`); join a name to it with one `/` whether or not it ends in one. An uploaded file appears in the manifest as `data/<name>`, and names may contain folders: `fcs/A1.fcs` becomes `data/fcs/A1.fcs`. The dataset turns `COMPLETED` by itself once every expected file has arrived.
 
 ## Pitfalls
 
 - **Expired URLs.** Store `FileSystemObject`s, sign at the moment of use. Raise `timeout` only for long streaming reads.
-- **CORS.** S3 enforces the bucket's CORS policy against the page origin. A CORS failure on file reads while API calls succeed means the origin isn't allowed on the bucket; it needs a Cirro admin to fix.
+- **CORS.** Project buckets accept GET and PUT, with the `Range` header, from any origin. A CORS error on a file read points at the request: a HEAD request, or a URL that isn't a signed URL for that file.
 - **Credential hygiene.** The credentials are real AWS keys. Keep them in memory; don't log request URLs that contain signatures.
 - **Wrong context type.** Using `projectDownload` for a dataset shared from another project fails with 403; use `datasetDownload(project, datasetDetail)`.

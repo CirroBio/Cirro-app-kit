@@ -1,4 +1,4 @@
-import { UserManager, type OidcMetadata, type User } from "oidc-client-ts";
+import { UserManager, type User } from "oidc-client-ts";
 
 // Sign-in returns here, and the registration must list it character for character: SAML sign-in
 // fails on a trailing-slash difference. An app served under a path (Vite `base`, e.g. a GitHub
@@ -10,16 +10,10 @@ export const REDIRECT_URI = import.meta.env.BASE_URL === "/"
 // Sign-in goes through Cirro's authorize page, which shows the user this app's name and
 // requested permissions and lets them pick their sign-in provider. The tenant publishes its
 // endpoints (authorize, token, revocation) in its OAuth metadata document; tokens use PKCE.
-export async function createSignIn(cirroUrl: string, clientId: string): Promise<UserManager> {
-  // Fetched here rather than through the library's metadataUrl: the document is served as
-  // text/json, and oidc-client-ts refuses any Content-Type but application/json.
-  const url = `${cirroUrl}/.well-known/oauth-authorization-server`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Could not load sign-in settings: ${url} answered HTTP ${res.status}`);
-  const metadata: Partial<OidcMetadata> = await res.json();
+export function createSignIn(cirroUrl: string, clientId: string): UserManager {
   return new UserManager({
     authority: cirroUrl,
-    metadata,
+    metadataUrl: `${cirroUrl}/.well-known/oauth-authorization-server`,
     client_id: clientId,
     redirect_uri: REDIRECT_URI,
     response_type: "code",

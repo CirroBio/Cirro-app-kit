@@ -25,9 +25,9 @@ Whoever creates the registration (a tenant admin, or you with the App Developer 
 
 - **name, description, logoUrl, appUrl, publisher.** Shown to users and admins on approval and discovery screens.
 - **redirectUris.** Every origin the app runs on, exactly: scheme, host and port. The app template returns to the bare origin (see [authentication](authentication.md#the-templates-sign-in)), so register `http://localhost:5173` and `https://app.example.org`, not a `/callback` path, exactly as the app sends them. Remove preview or staging URLs you don't control.
-- **globalPermissions** and **projectPermissions** (`{ projectId, permissions: [...] }`). Cirro permission names such as `VIEW_PROJECT`, `VIEW_DATASET` and `CREATE_DATASET`. Register only what the app calls; apps that read files most likely also need `GENERATE_DOWNLOAD_TOKEN`. The full list is the `Permission` enum in `@cirrobio/api-client`. Take these from the app's [permission manifest](permissions.md#layer-1-declare-what-the-app-needs). Prefer `projectPermissions` for specific projects: most front-end apps need nothing wider, and a narrow grant is quicker to approve. `globalPermissions` reach the whole tenant.
+- **globalPermissions** and **projectPermissions** (`{ projectId, permissions: [...] }`). Cirro permission names such as `VIEW_PROJECT`, `VIEW_DATASET` and `CREATE_DATASET`. Register only what the app calls; apps that read the project's files also need `GENERATE_DOWNLOAD_TOKEN`, and apps that list pipelines need `VIEW_PROCESS` as a global permission. The full list is the `Permission` enum in `@cirrobio/api-client`. Take these from the app's [permission manifest](permissions.md#layer-1-declare-what-the-app-needs). Prefer `projectPermissions` for specific projects: most front-end apps need nothing wider, and a narrow grant is quicker to approve. `globalPermissions` reach the whole tenant.
 - **allowedIps.** Leave empty for browser apps; users connect from anywhere.
-- **discoveryEnabled.** Whether other users can find the app.
+- **discoveryEnabled.** Whether the app can be found by [dynamic client registration](connecting-to-tenants.md#serving-more-than-one-tenant). Only a tenant admin can set it.
 
 ## Approval
 

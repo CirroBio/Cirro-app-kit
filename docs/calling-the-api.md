@@ -23,9 +23,7 @@ The token getter runs before every request, so token renewal stays inside the si
 
 ## Base path
 
-Use the tenant's web address followed by `/api`: `https://<tenant>/api`. It answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so the app calls it directly from `localhost` and in production alike. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. Both verified on dev.cirro.bio and app.cirro.bio, 2026-10-12. `basePath` defaults to `/api`, which only works on the Cirro origin itself, so always set it.
-
-Exception, 2026-10-15: the preflight for `/api/projects/<id>/sheets` and its sub-routes returns 401 on dev.cirro.bio and demo.cirro.bio, so browsers can't call the sheets API from another origin, while `/projects` and `/projects/<id>/datasets` pass. A same-origin dev proxy hides this; test sheet calls from the deployed origin, and have the app degrade when they fail with a network error.
+Use the tenant's web address followed by `/api`: `https://<tenant>/api`. It answers browsers from any origin (`Access-Control-Allow-Origin: *`, with `Authorization` allowed in preflights), so the app calls it directly from `localhost` and in production alike. `https://api.<tenant>`, which the Python client uses, returns the same data without CORS headers, so a browser can't read it. `basePath` defaults to `/api`, which only works on the Cirro origin itself, so always set it.
 
 ## Resources
 
@@ -41,13 +39,13 @@ python3 tools/api_surface.py node_modules > api-surface.md
 
 List endpoints that page return `{ data, nextToken }`. Pass `nextToken` back to get the next page, and stop when it's empty. In a UI, fetch pages on demand rather than everything up front.
 
-The exception is a list the user searches or filters, which needs every item. `getDatasets` accepts `limit: 1000`; a project of 1,875 datasets came back in two requests in under a second (dev.cirro.bio, 2026-10-12). A dataset's manifest pages differently: `getDatasetManifest` takes `fileOffset` and `fileLimit` and reports `totalFiles`, so ask again from the count received until it is reached.
+The exception is a list the user searches or filters, which needs every item. `getDatasets` accepts `limit: 1000`; a project of 1,875 datasets comes back in two requests in under a second. A dataset's manifest pages differently: `getDatasetManifest` takes `fileOffset` and `fileLimit` and reports `totalFiles`, so ask again from the count received until it is reached.
 
 ## Errors
 
 The sdk turns any non-2xx response into an `ApiError`, with the server's `message` and a list of field `errors`. Show `message` to users and log `errors`.
 
-`errorCode` is the HTTP status, so a refusal is `e instanceof ApiError && e.errorCode === 403`. Its message names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …", seen on dev.cirro.bio), which is what to show the user.
+`errorCode` is the HTTP status, so a refusal is `e instanceof ApiError && e.errorCode === 403`. Its message names the permission ("Not allowed to VIEW_PROJECT_METADATA on project …"), which is what to show the user.
 
 - **401:** no valid session. Check the sign-in.
 - **403:** the user or the registered app lacks a permission. Check the registration and the user's project role.

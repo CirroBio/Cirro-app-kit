@@ -38,7 +38,7 @@ The app needs a registration before sign-in works. Walk the user through `${CLAU
 
 ## 5. Deployment config
 
-Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: production API URL, production origin in the registration, CSP. Tell the user that direct file reads need bucket CORS for the production origin, which is a Cirro admin request.
+Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: production API URL, production origin in the registration, CSP.
 
 ## Connection request
 
@@ -46,4 +46,4 @@ A deployed app only works for users once a tenant connects it. When the app is r
 
 ## Hand-off
 
-Tell the user briefly what was created, which registration details are still needed, and which parts depend on items in `${CLAUDE_PLUGIN_ROOT}/docs/open-questions.md`. For feature work, use cirro-data-access, cirro-sheets or cirro-compute; run cirro-app-review before the first production deploy, and cirro-app-deploy to ship.
+Tell the user briefly what was created, which registration details are still needed, and which parts are affected by `${CLAUDE_PLUGIN_ROOT}/docs/known-limitations.md`. For feature work, use cirro-data-access, cirro-sheets or cirro-compute; run cirro-app-review before the first production deploy, and cirro-app-deploy to ship.

@@ -67,47 +67,62 @@ A complete request is quicker to approve. Include:
 
 ## Serving more than one tenant
 
-Each tenant has its own API URL and issues your app its own client ID. Users of one deployed app may belong to different tenants, and tenants come and go as admins approve or withdraw the app. You can handle that in two ways:
+Each tenant registers the app separately and gives it its own client ID. Users of one deployed app may belong to different tenants, and tenants come and go as admins approve or withdraw the app. Rather than storing client IDs, the app asks each tenant for its client ID at runtime with dynamic client registration ([RFC 7591](https://www.rfc-editor.org/rfc/rfc7591)): it sends the tenant its redirect URI, and the tenant answers with the client ID of the registration that lists it. No client ID is committed or deployed with the app, and a tenant that approves the app later works without a rebuild.
 
-| Approach | How | Good for |
-| --- | --- | --- |
-| **Runtime tenant registry** (recommended) | Serve a `tenants.json` next to the app listing each tenant's API URL and client ID; the app fetches it at startup and shows a tenant picker | Any number of tenants; adding or removing one is a file edit, with no rebuild |
-| **One build per tenant** | Build with that tenant's `VITE_CIRRO_URL` and `VITE_CIRRO_CLIENT_ID`, and deploy each to its own URL (for example `tenant-a.myapp.org`) | One tenant, or tenants that want the app on their own domain |
+Each tenant's registration needs:
 
-### The tenant registry
+- **Discovery enabled** (`discoveryEnabled`). The tenant only looks among discoverable registrations, and only a tenant admin can turn discovery on: a registration an App Developer creates isn't discoverable until an admin enables it.
+- **The app's redirect URI, and one unique to the app.** The tenant matches on redirect URI, so two apps served from one origin need different paths (see [authentication](authentication.md#the-templates-sign-in)).
 
-`tenants.json` is fetched at runtime, not imported, so the deployer adds or removes a tenant by editing one file on the host:
+### The tenant list
+
+A `tenants.json` next to the app lists the tenants it offers. It's fetched at runtime, not imported, so adding or removing a tenant is a file edit on the host:
 
 ```json
 {
   "tenants": [
-    {
-      "id": "dev",
-      "name": "Cirro (dev)",
-      "url": "https://dev.cirro.bio",
-      "clientId": "1a2b3c4d5e6f7g8h9i0j",
-      "addedAt": "2026-10-10",
-      "contact": "admins@example.org"
-    }
+    { "id": "example", "name": "Example Institute", "url": "https://cirro.example.org" }
   ]
 }
 ```
 
 - `id`: a short slug, stable for the life of the entry; the app remembers the user's choice by it.
-- `url`: the tenant's web address. The app calls the API at `url` + `/api` and signs users in at `url` + `/authorize`, and it's also where links that open an item in Cirro go. Paths under it (from the Cirro portal's router): `/project/{projectId}`, `/project/{projectId}/dataset/{datasetId}`, `/project/{projectId}/dataset/{datasetId}/pipeline/{processId}` (Cirro's own form for running a pipeline on that dataset), `/project/{projectId}/workspace/{workspaceId}`, `/project/{projectId}/sheets`.
-- `clientId`: the client ID the tenant's admins issued **for this app**. Client IDs of Public Apps are not secrets, so the file can be public and committed.
-- `name`, `addedAt`, `contact`: shown in the picker, or kept for whoever maintains the file.
+- `name`: shown in the picker.
+- `url`: the tenant's web address. The app reads the tenant's endpoints from `url` + `/.well-known/oauth-authorization-server`, calls the API at `url` + `/api`, and links to items in Cirro under it: `/project/{projectId}`, `/project/{projectId}/dataset/{datasetId}`, `/project/{projectId}/dataset/{datasetId}/pipeline/{processId}` (Cirro's own form for running a pipeline on that dataset), `/project/{projectId}/workspace/{workspaceId}`, `/project/{projectId}/sheets`.
 
-Adding a tenant: the tenant's admins register the app with your production origin as a redirect URI and send you the client ID; you add an entry. Removing one: delete the entry. Users who chose it see the picker on their next visit.
+Adding a tenant: the tenant's admins register the app with your production redirect URI and discovery enabled, and you add the tenant's entry. Removing one: delete the entry; a tenant that archives the app's registration stops answering with a client ID.
 
-Each app has its own registry, because each app has its own registration in each tenant: a tenant may approve one app and not another. Apps that share a host still keep separate files.
+### Getting the client ID
+
+Ask the tenant's `registration_endpoint`, from its metadata document, for the client ID that matches the app's redirect URI:
+
+```typescript
+type Tenant = { id: string; name: string; url: string };
+
+export async function clientIdFor(tenant: Tenant, redirectUri: string): Promise<string> {
+  const metadata = await (await fetch(`${tenant.url}/.well-known/oauth-authorization-server`)).json();
+  const res = await fetch(metadata.registration_endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_name: "My Cirro app",
+      redirect_uris: [redirectUri],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+    }),
+  });
+  // 401 means no discoverable registration in this tenant lists redirectUri.
+  if (!res.ok) throw new Error(`${tenant.name} has no registration for ${redirectUri} (HTTP ${res.status})`);
+  return (await res.json()).client_id;
+}
+```
 
 ### Choosing the tenant at startup
 
 Pick the tenant before anything calls Cirro, and create the sign-in for it:
 
 ```typescript
-type Tenant = { id: string; name: string; url: string; clientId: string };
 const TENANT_KEY = "cirro-tenant";   // the tenant's id is not sensitive
 
 export async function loadTenants(): Promise<Tenant[]> {
@@ -126,15 +141,15 @@ export function chooseTenant(t: Tenant) {
   window.location.reload();          // sign-in and DataService are created once, for one tenant
 }
 
-// main.tsx: render a picker until savedTenant() returns one, then start as the template does
-// with tenant.url and tenant.clientId in place of config.url and config.clientId:
-// await createSignIn(tenant.url, tenant.clientId), then a DataService on `${tenant.url}/api`, …
+// main.tsx: render a picker until savedTenant() returns one, then start as the template does:
+// await createSignIn(tenant.url, await clientIdFor(tenant, REDIRECT_URI)),
+// then a DataService on `${tenant.url}/api`, …
 ```
 
 - With a single entry, skip the picker.
 - After the tenant's config loads, show its name and logo (`tenantInfo.name` and `tenantInfo.tenantLogoUrl`) so users can see which environment they're signed in to.
 - Never mix data between tenants in one session: switching tenant means signing out, clearing the saved choice, and starting again.
-- If the saved tenant is no longer in the file, clear the choice and show the picker.
+- If the saved tenant is no longer in the file, or no longer answers with a client ID, clear the choice and show the picker.
 
 Register every origin the app is served from in every tenant that uses it.
 
@@ -142,4 +157,4 @@ Register every origin the app is served from in every tenant that uses it.
 
 - **Ask early.** Connection and approval involve people. Request the public-tenant connection when the app is usable, not the day before a demo.
 - **Keep one manifest for all tenants.** Tenants may grant less than you ask for; that's what [optional permissions](permissions.md#degrading-gracefully) are for.
-- **Track your connections.** Keep a list of connected tenants, their client IDs, contacts and approved permissions in the app's repo (not secrets: client IDs for public apps aren't confidential). You'll need it every time the registration changes.
+- **Track your connections.** Keep a list of connected tenants, their contacts and approved permissions in the app's repo. You'll need it every time the registration changes.

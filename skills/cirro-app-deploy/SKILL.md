@@ -12,13 +12,13 @@ Facts live in `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` and `${CLAUDE_PLUGIN_RO
 Ask only for what the conversation and repo haven't answered:
 
 1. Production origin(s), exactly (scheme, host, port). They become redirect URIs, so settle them before requesting any connection.
-2. Which tenants, now and later. One tenant: one build with env vars. Several, or tenants that come and go: a runtime `tenants.json` registry ("Serving more than one tenant" in the tenants doc).
+2. Which tenants, now and later. One tenant: one build with env vars. Several, or tenants that come and go: a runtime `tenants.json` of tenant addresses, with each tenant's client ID obtained by dynamic registration ("Serving more than one tenant" in the tenants doc).
 3. Where it is hosted, and whether the host config (headers, rewrites) lives in the repo.
 
 ## 2. Build config
 
 - One tenant: set `VITE_CIRRO_URL` to the tenant's web address (`https://<tenant>`; the app adds `/api` and `/authorize`) and `VITE_CIRRO_CLIENT_ID` to that tenant's client ID for this app.
-- Several tenants: add `public/tenants.json` and the startup picker from the tenants doc, creating the sign-in (`createSignIn` from the template's `src/auth.ts`) and `DataService` for the chosen tenant. Client IDs of Public Apps aren't secrets, so the file can be committed.
+- Several tenants: add `public/tenants.json` (tenant addresses only, never client IDs) and the startup picker and `clientIdFor` from the tenants doc, creating the sign-in (`createSignIn` from the template's `src/auth.ts`) and `DataService` for the chosen tenant. Each tenant's registration needs discovery enabled and the app's own redirect URI.
 - `npm run build` must pass.
 
 ## 3. Host config
@@ -33,13 +33,11 @@ Run cirro-app-review (scanner plus security checklist). Don't request connection
 
 For each tenant, draft the request from "What to include" in the tenants doc, filled in from the repo: `cirro-permissions.json`, production origins, the dev registration's client ID if there is one, the scan result, what the app creates and whether data leaves the browser. Address it to support@cirro.bio for the public tenant, or to the tenant's admins (`tenantInfo.contactEmail` from `/info/system`). Give the draft to the user to send; never send it yourself.
 
-Also list the admin-side items only Cirro can do: project bucket CORS for the production origin if the app reads files directly (and the `Range` header for range reads).
-
 ## 6. After approval
 
-- Add each tenant's client ID to the build or `tenants.json`.
+- One tenant: set its client ID in the build. Several: add the tenant's entry to `tenants.json`, and confirm `clientIdFor` gets a client ID from it.
 - Sign in as a second user who isn't the registration's creator; before approval only the creator can sign in, so this is the real test.
-- Suggest a connections list in the repo (tenant, client ID, contact, approved permissions); every registration change needs it.
+- Suggest a connections list in the repo (tenant, contact, approved permissions); every registration change needs it.
 
 ## Changes later
 

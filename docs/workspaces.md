@@ -23,11 +23,11 @@ sequenceDiagram
   end
 ```
 
-`createWorkspace` starts the workspace by itself. Calling `startWorkspace` straight after fails with "Workspace is already changing state"; call it only to restart a stopped workspace you're reusing. `Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `COMPLETED`, which is what a stopped, restartable workspace reports (on dev.cirro.bio, stopping took about 5.5 minutes). `FAILED` means it couldn't start; `getWorkspaceLogs` has the detail. `statusMessage` can carry internal identifiers such as an ECS task ARN, so log it rather than showing it to users.
+`createWorkspace` starts the workspace by itself. Calling `startWorkspace` straight after fails with "Workspace is already changing state"; call it only to restart a stopped workspace you're reusing. `Workspace.status` moves through `PENDING`/`STARTING` to `RUNNING`, and through `STOPPING` to `COMPLETED`, which is what a stopped, restartable workspace reports (stopping can take several minutes). `FAILED` means it couldn't start; `getWorkspaceLogs` has the detail. `statusMessage` can carry internal identifiers such as an ECS task ARN, so log it rather than showing it to users.
 
 ## Booting takes minutes; say so
 
-Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyter-minimal` took 3 min 52 s and `cirro-jupyter-r` about 5.5 min): the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
+Starting a workspace usually takes a few minutes, and longer for larger images: the instance has to be provisioned and the image pulled. Users who aren't told assume the app is broken.
 
 - Before starting, say how long it will take ("Starting a workspace takes a few minutes").
 - While it boots, show the elapsed time and the status in plain words, and let the user keep working elsewhere in the app. Don't block the whole UI.
@@ -36,14 +36,14 @@ Starting a workspace usually takes a few minutes (on dev.cirro.bio, `cirro-jupyt
 
 ## The per-user limit
 
-Cirro limits how many workspaces one user can have in a project (5 on dev.cirro.bio). Stopped workspaces count toward it. At the limit, `createWorkspace` is refused with a message saying so ("5 out of 5"). So:
+A project can limit how many workspaces one user may have in it; the project admin sets the number. Stopped workspaces count toward it. At the limit, `createWorkspace` is refused with a message saying so (for example "5 out of 5"). So:
 
 - Reuse first, as above. An app should rarely need more than one workspace per purpose.
 - At the limit, don't just show the error. List the user's workspaces in the project, with their names, status and last start, and offer to reuse one or delete one the user picks. Deleting needs the user's explicit confirmation, because files inside a workspace that weren't saved to the project are lost with it.
 
 ## Handing the user into the workspace
 
-Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. Confirmed on dev.cirro.bio, 2026-10-11, by two apps. Embedding would need Cirro to allow app origins; see [open questions](open-questions.md).
+Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. See [known limitations](known-limitations.md#workspaces-open-in-a-new-tab).
 
 ```ts
 async function openWorkspace(projectId: string, workspaceId: string) {
@@ -72,4 +72,4 @@ Files written inside a workspace stay in it until saved to the project. Decide u
 
 ## Permissions
 
-`CREATE_WORKSPACE`, `CONTROL_WORKSPACE` (start, stop, postpone), `OPEN_WORKSPACE` (connect). See the [capability map](building-on-cirro.md#capability-map).
+`CREATE_WORKSPACE`, `CONTROL_WORKSPACE` (start, stop, postpone), `OPEN_WORKSPACE` (connect), `DELETE_WORKSPACE`. Only project owners have `OPEN_WORKSPACE`; other users connect to a workspace they created or one shared with them. See the [capability map](building-on-cirro.md#capability-map).

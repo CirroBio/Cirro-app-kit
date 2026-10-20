@@ -22,11 +22,11 @@ sequenceDiagram
   App->>API: 8. API calls with Authorization: Bearer
 ```
 
-- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. It's served as `text/json`, which some OAuth libraries refuse, so fetch it yourself and pass the result to the library, as the template does. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
+- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
 - **Step 3 is Cirro's consent screen.** It shows the registration's name, logo, publisher and requested permissions, and an "Official" badge for apps Cirro publishes, and lists the tenant's sign-in providers. The user must be signed in to Cirro to see it; a signed-out user is taken to Cirro's sign-in first.
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
 - **Only `openid`.** Public Apps allow the `openid` scope and no other.
-- **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire (they last 15 minutes).
+- **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire. By default access tokens last 15 minutes and refresh tokens a day, so a user who comes back after a day signs in again. Refresh tokens aren't rotated.
 - **No emailed sign-in links.** The authorize page offers the tenant's SSO providers only.
 
 ## The template's sign-in
@@ -36,10 +36,9 @@ The [app template](../templates/app) implements the flow with [oidc-client-ts](h
 ```typescript
 import { UserManager } from "oidc-client-ts";
 
-const res = await fetch(`${cirroUrl}/.well-known/oauth-authorization-server`);
 const userManager = new UserManager({
   authority: cirroUrl,
-  metadata: await res.json(),     // authorize, token and revocation endpoints
+  metadataUrl: `${cirroUrl}/.well-known/oauth-authorization-server`,   // authorize, token and revocation endpoints
   client_id: clientId,
   redirect_uri: REDIRECT_URI,
   response_type: "code",
@@ -53,7 +52,7 @@ const userManager = new UserManager({
 
 What to know about it:
 
-- **The redirect URI must match the registration exactly.** The template returns to `window.location.origin`, or to the origin plus Vite's `base` for an app served under a path (a GitHub Pages project site such as `https://<org>.github.io/<repo>/`). Register that exact URL, trailing slash included: Cognito's authorize step treats `https://host/app` and `https://host/app/` alike, but the end of a SAML sign-in (a Microsoft or other SAML identity provider) compares exactly and fails with `Invalid SAML response received: RedirectUri is not registered with the client` (demo.cirro.bio, 2026-10-15).
+- **The redirect URI must match the registration exactly.** The template returns to `window.location.origin`, or to the origin plus Vite's `base` for an app served under a path (a GitHub Pages project site such as `https://<org>.github.io/<repo>/`). Register that exact URL, trailing slash included: Cognito's authorize step treats `https://host/app` and `https://host/app/` alike, but the end of a SAML sign-in (a Microsoft or other SAML identity provider) compares exactly and fails with `Invalid SAML response received: RedirectUri is not registered with the client`.
 - **Show a failed return.** A page load with `?error=` is a failed sign-in, usually a registration mismatch. The template shows the error instead of offering to sign in again, so a broken registration can't loop.
 - **Tokens live in the library's session storage** (oidc-client-ts's default), so a reload keeps the user signed in without another trip through the consent screen. Your own code never stores them. Browser storage is per origin, so an app served from an origin of its own (its own domain or subdomain) can keep the login across tabs and browser restarts by passing `userStore: new WebStorageStateStore({ store: window.localStorage })`; ask the tenant's Cirro admins to shorten the app client's refresh-token lifetime when you do, since the login then persists on disk. Keep the default on an origin shared with other sites, such as a `github.io` Pages site, where every site on it could read the tokens.
 - **Signing out** revokes the refresh token at the `revocation_endpoint` (the token server revokes refresh tokens only) and removes the user from the library, which it does even when revocation fails; the app then shows the revocation error instead of reloading. That ends the app's session; the user stays signed in to Cirro itself, so signing in again goes straight through.
