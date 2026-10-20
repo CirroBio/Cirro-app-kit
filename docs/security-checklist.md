@@ -15,7 +15,7 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 - [ ] Registered as a Public App (the only type this kit uses); the app holds no secret and acts as the signed-in user
 - [ ] `cirro-permissions.json` exists, lists every permission the code uses with a reason, and nothing more
 - [ ] Optional permissions really are optional: the app works with only the required ones
-- [ ] Redirect URIs list only origins you control; no stale preview URLs or wildcards
+- [ ] Redirect URIs list only callback URLs you control, each unique to this app; no stale preview URLs or wildcards
 
 ## Tokens and credentials
 
@@ -45,4 +45,4 @@ It flags likely problems: secrets in code or env files, tokens in web storage or
 
 - [ ] Content Security Policy set at the host, with `connect-src` limited to the Cirro tenant, its token server and S3 (see [deployment](deployment.md#content-security-policy))
 - [ ] The host sends `frame-ancestors 'none'`, so other sites can't frame the app
-- [ ] Production `VITE_CIRRO_URL` is the tenant's web address, and its client ID is that tenant's
+- [ ] Production builds set only `VITE_CIRRO_URL` (the tenant's web address); no client ID is built in, since the app gets it from the tenant

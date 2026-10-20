@@ -4,8 +4,10 @@ Check the registration before changing code. Open it in the Cirro UI, or read it
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Cirro's authorize page shows an error with your client ID | Client ID from another tenant, or not a registration in this tenant | Check `VITE_CIRRO_CLIENT_ID` and that `VITE_CIRRO_URL` is the tenant the registration is in |
-| Login page shows `redirect_mismatch` | Redirect URI sent doesn't exactly match a registered one | The template sends `window.location.origin` (plus Vite's `base` under a path); register exactly that. Watch for `localhost` vs `127.0.0.1` and trailing slashes |
+| "No app is registered in this tenant for <callback URL>" | No discoverable registration in this tenant lists the callback URL the app sends | Have a tenant admin register that exact URL, trailing slash included, with discovery enabled; for local development, set your own registration's client ID in `VITE_CIRRO_CLIENT_ID` |
+| "More than one app in this tenant is registered for <callback URL>" | Two discoverable registrations list the same callback URL | Give the app its own path (`base` in `vite.config.ts`) and register that, or ask an admin to remove the URL from the other registration |
+| Cirro's authorize page shows an error with your client ID | The development client ID in `.env` is from another tenant, or its registration was deleted | Check `VITE_CIRRO_CLIENT_ID` and that `VITE_CIRRO_URL` is the tenant the registration is in |
+| Login page shows `redirect_mismatch` | Redirect URI sent doesn't exactly match a registered one | The template sends its origin plus its path (`base` in `vite.config.ts`); register exactly that. Watch for `localhost` vs `127.0.0.1` and trailing slashes |
 | `Invalid SAML response received: RedirectUri is not registered with the client` | SAML sign-in compares the redirect URI exactly, trailing slash included | Make the registered URI and the one the app sends identical; see [authentication](authentication.md#the-templates-sign-in) |
 | Back at the app with `?error=invalid_scope` | The app asked for a scope other than `openid` | Request `openid` only |
 | Works for the creator, fails for colleagues | App not yet approved (`approvedAt` empty) | Admin approves the app |

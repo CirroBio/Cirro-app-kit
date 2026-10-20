@@ -13,9 +13,9 @@ If the app's purpose is still open (what it creates, whether it needs compute, a
 
 Ask only for what the conversation hasn't answered:
 
-1. Do they have a Cirro account and a client ID yet? If not, start with `${CLAUDE_PLUGIN_ROOT}/docs/getting-started.md` steps 1 and 2: with the App Developer role they create a development registration themselves, pointing to `http://localhost:5173` and working only for them; otherwise draft the request to a tenant admin for them. Project admins can't register apps.
+1. Do they have a Cirro account and a registered callback URL yet? If not, start with `${CLAUDE_PLUGIN_ROOT}/docs/getting-started.md` steps 1 and 2: pick the app's slug (its path, `http://localhost:5173/<slug>/`); with the App Developer role they register that callback URL themselves and use its client ID during local development; otherwise draft the request to a tenant admin to register it with discovery enabled, so no client ID is needed. Project admins can't register apps.
 2. Which Cirro tenant(s): the public Cirro tenant, an institution's tenant, or several? See `${CLAUDE_PLUGIN_ROOT}/docs/connecting-to-tenants.md`.
-3. Production origin(s)?
+3. Production address, and so the production callback URL (address plus the app's path)?
 4. Would the app need a client secret, for example to act as itself rather than as the signed-in user, or to run with no user present? That's out of scope for this kit: say so, and don't scaffold it here.
 
 ## 2. Copy the template
@@ -23,7 +23,7 @@ Ask only for what the conversation hasn't answered:
 Start from `${CLAUDE_PLUGIN_ROOT}/templates/app/` (React, Vite, Cirro's login UI). Then:
 
 1. Check for newer versions: `npm view @cirrobio/sdk version` (and `@cirrobio/api-client`). If newer than the template's pins, bump them and read the release notes for anything that replaces hand-written code.
-2. `npm install`, copy `.env.example` to `.env`, and set `VITE_CIRRO_URL` and `VITE_CIRRO_CLIENT_ID`.
+2. Set `base` in `vite.config.ts` to `/<slug>/`, `npm install`, copy `.env.example` to `.env`, and set `VITE_CIRRO_URL` (plus `VITE_CIRRO_CLIENT_ID` only for an App Developer's own registration).
 3. `npm run build` must pass before continuing.
 
 ## 3. Permissions and registration
@@ -34,11 +34,11 @@ The app needs a registration before sign-in works. Walk the user through `${CLAU
 
 ## 4. First run
 
-`npm run dev`, open `http://localhost:5173`, sign in through Cirro's authorize page, confirm projects load. On failure, use `${CLAUDE_PLUGIN_ROOT}/docs/troubleshooting.md` before changing code.
+`npm run dev`, open `http://localhost:5173/<slug>/`, sign in through Cirro's authorize page, confirm projects load. On failure, use `${CLAUDE_PLUGIN_ROOT}/docs/troubleshooting.md` before changing code.
 
 ## 5. Deployment config
 
-Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: production API URL, production origin in the registration, CSP.
+Set up what `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` lists before the first deploy: the tenant's address, the production callback URL registered with discovery enabled, CSP.
 
 ## Connection request
 

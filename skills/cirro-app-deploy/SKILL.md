@@ -11,19 +11,19 @@ Facts live in `${CLAUDE_PLUGIN_ROOT}/docs/deployment.md` and `${CLAUDE_PLUGIN_RO
 
 Ask only for what the conversation and repo haven't answered:
 
-1. Production origin(s), exactly (scheme, host, port). They become redirect URIs, so settle them before requesting any connection.
-2. Which tenants, now and later. One tenant: one build with env vars. Several, or tenants that come and go: a runtime `tenants.json` of tenant addresses, with each tenant's client ID obtained by dynamic registration ("Serving more than one tenant" in the tenants doc).
+1. The production callback URL, exactly: host address plus the app's path (`base` in `vite.config.ts`), trailing slash included. Each tenant registers it, so settle it before requesting any connection.
+2. Which tenants, now and later. One tenant: `VITE_CIRRO_URL` at build time. Several, or tenants that come and go: a runtime `tenants.json` of tenant addresses ("Serving more than one tenant" in the tenants doc). Either way the app gets its client ID from the tenant.
 3. Where it is hosted, and whether the host config (headers, rewrites) lives in the repo.
 
 ## 2. Build config
 
-- One tenant: set `VITE_CIRRO_URL` to the tenant's web address (`https://<tenant>`; the app adds `/api` and `/authorize`) and `VITE_CIRRO_CLIENT_ID` to that tenant's client ID for this app.
-- Several tenants: add `public/tenants.json` (tenant addresses only, never client IDs) and the startup picker and `clientIdFor` from the tenants doc, creating the sign-in (`createSignIn` from the template's `src/auth.ts`) and `DataService` for the chosen tenant. Each tenant's registration needs discovery enabled and the app's own redirect URI.
+- One tenant: set `VITE_CIRRO_URL` to the tenant's web address (`https://<tenant>`; the app adds `/api` and `/authorize`). Leave `VITE_CIRRO_CLIENT_ID` unset in production builds.
+- Several tenants: add `public/tenants.json` (tenant addresses only, never client IDs) and the startup picker from the tenants doc, creating the sign-in (`createSignIn` from the template's `src/auth.ts`) and `DataService` for the chosen tenant.
 - `npm run build` must pass.
 
 ## 3. Host config
 
-Apply what the deployment doc lists: HTTPS on a registered origin, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Take the token server from `token_endpoint` in the tenant's `/.well-known/oauth-authorization-server`, and the region from `/api/info/system`. Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
+Apply what the deployment doc lists: HTTPS at the registered callback URL, rewrite unknown paths to `index.html` if the app routes client-side, and a CSP started from the doc's template and tightened to the hosts seen in the network tab. Take the token server from `token_endpoint` in the tenant's `/.well-known/oauth-authorization-server`, and the region from `/api/info/system`. Add `'wasm-unsafe-eval'` and `worker-src` only if the app uses WebAssembly readers.
 
 ## 4. Pre-flight
 
@@ -31,11 +31,11 @@ Run cirro-app-review (scanner plus security checklist). Don't request connection
 
 ## 5. Request connections
 
-For each tenant, draft the request from "What to include" in the tenants doc, filled in from the repo: `cirro-permissions.json`, production origins, the dev registration's client ID if there is one, the scan result, what the app creates and whether data leaves the browser. Address it to support@cirro.bio for the public tenant, or to the tenant's admins (`tenantInfo.contactEmail` from `/info/system`). Give the draft to the user to send; never send it yourself.
+For each tenant, draft the request from "What to include" in the tenants doc, filled in from the repo: `cirro-permissions.json`, the production callback URL and a request to enable discovery, the dev registration's client ID if there is one, the scan result, what the app creates and whether data leaves the browser. Address it to support@cirro.bio for the public tenant, or to the tenant's admins (`tenantInfo.contactEmail` from `/info/system`). Give the draft to the user to send; never send it yourself.
 
 ## 6. After approval
 
-- One tenant: set its client ID in the build. Several: add the tenant's entry to `tenants.json`, and confirm `clientIdFor` gets a client ID from it.
+- Several tenants: add the tenant's entry to `tenants.json`. Either way, confirm the app gets a client ID from the tenant (no "No app is registered" error) and sign-in reaches the consent screen.
 - Sign in as a second user who isn't the registration's creator; before approval only the creator can sign in, so this is the real test.
 - Suggest a connections list in the repo (tenant, contact, approved permissions); every registration change needs it.
 

@@ -1,6 +1,6 @@
 # Authentication
 
-An app signs users in by sending them to Cirro's authorize page. Cirro shows the user which app is asking and what it may do, the user signs in with their own account, and the app gets back a token that acts as them. The app holds a client ID and no secret.
+An app signs users in by sending them to Cirro's authorize page. Cirro shows the user which app is asking and what it may do, the user signs in with their own account, and the app gets back a token that acts as them. The app has no secret, and doesn't need to be given a client ID: it asks the tenant for the one registered for its callback URL.
 
 ## The flow
 
@@ -13,16 +13,18 @@ sequenceDiagram
   participant Login as Token server
   participant API as Cirro API
   App->>Cirro: 1. GET /.well-known/oauth-authorization-server (no token)
+  App->>Cirro: POST registration_endpoint with the callback URL, returns the client ID
   App->>Cirro: 2. Redirect to /authorize with client ID + PKCE challenge
   Note over Cirro: 3. Shows the app's name, publisher and permissions,<br/>and the user picks how to sign in
   Cirro->>Login: 4. Hands off to the tenant's sign-in
-  Login-->>App: 5. Redirect back to your redirect URI with a code
+  Login-->>App: 5. Redirect back to your callback URL with a code
   App->>Login: 6. Exchange code + PKCE verifier at the token endpoint
   Login-->>App: 7. Access, ID and refresh tokens
   App->>API: 8. API calls with Authorization: Bearer
 ```
 
 - **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
+- **The client ID comes from the tenant.** The app POSTs its callback URL to the metadata document's `registration_endpoint` (dynamic client registration, [RFC 7591](https://www.rfc-editor.org/rfc/rfc7591)), and the tenant answers with the client ID of the registration that lists it. A tenant admin sets that registration up with discovery enabled. The tenant answers 401 if no discoverable registration lists the callback URL, and 409 if more than one does. During local development with your own App Developer registration, which isn't discoverable, the app uses that registration's client ID instead.
 - **Step 3 is Cirro's consent screen.** It shows the registration's name, logo, publisher and requested permissions, and an "Official" badge for apps Cirro publishes, and lists the tenant's sign-in providers. The user must be signed in to Cirro to see it; a signed-out user is taken to Cirro's sign-in first.
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
 - **Only `openid`.** Public Apps allow the `openid` scope and no other.
@@ -36,10 +38,13 @@ The [app template](../templates/app) implements the flow with [oidc-client-ts](h
 ```typescript
 import { UserManager } from "oidc-client-ts";
 
+const metadata = await (await fetch(`${cirroUrl}/.well-known/oauth-authorization-server`)).json();
 const userManager = new UserManager({
   authority: cirroUrl,
-  metadataUrl: `${cirroUrl}/.well-known/oauth-authorization-server`,   // authorize, token and revocation endpoints
-  client_id: clientId,
+  metadata,                                   // authorize, token, revocation and registration endpoints
+  // VITE_CIRRO_CLIENT_ID during local development; otherwise asks registration_endpoint for the
+  // client ID registered for REDIRECT_URI (registeredClientId in src/auth.ts)
+  client_id: devClientId || await registeredClientId(metadata.registration_endpoint),
   redirect_uri: REDIRECT_URI,
   response_type: "code",
   scope: "openid",
@@ -52,7 +57,7 @@ const userManager = new UserManager({
 
 What to know about it:
 
-- **The redirect URI must match the registration exactly.** The template returns to `window.location.origin`, or to the origin plus Vite's `base` for an app served under a path (a GitHub Pages project site such as `https://<org>.github.io/<repo>/`). Register that exact URL, trailing slash included: Cognito's authorize step treats `https://host/app` and `https://host/app/` alike, but the end of a SAML sign-in (a Microsoft or other SAML identity provider) compares exactly and fails with `Invalid SAML response received: RedirectUri is not registered with the client`.
+- **The callback URL is unique to the app, and must match the registration exactly.** The template returns to its origin plus its own path, Vite's `base` in `vite.config.ts` (`/cirro-app/` until you rename it), for example `http://localhost:5173/qc-review/`. The path keeps the callback URL unique even when several apps share a host. Register that exact URL, trailing slash included: Cognito's authorize step treats `https://host/app` and `https://host/app/` alike, but the end of a SAML sign-in (a Microsoft or other SAML identity provider) compares exactly and fails with `Invalid SAML response received: RedirectUri is not registered with the client`.
 - **Show a failed return.** A page load with `?error=` is a failed sign-in, usually a registration mismatch. The template shows the error instead of offering to sign in again, so a broken registration can't loop.
 - **Tokens live in the library's session storage** (oidc-client-ts's default), so a reload keeps the user signed in without another trip through the consent screen. Your own code never stores them. Browser storage is per origin, so an app served from an origin of its own (its own domain or subdomain) can keep the login across tabs and browser restarts by passing `userStore: new WebStorageStateStore({ store: window.localStorage })`; ask the tenant's Cirro admins to shorten the app client's refresh-token lifetime when you do, since the login then persists on disk. Keep the default on an origin shared with other sites, such as a `github.io` Pages site, where every site on it could read the tokens.
 - **Signing out** revokes the refresh token at the `revocation_endpoint` (the token server revokes refresh tokens only) and removes the user from the library, which it does even when revocation fails; the app then shows the revocation error instead of reloading. That ends the app's session; the user stays signed in to Cirro itself, so signing in again goes straight through.
