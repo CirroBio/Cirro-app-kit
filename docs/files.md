@@ -20,6 +20,17 @@ new ProjectFileAccessContext(project, dataset, { accessType: ProjectAccessType.D
 
 `project` only needs `{ id }`. `dataset` must be a `DatasetDetail` (from `getDataset`), because the context reads `dataset.share`.
 
+Every access type needs `VIEW_PROJECT`, and each adds its own permission, in both the app's registration and the user's role:
+
+| Access type | Also needs |
+| --- | --- |
+| `PROJECT_DOWNLOAD` (the project's own files) | `GENERATE_DOWNLOAD_TOKEN` |
+| `SHARED_DATASET_DOWNLOAD` (a dataset shared from another project) | `VIEW_DATASET` |
+| `DATASET_UPLOAD` | `CREATE_DATASET` |
+| `SHEET_UPLOAD` | `EDIT_SHEET` |
+
+A refused request answers 401 (not 403) with "Not allowed to …" naming the permission.
+
 ## Listing a dataset's files
 
 ```typescript

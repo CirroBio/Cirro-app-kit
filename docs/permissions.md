@@ -36,7 +36,7 @@ This kit uses a `cirro-permissions.json` file at the root of the app (the app te
 - **`scope`**: `project` if the app should be granted permissions on specific projects (`projectPermissions` in the registration), `global` if it needs them everywhere (`globalPermissions`). Prefer `project`.
 - **`reason` / `feature`**: written for the admin reviewing the app. "Read VCF files for display" is reviewable; "file access" isn't.
 
-Keep the manifest in step with the code: when you add a call to a new API, add its permission. The [scanner](../tools/scan.py) and the [security checklist](security-checklist.md) both check for a manifest, and code review should compare it with the calls the app makes. The [capability map](building-on-cirro.md#capability-map) suggests the likely permission for each part of the API.
+Keep the manifest in step with the code: when you add a call to a new API, add its permission. The [scanner](../tools/scan.py) and the [security checklist](security-checklist.md) both check for a manifest, and code review should compare it with the calls the app makes. The [capability map](building-on-cirro.md#capability-map) lists the permission each part of the API needs.
 
 Resist adding permissions "in case". Every extra permission is something an admin has to trust, and a reason to delay approval.
 
@@ -46,39 +46,46 @@ Users sign in as themselves, so the app inherits their access, no more. The same
 
 ### Checking before offering an action
 
-An app usually can't find out in advance what the user is allowed to do: the user's **role in each project** is in their user record, which a typical app registration can't read.
-
-So by default **the role is unknown**. Show actions as available, and let the server decide (next section).
-
-If a registration does let the app read the user record, here is how to read the role:
+Cirro has no endpoint that answers "can this user do X", but an app can usually learn the user's **role in each project** from the project's member list: `data.projects.getProjectUsers({ projectId })` returns every member with their `role`, the signed-in user included. It needs `VIEW_PROJECT_MEMBERS` in the app's registration, and the user must be a `CONTRIBUTOR` or above, so for collaborators the role stays unknown. (Reading the user's own record with `getUser` needs `MANAGE_MEMBERS` as a global permission, which governs everyone's membership; don't request it just to read roles.)
 
 ```typescript
+import { ApiError } from "@cirrobio/sdk";
 import type { ProjectRole } from "@cirrobio/api-client";
 
-const me = await data.users.getUser({ username });   // the ID token's cognito:username
-const roleIn = (projectId: string): ProjectRole | undefined =>
-  me.projectAssignments.find((a) => a.projectId === projectId)?.role;
+async function roleIn(projectId: string, username: string): Promise<ProjectRole | undefined> {
+  try {
+    const members = await data.projects.getProjectUsers({ projectId });
+    return members.find((m) => m.username === username)?.role;   // username: the ID token's cognito:username
+  } catch (e) {
+    if (e instanceof ApiError && e.errorCode === 403) return undefined;   // a collaborator, or no VIEW_PROJECT_MEMBERS
+    throw e;
+  }
+}
 ```
 
-Roles are `OWNER`, `ADMIN`, `CONTRIBUTOR`, `COLLABORATOR` and `NONE`.
+When the role is unknown, show actions as available, and let the server decide (next section).
+
+Each role includes everything the role before it can do:
+
+| Role | Adds |
+| --- | --- |
+| `COLLABORATOR` | View the project, its datasets, metadata, references, shares, dashboards and sheets; read files (`GENERATE_DOWNLOAD_TOKEN`); read discussions and post messages in them; run read-only SQL on sheets |
+| `CONTRIBUTOR` | Create and edit datasets, metadata, dashboards and sheets; run and stop pipelines and see their tasks, logs and costs; create workspaces, custom pipelines and discussion threads; see project members |
+| `ADMIN` | Manage members and shares; edit project settings; delete datasets, workspaces and sheets; start and stop any workspace; manage discussions |
+| `OWNER` | Delete the project; open any workspace |
 
 Turn roles into the app's own capabilities in one place, rather than scattering role checks through the UI:
 
 ```typescript
-type Capability = "view" | "readFiles" | "addNotes" | "createDatasets" | "runPipelines" | "manageShares";
+type Capability = "view" | "readFiles" | "postNotes" | "createDatasets" | "runPipelines" | "manageShares";
 
-// Example mapping. Cirro does not publish its role-to-permission table yet;
-// confirm these with your Cirro admins before relying on them.
 const ROLE_CAPABILITIES: Record<ProjectRole, Capability[]> = {
-  OWNER:        ["view", "readFiles", "addNotes", "createDatasets", "runPipelines", "manageShares"],
-  ADMIN:        ["view", "readFiles", "addNotes", "createDatasets", "runPipelines", "manageShares"],
-  CONTRIBUTOR:  ["view", "readFiles", "addNotes", "createDatasets", "runPipelines"],
-  COLLABORATOR: ["view", "readFiles", "addNotes"],
+  OWNER:        ["view", "readFiles", "postNotes", "createDatasets", "runPipelines", "manageShares"],
+  ADMIN:        ["view", "readFiles", "postNotes", "createDatasets", "runPipelines", "manageShares"],
+  CONTRIBUTOR:  ["view", "readFiles", "postNotes", "createDatasets", "runPipelines"],
+  COLLABORATOR: ["view", "readFiles", "postNotes"],
   NONE:         [],
 };
-
-export const can = (projectId: string, cap: Capability) =>
-  ROLE_CAPABILITIES[roleIn(projectId) ?? "NONE"].includes(cap);
 ```
 
 Then combine it with what the app was granted: a feature behind an optional permission that the admin didn't grant should behave the same as one the user's role doesn't allow.
@@ -88,7 +95,7 @@ Then combine it with what the app was granted: a feature behind an optional perm
 Client-side checks are for a better experience, not for security, and they can be wrong: roles change mid-session, mappings drift, and governance requirements (such as data use agreements) can block access regardless of role. So:
 
 - **Treat a 403 as authoritative.** Catch errors on every action, and when it's a permission failure (`errorCode` 403 on the `ApiError`; see [calling the API](calling-the-api.md#errors)), update the UI to match rather than retrying.
-- **Explain who can fix it.** A 403 can come from either layer, and the response may not say which. A good message covers both: "You don't have permission to run pipelines in this project. A project owner can change your role, or a Cirro admin can grant this app access."
+- **Explain who can fix it.** A 403 can come from either layer, and the response doesn't say which: the message is the same ("Not allowed to RUN_ANALYSIS on project …"). A good message covers both: "You don't have permission to run pipelines in this project. A project owner can change your role, or a Cirro admin can grant this app access."
 - **Remember refusals.** After a 403, disable that action for that project for the rest of the session, with the explanation, so the user doesn't hit it again.
 
 ## Degrading gracefully

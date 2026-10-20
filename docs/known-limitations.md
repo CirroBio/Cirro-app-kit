@@ -10,10 +10,6 @@ When your app sends a user to Cirro's authorize page and they aren't signed in t
 
 [Dynamic client registration](connecting-to-tenants.md#serving-more-than-one-tenant), which an app uses to get each tenant's client ID at runtime, doesn't accept requests from browsers yet. Until it does, a browser app can serve only the tenant it was built for.
 
-## Fetch the OAuth metadata document yourself
-
-The tenant's metadata document (`/.well-known/oauth-authorization-server`) is served with the content type `text/json` rather than `application/json`. OAuth libraries that load it themselves, including oidc-client-ts, refuse it. Fetch it with `fetch` and pass the result to the library, as the [app template](authentication.md#the-templates-sign-in) does.
-
 ## Workspaces open in a new tab
 
 A workspace can't be shown inside your app: workspace servers only allow themselves and the Cirro web app to frame them. Open the workspace in a new tab, and keep its status in your app. See [workspaces](workspaces.md#handing-the-user-into-the-workspace).

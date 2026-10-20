@@ -71,7 +71,7 @@ Each tenant registers the app separately and gives it its own client ID. Users o
 
 Each tenant's registration needs:
 
-- **Discovery enabled** (`discoveryEnabled`). The tenant only looks among discoverable registrations.
+- **Discovery enabled** (`discoveryEnabled`). The tenant only looks among discoverable registrations, and only a tenant admin can turn discovery on: a registration an App Developer creates isn't discoverable until an admin enables it.
 - **The app's redirect URI, and one unique to the app.** The tenant matches on redirect URI, so two apps served from one origin need different paths (see [authentication](authentication.md#the-templates-sign-in)).
 
 ### The tenant list

@@ -27,21 +27,21 @@ Anything the app creates outlives the session and belongs to the project, not th
 
 ## Capability map
 
-Each row is something an app can use. Permission names are the likely ones for each capability; confirm them against your registration while testing.
+Each row is something an app can use, with the permissions it needs. A call succeeds only if both the app's registration and the user's project role include the permission (see [permissions](permissions.md)).
 
-| Capability | What it lets an app do | API | Likely permissions |
+| Capability | What it lets an app do | API | Permissions |
 | --- | --- | --- | --- |
-| **Dataset storage** | Read datasets and files; upload new datasets; update names, descriptions and tags | `DatasetsApi`, `FileApi`; see [files](files.md) | `VIEW_DATASET`, `CREATE_DATASET`, `EDIT_DATASET`, `GENERATE_DOWNLOAD_TOKEN` |
-| **Pipeline execution** | Run a pipeline on datasets, track tasks and logs, see what runs cost, stop runs; outputs become new datasets. `ExecutionApi.calculateCost` reports what a run cost; it can take ~20 s on older runs, so load it in the background. For a run's duration use its tasks' `requestedAt` and `stoppedAt`: a dataset's `updatedAt` moves whenever it is edited | `ExecutionApi` (`runAnalysis`, `getTasksForExecution`, `getExecutionLogs`, `calculateCost`, `stopAnalysis`) | `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` |
-| **Pipelines as app code** | Register a Nextflow or Cromwell pipeline from a GitHub repo, including the app's own repo, and keep it in sync | `ProcessesApi` (`createCustomProcess`, `syncCustomProcess`, `getProcessParameters`) | `CREATE_CUSTOM_PIPELINE`, `MANAGE_CUSTOM_PIPELINES` |
-| **Interactive workspaces** | Create a workspace with datasets mounted (it starts by itself), restart a stopped one, and get a connection URL to hand the user into it | `WorkspacesApi` (`createWorkspace`, `startWorkspace`, `connectWorkspace`, `stopWorkspace`) | `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` |
+| **Dataset storage** | Read datasets and files; upload new datasets; update names, descriptions and tags | `DatasetsApi`, `FileApi`; see [files](files.md) | `VIEW_DATASET` (list datasets, read manifests), `GENERATE_DOWNLOAD_TOKEN` (read the project's files), `CREATE_DATASET` (upload), `EDIT_DATASET`, `DELETE_DATASET` |
+| **Pipeline execution** | Run a pipeline on datasets, track tasks and logs, see what runs cost, stop runs; outputs become new datasets. `ExecutionApi.calculateCost` reports what a run cost; it can take ~20 s on older runs, so load it in the background. For a run's duration use its tasks' `requestedAt` and `stoppedAt`: a dataset's `updatedAt` moves whenever it is edited | `ExecutionApi` (`runAnalysis`, `getTasksForExecution`, `getExecutionLogs`, `calculateCost`, `stopAnalysis`) | `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` (tasks, logs, `calculateCost`); listing pipelines needs `VIEW_PROCESS` as a global permission |
+| **Pipelines as app code** | Register a Nextflow or Cromwell pipeline from a GitHub repo, including the app's own repo, and keep it in sync | `ProcessesApi` (`createCustomProcess`, `syncCustomProcess`, `getProcessParameters`) | `CREATE_CUSTOM_PIPELINE`, both on the project and as a global permission; the user must be a pipeline developer |
+| **Interactive workspaces** | Create a workspace with datasets mounted (it starts by itself), restart a stopped one, and get a connection URL to hand the user into it | `WorkspacesApi` (`createWorkspace`, `startWorkspace`, `connectWorkspace`, `stopWorkspace`) | `CREATE_WORKSPACE`, `CONTROL_WORKSPACE` (start, stop, extend), `OPEN_WORKSPACE` (connect; only project owners have it, others connect through the workspace's sharing), `DELETE_WORKSPACE` |
 | **Sharing between projects** | Publish datasets from one project and subscribe to them in another, without copying | `SharingApi` | `VIEW_PROJECT_SHARES`, `MANAGE_PROJECT_SHARES` |
 | **Sample metadata** | Read and update sample metadata and the project's metadata schema | `MetadataApi` | `VIEW_PROJECT_METADATA`, `EDIT_PROJECT_METADATA` |
-| **Sheets (relational tables)** | A database in the project: typed tables with keys and relationships, joined views, read-only SQL, file ingest. See [Sheets](sheets.md) | `SheetsApi` | `VIEW_SHEET_DATA`, `CREATE_SHEET`, `EDIT_SHEET_DATA`, `SHEET_RAW_QUERY` |
-| **Notes and discussions** | Attach notes or discussion threads to datasets, samples, workspaces and other entities | `FeedApi` (discussions of type `NOTES` or `DISCUSSION`) | `CREATE_DISCUSSION`, `VIEW_DISCUSSION` |
+| **Sheets (relational tables)** | A database in the project: typed tables with keys and relationships, joined views, read-only SQL, file ingest. See [Sheets](sheets.md) | `SheetsApi` | `VIEW_SHEET`, `VIEW_SHEET_DATA`, `CREATE_SHEET`, `EDIT_SHEET`, `EDIT_SHEET_DATA`, `SHEET_RAW_QUERY`, `DELETE_SHEET`; see [Sheets](sheets.md#permissions) |
+| **Notes and discussions** | Attach notes or discussion threads to datasets, samples, workspaces and other entities | `FeedApi` (discussions of type `NOTES` or `DISCUSSION`) | `CREATE_DISCUSSION` (start a thread), `VIEW_DISCUSSION` (read, and post messages) |
 | **Reference data** | Use and add project reference genomes and annotations | `ReferencesApi` | `VIEW_PROJECT_REFERENCES`, `EDIT_PROJECT_REFERENCES` |
-| **Dashboards** | Create project dashboards from templates | `DashboardsApi` | `VIEW_DASHBOARD`, `CREATE_DASHBOARD` |
-| **Project membership** | Read project members; set user roles | `ProjectsApi` (`getProjectUsers`, `setUserProjectRole`) | `VIEW_PROJECT_MEMBERS`, `EDIT_PROJECT_MEMBERS`; see [trust boundaries](#trust-boundaries) |
+| **Dashboards** | Create project dashboards from templates | `DashboardsApi` | `VIEW_DASHBOARD`, `CREATE_DASHBOARD`, `EDIT_DASHBOARD` |
+| **Project membership** | Read project members; set user roles | `ProjectsApi` (`getProjectUsers`, `setUserProjectRole`) | `VIEW_PROJECT_MEMBERS` (members and their roles), `EDIT_PROJECT_MEMBERS`; see [trust boundaries](#trust-boundaries) |
 
 Method details are in the [API reference](../reference/api-surface.md). List the permissions your app uses in its [permission manifest](permissions.md#layer-1-declare-what-the-app-needs).
 
@@ -108,22 +108,22 @@ Booting takes minutes, a project can limit how many workspaces each user has, wo
 
 Anything an app creates should explain itself to someone who never used the app. We recommend a simple convention: **whenever an app creates a dataset, workspace, pipeline run or other asset, it attaches a note** describing what it did.
 
-Notes are discussions of type `NOTES` attached to an entity (`DATASET`, `SAMPLE`, `WORKSPACE`, `PROJECT`, and others):
-
-Notes go through `data.feed`:
+Notes are discussions of type `NOTES` attached to an entity, through `data.feed`. The Cirro web app shows a note's messages in the notes panel of datasets, pipelines, sheets and workspaces. Each entity has at most one notes thread, shared by everyone who writes notes on it, so post into the existing thread and create one only if there's none:
 
 ```typescript
 import { EntityType, DiscussionType } from "@cirrobio/api-client";
 
 export async function addProvenanceNote(projectId: string, entity: { type: EntityType; id: string }, body: string) {
-  const note = await data.feed.createDiscussion({ discussionInput: {
-    name: `Created by ${APP_NAME}`,
-    description: `${APP_NAME} ${APP_VERSION}`,
-    entity, type: DiscussionType.Notes, projectId,
-  }});
-  await data.feed.postMessage({ discussionId: note.id, messageInput: { message: body } });
+  const { data: threads } = await data.feed.getDiscussionsForEntity({ entityType: entity.type, entityId: entity.id });
+  const notes = threads.find((d) => d.type === DiscussionType.Notes)
+    ?? await data.feed.createDiscussion({ discussionInput: {
+      name: "Notes", description: "", entity, type: DiscussionType.Notes, projectId,
+    }});
+  await data.feed.postMessage({ discussionId: notes.id, messageInput: { message: `${APP_NAME} ${APP_VERSION}: ${body}` } });
 }
 ```
+
+Creating a notes thread needs `CREATE_DISCUSSION`; reading and posting need `VIEW_DISCUSSION`.
 
 A useful note says, in plain language:
 

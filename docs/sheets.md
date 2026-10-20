@@ -28,7 +28,7 @@ Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/inf
 | **`_row_id`** | Every row has one. It's the first column of every data response and the key for updates and deletes. |
 | **Views** | A `STRUCTURED` view names sheets, joins (`INNER`, `LEFT`, `RIGHT`, `FULL`), columns and a filter; a `RAW` view is a SQL query. Views are materialized: `refreshView` rebuilds one from its source tables. |
 | **Ingest** | `triggerIngest` loads a file into a sheet as an asynchronous job, mapping file columns to sheet columns, with `onConflict` set to `ERROR`, `SKIP` or `OVERWRITE` against a `conflictColumn`. `getJobs` reports progress and errors. |
-| **Mappings** | Saved column mappings (with optional value translations) from a sheet to a target Cirro entity, managed with `saveSheetMapping` and `getSheetMappings`. |
+| **Mappings** | Saved column mappings (with optional value translations) from a sheet to a pipeline's inputs, managed with `saveSheetMapping` and `getSheetMappings`. The Cirro web app's pipeline launch form uses them to offer and fill in sheets; nothing else applies them. |
 
 ## Using sheets from an app
 
@@ -109,11 +109,17 @@ const summary = await sheets.queryData({ projectId, sheetQueryRequest: {
 } });
 ```
 
+Writes are checked against the column definitions: a missing `required` value, a duplicate in a `unique` column, a value outside `allowedValues`, or a malformed Cirro reference is refused with 400 and a message naming the column, and the whole insert or update is rolled back. Foreign keys aren't checked on writes, so check them in the app if they matter.
+
 Prefer `querySheetData` with a structured `filter` for anything built from user input. If you must use `queryData` with user input, validate it against an allow-list (column names, enum values) rather than interpolating it into the SQL string. Queries are read-only and stay inside the project, but a crafted query can still read any sheet in it the user can see, which may be more than your app means to show.
 
 ### Bulk loads
 
-For more than a few hundred rows, write a file and ingest it rather than inserting in a loop. Ingest runs as a job: start it with `triggerIngest` (a `fileDef` with the file's type and storage URI, `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule), then poll `getJobs` and show `errorMessage` if it fails. Getting the file into place needs file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD`, see [working with files](files.md)).
+For more than a few hundred rows, write a file and ingest it rather than inserting in a loop:
+
+1. Upload the file under the sheet's `stagingUploadPath` (from `getSheet`), with file credentials for the sheet (`ProjectAccessType.SHEET_UPLOAD` with the sheet's ID; see [working with files](files.md)). Parquet, CSV, JSON and XLSX are accepted; from an XLSX file only the first worksheet is read.
+2. Start the job with `triggerIngest`: a `fileDef` with the file's type and its `s3://` URI under the staging path, optional `sourceColumns` mapping file columns to sheet columns, and an `onConflict` rule (`ERROR`, `SKIP` or `OVERWRITE` against a `conflictColumn`). A request that's wrong (a path outside the staging folder, a missing required column) is refused straight away with 400.
+3. Poll `getJobs`. A job that fails reports `FAILED` with an `errorMessage`; show it. Each ingest runs as a single transaction, so a failed one leaves the sheet unchanged.
 
 ### Changing the schema
 
@@ -125,7 +131,7 @@ For more than a few hundred rows, write a file and ingest it rather than inserti
 - **Link, don't copy.** Store references to Cirro objects in `CIRRO_DATASET`, `CIRRO_FILE` and `CIRRO_FOLDER` columns rather than copying data or paths into the sheet.
 - **Leave provenance.** Tag sheets the app creates with the [app tag](building-on-cirro.md#tag-everything-the-app-creates) and attach a note, as for any other object the app creates (see [provenance by default](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates)). For row-level history, add `created_by` and `updated_at` columns and fill them in.
 - **Let pipelines and the app share tables.** A pipeline can write results into a sheet that the app then filters and annotates, and a view can join them with the app's own tables. Pin the schema to the same release as the pipeline (see [an app that ships its own pipeline](building-on-cirro.md#an-app-that-ships-its-own-pipeline)).
-- **Assume other writers.** People can edit sheets in the Cirro UI while your app is open. Re-read before acting on a row, write partial updates, and show what changed. Don't assume transactions or locking.
+- **Assume other writers.** People can edit sheets in the Cirro UI while your app is open. Rows have no version numbers, and when two writes to a sheet collide the later one fails with a 500; re-read before acting on a row, write partial updates, retry a failed write once after re-reading, and show what changed.
 - **Expect sheets you didn't make.** If the app reads sheets people created, read `columns` from `getSheet` and adapt rather than hard-coding a layout.
 
 ## Permissions
@@ -134,12 +140,12 @@ Declare what you need in the app's [permission manifest](permissions.md):
 
 | Permission | Lets the app |
 | --- | --- |
-| `VIEW_SHEET` | List sheets and read their definitions |
+| `VIEW_SHEET` | List sheets, read their definitions, mappings and ingest jobs |
 | `VIEW_SHEET_DATA` | Read rows (`getSheetData`, `querySheetData`) |
 | `SHEET_RAW_QUERY` | Run SQL with `queryData` |
-| `CREATE_SHEET` | Create tables and views |
-| `EDIT_SHEET` | Change schemas, views and mappings; refresh views; trigger ingest |
+| `CREATE_SHEET` | Create tables and views (plus `SHEET_RAW_QUERY` for a view defined by SQL) |
+| `EDIT_SHEET` | Change schemas, views and mappings; refresh views; trigger ingest and upload its files |
 | `EDIT_SHEET_DATA` | Insert, update and delete rows |
 | `DELETE_SHEET` | Delete sheets |
 
-An app that only reads should ask for the first two, plus `SHEET_RAW_QUERY` if it runs SQL. As with the rest of the platform, which roles can do these things is the user's project role, so a COLLABORATOR may be able to read a sheet but not write to it; handle the 403 and offer a read-only mode ([degrading gracefully](permissions.md#degrading-gracefully)). The exact permission behind each method is an assumption from the names; confirm it against the 403s you see.
+An app that only reads should ask for the first two, plus `SHEET_RAW_QUERY` if it runs SQL. As with the rest of the platform, which roles can do these things is the user's project role, so a COLLABORATOR may be able to read a sheet but not write to it; handle the 403 and offer a read-only mode ([degrading gracefully](permissions.md#degrading-gracefully)). Collaborators can read sheets and run SQL; contributors can also create sheets and edit them and their rows; deleting a sheet takes an admin.

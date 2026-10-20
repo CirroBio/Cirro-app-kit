@@ -41,4 +41,4 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/workspaces.md` in full; most of its rules exist
 
 ## 4. Permissions
 
-Add what the code uses to `cirro-permissions.json`, usually as optional permissions tied to the feature: `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` for runs; `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` for workspaces. Check them all at the start of a flow, not after the user has filled in a form. See cirro-permissions.
+Add what the code uses to `cirro-permissions.json`, usually as optional permissions tied to the feature: `RUN_ANALYSIS`, `STOP_ANALYSIS`, `VIEW_DATASET_LOGS` for runs (plus `VIEW_PROCESS` as a global permission to list pipelines); `CREATE_WORKSPACE`, `CONTROL_WORKSPACE`, `OPEN_WORKSPACE` for workspaces. Check them all at the start of a flow, not after the user has filled in a form. See cirro-permissions.

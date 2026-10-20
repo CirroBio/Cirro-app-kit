@@ -72,4 +72,4 @@ Files written inside a workspace stay in it until saved to the project. Decide u
 
 ## Permissions
 
-`CREATE_WORKSPACE`, `CONTROL_WORKSPACE` (start, stop, postpone), `OPEN_WORKSPACE` (connect). See the [capability map](building-on-cirro.md#capability-map).
+`CREATE_WORKSPACE`, `CONTROL_WORKSPACE` (start, stop, postpone), `OPEN_WORKSPACE` (connect), `DELETE_WORKSPACE`. Only project owners have `OPEN_WORKSPACE`; other users connect to a workspace they created or one shared with them. See the [capability map](building-on-cirro.md#capability-map).

@@ -26,7 +26,7 @@ async function start() {
     throw new Error(`Sign-in failed: ${returned.get("error_description") ?? returned.get("error")}`);
   }
 
-  const userManager = await createSignIn(config.url, config.clientId);
+  const userManager = createSignIn(config.url, config.clientId);
   const user = await currentUser(userManager);
   if (!user) {
     root.render(

@@ -5,7 +5,7 @@ description: Decide which Cirro permissions a browser app needs, write or update
 
 # Cirro app permissions
 
-Read `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` first: it explains the two layers (what the registration allows, what the user's project role allows) and the manifest format. Likely permission names for each API are in the capability map in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`; they are inferred from names, so confirm them against the 403s seen while testing.
+Read `${CLAUDE_PLUGIN_ROOT}/docs/permissions.md` first: it explains the two layers (what the registration allows, what the user's project role allows) and the manifest format. The permission each API needs is in the capability map in `${CLAUDE_PLUGIN_ROOT}/docs/building-on-cirro.md`, taken from the backend's checks. A call needs the permission in both the registration and the user's role.
 
 ## 1. Build or update the manifest
 

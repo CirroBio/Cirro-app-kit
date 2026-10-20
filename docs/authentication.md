@@ -22,11 +22,11 @@ sequenceDiagram
   App->>API: 8. API calls with Authorization: Bearer
 ```
 
-- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. It's served as `text/json`, which some OAuth libraries refuse, so fetch it yourself and pass the result to the library, as the template does. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
+- **Step 1 needs no token.** The metadata document lists `authorization_endpoint` (Cirro's authorize page), `token_endpoint`, `revocation_endpoint` and `issuer`, and answers browsers from any origin. Read endpoints from it rather than building them. Once the user is signed in, the template reads the tenant's display name with `data.system.info()` (`tenantInfo.name`).
 - **Step 3 is Cirro's consent screen.** It shows the registration's name, logo, publisher and requested permissions, and an "Official" badge for apps Cirro publishes, and lists the tenant's sign-in providers. The user must be signed in to Cirro to see it; a signed-out user is taken to Cirro's sign-in first.
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
 - **Only `openid`.** Public Apps allow the `openid` scope and no other.
-- **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire (they last 15 minutes).
+- **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire. By default access tokens last 15 minutes and refresh tokens a day, so a user who comes back after a day signs in again. Refresh tokens aren't rotated.
 - **No emailed sign-in links.** The authorize page offers the tenant's SSO providers only.
 
 ## The template's sign-in
@@ -36,10 +36,9 @@ The [app template](../templates/app) implements the flow with [oidc-client-ts](h
 ```typescript
 import { UserManager } from "oidc-client-ts";
 
-const res = await fetch(`${cirroUrl}/.well-known/oauth-authorization-server`);
 const userManager = new UserManager({
   authority: cirroUrl,
-  metadata: await res.json(),     // authorize, token and revocation endpoints
+  metadataUrl: `${cirroUrl}/.well-known/oauth-authorization-server`,   // authorize, token and revocation endpoints
   client_id: clientId,
   redirect_uri: REDIRECT_URI,
   response_type: "code",
