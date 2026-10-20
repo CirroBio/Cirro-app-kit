@@ -13,8 +13,8 @@ The template and tools live in the [CirroBio/Cirro-app-kit](https://github.com/C
 
 New to Cirro? Read [Cirro in five minutes](docs/concepts.md), then follow [getting started](docs/getting-started.md), which takes you from no account to a running app.
 
-1. **Start from your Cirro account and get a development registration.** Use the account you already have on a tenant; create a development registration yourself if you have the App Developer role, or ask a tenant admin (support@cirro.bio for the public tenant). You'll get a client ID.
-2. **Run the app template.** [`templates/app`](templates/app) is a React starter for portals, dashboards and workflow tools. Set two values in `.env`, then `npm install && npm run dev`.
+1. **Register the app's callback URL.** Each app has its own callback URL, the address it returns to after sign-in, and gets its client ID from the tenant by it. In production a tenant admin registers it with discovery enabled (support@cirro.bio for the public tenant), so no client ID is configured or deployed. For local development, an App Developer can register a `localhost` callback URL themselves and put that registration's client ID in `.env`.
+2. **Run the app template.** [`templates/app`](templates/app) is a React starter for portals, dashboards and workflow tools. Set the tenant's address (and, for local development, your registration's client ID) in `.env`, then `npm install && npm run dev`.
 3. **Decide what to build.** Cirro gives an app storage, pipelines, workspaces, sharing and a database, not just an API; see [building on Cirro](docs/building-on-cirro.md). List the permissions you use in `cirro-permissions.json` ([permissions](docs/permissions.md)).
 4. **Before deploying,** run `python3 tools/scan.py <your app>` and work through the [security checklist](docs/security-checklist.md).
 5. **Connect to tenants.** A deployed app works for users once each tenant approves it; see [connecting to tenants](docs/connecting-to-tenants.md).

@@ -5,16 +5,16 @@
 | Variable | Production value |
 | --- | --- |
 | `VITE_CIRRO_URL` | The tenant's web address, such as `https://app.cirro.bio`. The app calls `/api` and `/authorize` under it |
-| `VITE_CIRRO_CLIENT_ID` | The registered app's client ID for that tenant |
+| `VITE_CIRRO_CLIENT_ID` | Leave unset. The app gets its client ID from the tenant by its callback URL; this variable is only for local development |
 
-These configure one tenant. An app serving several tenants builds once, lists the tenants in a runtime `tenants.json`, and asks each tenant for its client ID at runtime; see [serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant).
+`base` in `vite.config.ts` is the app's path, so the production callback URL is the host's address plus that path (for example `https://apps.example.org/qc-review/`); host the app there, and have each tenant register that URL. An app serving several tenants builds once and lists the tenants in a runtime `tenants.json`; see [serving more than one tenant](connecting-to-tenants.md#serving-more-than-one-tenant).
 
 ## Hosting
 
 Any static host works (S3 + CloudFront, Netlify, GitHub Pages). Requirements:
 
-- Serve over HTTPS on an origin listed in the registration's redirect URIs.
-- If the app uses client-side routing, rewrite unknown paths to `index.html`. The sign-in redirect returns to the registered redirect URI (the template's is the origin root, or Vite's `base` under a path), so that path must load the app.
+- Serve over HTTPS at the registered callback URL: the host's address plus the app's path.
+- If the app uses client-side routing, rewrite unknown paths to `index.html`. The sign-in redirect returns to the callback URL, so that path must load the app.
 
 ## Content Security Policy
 
@@ -35,5 +35,5 @@ The Cirro tenant serves the API and the OAuth metadata document; the token serve
 
 ## Before the first production deploy
 
-- Connection requested and approved in each tenant the app serves, with the production origin in the redirect URIs. See [connecting to tenants](connecting-to-tenants.md).
+- Connection requested and approved in each tenant the app serves: the production callback URL registered with discovery enabled. See [connecting to tenants](connecting-to-tenants.md).
 - Run `python3 tools/scan.py <app dir>` and work through the [security checklist](security-checklist.md).
