@@ -14,7 +14,7 @@ Facts about Cirro (permission names, redirect rules, package APIs, known issues)
 
 ## When platform behavior changes
 
-`docs/known-limitations.md` is for readers: each entry says what doesn't work yet and what to do instead. When Cirro fixes one, remove its entry and update the pages it links to. Questions for the platform team and bugs go to Cirro's issue tracker, not the docs.
+Describe how Cirro works on the page a reader would look for it, as guidance: what to do, not a list of what's missing. When the platform changes, update those pages. Questions for the platform team and bugs go to Cirro's issue tracker, not the docs.
 
 ## Checks before opening a PR
 

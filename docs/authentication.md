@@ -29,7 +29,6 @@ sequenceDiagram
 - **PKCE replaces the client secret.** The library sends only a hash of a random verifier in step 2 and proves possession in step 6, so a stolen code is useless on its own.
 - **Only `openid`.** Public Apps allow the `openid` scope and no other.
 - **Renewal is silent.** The library uses the refresh token from step 7 to get new access tokens before they expire. By default access tokens last 15 minutes and refresh tokens a day, so a user who comes back after a day signs in again. Refresh tokens aren't rotated.
-- **No emailed sign-in links.** The authorize page offers the tenant's SSO providers only.
 
 ## The template's sign-in
 
@@ -61,6 +60,10 @@ What to know about it:
 - **Show a failed return.** A page load with `?error=` is a failed sign-in, usually a registration mismatch. The template shows the error instead of offering to sign in again, so a broken registration can't loop.
 - **Tokens live in the library's session storage** (oidc-client-ts's default), so a reload keeps the user signed in without another trip through the consent screen. Your own code never stores them. Browser storage is per origin, so an app served from an origin of its own (its own domain or subdomain) can keep the login across tabs and browser restarts by passing `userStore: new WebStorageStateStore({ store: window.localStorage })`; ask the tenant's Cirro admins to shorten the app client's refresh-token lifetime when you do, since the login then persists on disk. Keep the default on an origin shared with other sites, such as a `github.io` Pages site, where every site on it could read the tokens.
 - **Signing out** revokes the refresh token at the `revocation_endpoint` (the token server revokes refresh tokens only) and removes the user from the library, which it does even when revocation fails; the app then shows the revocation error instead of reloading. That ends the app's session, not the user's Cirro session; signing in to the app again goes through Cirro's authorize page again.
+
+### Using another OAuth library
+
+The metadata document's `issuer` is the tenant's Cognito user pool (`https://cognito-idp.<region>.amazonaws.com/<pool>`), not the Cirro address the document is published at, and the ID tokens carry the same issuer. oidc-client-ts doesn't compare the two. Libraries that do, such as [oauth4webapi](https://github.com/panva/oauth4webapi), refuse the document in their discovery step. With such a library, fetch the document yourself, as the template does, and pass it to the library as the server's settings instead of using its discovery step.
 
 ## Checking it works
 

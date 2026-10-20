@@ -94,5 +94,4 @@ nav:
   - Reference:
       - API surface: reference/api-surface.md
       - Response models: reference/models.md
-      - Known limitations: docs/known-limitations.md
   - Contributing: CONTRIBUTING.md

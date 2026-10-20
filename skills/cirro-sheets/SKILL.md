@@ -11,7 +11,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/docs/sheets.md` before writing Sheets code; it has t
 
 Use the doc's "When an app should use a sheet" table. Not for secrets, per-user UI preferences (every project member can see rows), large binary data (datasets), or high-frequency writes.
 
-Not every tenant has sheets: read `tenantInfo.features.sheetsEnabled` from `/info/system` and gate the feature on it. If the target tenant lacks them (the public tenant does), say so and offer the doc's fallback of tagged dataset snapshots.
+Check `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on sheets, and tell the user if the target tenant has them turned off.
 
 ## 2. Design the schema with the user
 

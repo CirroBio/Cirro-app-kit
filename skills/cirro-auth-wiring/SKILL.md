@@ -26,7 +26,3 @@ Signing in as the user means the app only has the user's access. Most registrati
 ## Verify
 
 Run the four checks in "Checking it works" in the authentication doc. On failure, match the symptom in `${CLAUDE_PLUGIN_ROOT}/docs/troubleshooting.md` before changing code; most failures are registration mismatches.
-
-## Be explicit about limitations
-
-If the app is affected by anything in `${CLAUDE_PLUGIN_ROOT}/docs/known-limitations.md` (for example users who aren't signed in to Cirro yet, or serving several tenants), tell the user and apply the workaround it describes.
