@@ -6,10 +6,6 @@ Things Cirro doesn't support yet that affect how you build an app, and what to d
 
 When your app sends a user to Cirro's authorize page and they aren't signed in to Cirro, Cirro asks them to sign in and then shows an error ("Invalid authorize link") instead of returning to your app's consent screen. Signing in from your app a second time then works. Until this is fixed, tell users in your app's sign-in screen to sign in to Cirro first, or that they may need to click **Sign in with Cirro** twice. See [authentication](authentication.md).
 
-## Apps serving several tenants can't get client IDs from the browser yet
-
-[Dynamic client registration](connecting-to-tenants.md#serving-more-than-one-tenant), which an app uses to get each tenant's client ID at runtime, doesn't accept requests from browsers yet. Until it does, a browser app can serve only the tenant it was built for.
-
 ## Workspaces open in a new tab
 
 A workspace can't be shown inside your app: workspace servers only allow themselves and the Cirro web app to frame them. Open the workspace in a new tab, and keep its status in your app. See [workspaces](workspaces.md#handing-the-user-into-the-workspace).
