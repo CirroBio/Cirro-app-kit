@@ -65,7 +65,7 @@ async function ensureReviewSheet(projectId: string): Promise<string> {
       namespaceName: NAMESPACE,
       tableName: TABLE,
       sheetCreationMode: SheetCreationMode.Scratch,
-      tags: [{ key: "cirro-app", value: APP_ID }],
+      tags: [{ value: APP_ID }],
       columns: [
         { name: "sample_id", dataType: ColumnDataType.String, required: true, unique: true },
         { name: "dataset", dataType: ColumnDataType.String, semanticType: SemanticColumnType.CirroDataset },

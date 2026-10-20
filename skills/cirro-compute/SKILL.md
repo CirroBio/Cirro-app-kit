@@ -23,7 +23,7 @@ Read "Capability map" and "An app that ships its own pipeline" in the building-o
 
 - Which pipeline: an existing Cirro process (find its ID with `ProcessesApi`), or one shipped in the app's repo. Registering a pipeline (`createCustomProcess`, `syncCustomProcess`) is a one-time maintainer step, not something the app does per user; pin it to the same release tag as the frontend.
 - Build the form from `getProcessParameters` rather than duplicating the parameter schema.
-- Submit with `runAnalysis`, setting `tags` to `cirro-app: <APP_ID>` in the request, then add a provenance note to the output dataset ("Provenance by default" in the same doc).
+- Submit with `runAnalysis`, setting `tags` to `[{ value: APP_ID }]` in the request, then add a provenance note to the output dataset ("Provenance by default" in the same doc).
 - Track status from Cirro, not app state, so the app can be closed and reopened: `getTasksForExecution` for progress and duration (tasks' `requestedAt`/`stoppedAt`), `getExecutionLogs` on failure. Offer `stopAnalysis` with a confirmation.
 - Detect a refused launch from the `ApiError` (`errorCode` 403; its message names the permission), as in "Errors" in `${CLAUDE_PLUGIN_ROOT}/docs/calling-the-api.md`.
 
