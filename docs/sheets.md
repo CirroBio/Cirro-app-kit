@@ -15,7 +15,7 @@ For an app, that means a database you don't have to run. A browser-only app gets
 
 Don't use a sheet for secrets or tokens, per-user UI preferences (every project member with access can see the rows), large binary data (use datasets), or high-frequency writes such as telemetry.
 
-Not every tenant has sheets. Read `tenantInfo.features.sheetsEnabled` from `/info/system` before offering a feature built on them: it is off on some tenants, including the public tenant (app.cirro.bio). Where it is false, an app can keep the same records as tagged datasets, one snapshot per save, and merge the snapshots when reading.
+Before offering a feature built on sheets, check that the tenant has them turned on: `tenantInfo.features.sheetsEnabled` from `/info/system`.
 
 ## Concepts
 
@@ -65,7 +65,7 @@ async function ensureReviewSheet(projectId: string): Promise<string> {
       namespaceName: NAMESPACE,
       tableName: TABLE,
       sheetCreationMode: SheetCreationMode.Scratch,
-      tags: [{ key: "cirro-app", value: APP_ID }],
+      tags: [{ value: APP_ID }],
       columns: [
         { name: "sample_id", dataType: ColumnDataType.String, required: true, unique: true },
         { name: "dataset", dataType: ColumnDataType.String, semanticType: SemanticColumnType.CirroDataset },

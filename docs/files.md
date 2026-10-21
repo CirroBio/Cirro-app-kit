@@ -83,7 +83,7 @@ import { ProjectAccessType } from "@cirrobio/api-client";
 const created = await data.datasets.uploadDataset({
   projectId: project.id,
   uploadDatasetRequest: { name, description, processId, expectedFiles: fileList.map(f => f.name),
-                          tags: [{ key: "cirro-app", value: APP_ID }] },
+                          tags: [{ value: APP_ID }] },
 });  // → { id, message, uploadPath, bucket }
 
 // 2. Get upload credentials for that dataset and upload each file under uploadPath.

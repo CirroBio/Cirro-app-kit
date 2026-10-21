@@ -136,7 +136,7 @@ Pair notes with the app's tag (below), so assets can be found by app as well as 
 
 ### Tag everything the app creates
 
-Every taggable entity an app creates carries one tag naming the app: `{ key: "cirro-app", value: APP_ID }`. `APP_ID` is a stable slug chosen once for the app (`spatial-data-studio`), not its registration or client ID, which differ in every tenant. With it, a user or another app can find everything an app made with one filter, in any tenant.
+Every taggable entity an app creates carries one tag naming the app: `{ value: APP_ID }`. A tag is a plain text label, and `APP_ID` is a stable slug chosen once for the app (`spatial-data-studio`), not its registration or client ID, which differ in every tenant. With it, a user or another app can find everything an app made by filtering on that tag, in any tenant. (`Tag` also has a `key` field; it's deprecated, and the Cirro web app ignores it.)
 
 Set the tag when the entity is created, where the API allows it, rather than in a second call:
 

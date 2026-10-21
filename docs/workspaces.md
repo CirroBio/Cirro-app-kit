@@ -43,7 +43,7 @@ A project can limit how many workspaces one user may have in it; the project adm
 
 ## Handing the user into the workspace
 
-Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block. See [known limitations](known-limitations.md#workspaces-open-in-a-new-tab).
+Open the workspace in a new tab. It can't be embedded in your app: the workspace server sends `frame-ancestors 'self' https://<cirro portal>` and `X-Frame-Options: SAMEORIGIN`, so an iframe on any other origin stays blank, and the page can't detect the block.
 
 ```ts
 async function openWorkspace(projectId: string, workspaceId: string) {

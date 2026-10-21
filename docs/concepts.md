@@ -36,7 +36,7 @@ flowchart TD
 | **Share** | A way to make datasets from one project available in another without copying them. |
 | **Reference** | Reference data used by pipelines, such as genomes and annotations, stored in a project. |
 | **Notes and discussions** | Comment threads attached to datasets, samples, workspaces and other objects. Apps should use notes to record what they did; see [provenance by default](building-on-cirro.md#provenance-by-default-notes-on-everything-the-app-creates). |
-| **Tags** | Key/value labels on datasets, sheets and other objects, used for finding and organizing things. |
+| **Tags** | Short text labels on projects, datasets, sheets and other objects, used for finding and organizing things. |
 | **App registration** | A record of an app in a tenant: its callback URL (where it returns after sign-in), its client ID and the permissions it may use. A tenant admin creates it with discovery enabled, and the app gets its client ID from the tenant by its callback URL. A user with the App Developer role can register a `localhost` callback URL that works only for them, to develop the app before a tenant admin sets it up for others. The Cirro team registers apps on the public tenant. See [app types and registration](app-types-and-registration.md). |
 
 ## How an app works with Cirro
