@@ -28,6 +28,8 @@ theme:
     - navigation.top
     - content.code.copy
     - search.highlight
+  font:
+    text: Inter
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
